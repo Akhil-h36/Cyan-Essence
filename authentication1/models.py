@@ -81,7 +81,8 @@ class usertable(AbstractBaseUser, PermissionsMixin):
         related_name='referrals'
     )
 
-
+    is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
     # Required fields for custom user model
     is_active = models.BooleanField(default=True)
    
