@@ -1,0 +1,50 @@
+# python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# virtual environment
+.venv/
+cyanenv/
+
+#Django-specific 
+*.log
+debug.log
+db.sqlite3
+db.sqlite3-journal
+local_settings.py
+
+# Media and static files (untracked user uploads / auto-collected static)
+media/
+cyan/media/
+cyan/staticfiles/
+
+# Environment and secrets
+.env
+.env.*
+
+# IDEs and editor settings
+.vscode/
+.idea/
+
+.vscode/* 
+!.vscode/settings.json 
+!.vscode/tasks.json 
+!.vscode/launch.json 
+!.vscode/extensions.json 
+.history
+
+
+
+
+# Test/coverage
+.coverage
+.cache
+.pytest_cache/
+.tox/
+.nox/
+htmlcov/
+
+# OS-specific
+.DS_Store
+Thumbs.db

@@ -1,0 +1,165 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    {% if messages %}
+    <div class="container">
+        {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    </div>
+    
+    {% endif %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'adminhome' %}" >Admin</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'adproducts' %}" class="text-light">Product Management</a></li>
+            <li class="breadcrumb-item active text-info" aria-current="page">{{ product.product_name }} Variance</li>
+        </ol>
+    </nav>
+
+    <div class="container">
+        <h3 class="text-light mb-4">Product Variance for {{ product.product_name }}</h3>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <table class="table text-light">
+                    <thead>
+                        <tr>
+                            <th>Size (ml)</th>
+                            <th>Stock</th>
+                            <th>Price</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for variance in variances %}
+                        <tr>
+                            <td>{{ variance.size.size }} ml</td>
+                            <td>{{ variance.stock }}</td>
+                            <td>₹{{ variance.price|floatformat:2 }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary edit-variance" 
+                                    data-variance-id="{{ variance.id }}"
+                                    data-size="{{ variance.size.size_id }}"
+                                    data-stock="{{ variance.stock }}"
+                                    data-price="{{ variance.price }}"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editVarianceModal">
+                                    Edit
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">No variances found for this product</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card bg-dark">
+                    <div class="card-header text-light">
+                        Add New Variance
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{% url 'product_variance' product_id=product.product_id %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label text-light">Size (ml)</label>
+                                <select name="size" class="form-select" required>
+                                    <option value="">Select Size</option>
+                                    {% for size in sizes %}
+                                    <option value="{{ size.size_id }}">{{ size.size }} ml</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-light">Stock</label>
+                                <input type="number" name="stock" class="form-control" required min="0" placeholder="Enter stock quantity">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-light">Price</label>
+                                <input type="number" name="price" step="0.01" class="form-control" required min="0" placeholder="Enter price">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Add Variance</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Variance Modal -->
+    <div class="modal fade" id="editVarianceModal" tabindex="-1" aria-labelledby="editVarianceModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editVarianceModalLabel">Edit Variance</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editVarianceForm" method="POST" action="{% url 'product_variance' product_id=product.product_id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="variance_id" id="editVarianceId">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Size (ml)</label>
+                            <select name="size" id="editVarianceSize" class="form-select" required>
+                                <option value="">Select Size</option>
+                                {% for size in sizes %}
+                                <option value="{{ size.size_id }}">{{ size.size }} ml</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Stock</label>
+                            <input type="number" name="stock" id="editVarianceStock" class="form-control" required min="0">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Price</label>
+                            <input type="number" name="price" id="editVariancePrice" step="0.01" class="form-control" required min="0">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const editButtons = document.querySelectorAll('.edit-variance');
+    const editVarianceForm = document.getElementById('editVarianceForm');
+    const editVarianceId = document.getElementById('editVarianceId');
+    const editVarianceSize = document.getElementById('editVarianceSize');
+    const editVarianceStock = document.getElementById('editVarianceStock');
+    const editVariancePrice = document.getElementById('editVariancePrice');
+    
+    editButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const varianceId = this.dataset.varianceId;
+            const sizeId = this.dataset.size;
+            const stock = this.dataset.stock;
+            const price = this.dataset.price;
+            
+            // Set form values
+            editVarianceId.value = varianceId;
+            editVarianceSize.value = sizeId;
+            editVarianceStock.value = stock;
+            editVariancePrice.value = price;
+        });
+    });
+});
+</script>
+{% endblock %}

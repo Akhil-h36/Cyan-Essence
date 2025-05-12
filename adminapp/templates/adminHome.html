@@ -1,0 +1,293 @@
+{% extends 'layout.html' %}
+{% csrf_token %}
+{% load static %}
+
+{% block styles %} 
+
+
+
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid mt-3">
+      <div class="row">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+              <a href="/admin" class="text-light">Admin</a>
+            </li>
+            <li class="breadcrumb-item active text-info" aria-current="page">
+              Dashboard
+            </li>
+          </ol>
+        </nav>
+      </div>
+
+      <div class="row">
+        <div class="col-12">
+          <div class="card shadow-sm">
+            <div class="card-header bg-dark text-light">
+              <h5>Sales Report</h5>
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+
+                  <div class="dropdown float-end me-3">
+                    <button
+                      class="btn btn-dark dropdown-toggle px-4"
+                      id="filterDropdown"
+                      type="button"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                    >
+                      Daily
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="filterDropdown">
+                      <li>
+                        <a class="dropdown-item" href="#" data-value="Daily">Daily</a>
+                      </li>
+                      <li>
+                        <a class="dropdown-item" href="#" data-value="Weekly"
+                          >Weekly</a
+                        >
+                      </li>
+                      <li>
+                        <a class="dropdown-item" href="#" data-value="Monthly"
+                          >Monthly</a
+                        >
+                      </li>
+                      <li>
+                        <a class="dropdown-item" href="#" data-value="Yearly"
+                          >Yearly</a
+                        >
+                      </li>
+                      <li>
+                        <a
+                          class="dropdown-item"
+                          href="#"
+                          data-value="Custom Date Range"
+                          >Custom Date Range</a
+                        >
+                      </li>
+                    </ul>
+                  </div>
+                  <!-- Add download buttons -->
+                  <div class="ms-3">
+                    <button id="pdfDownload" class="btn btn-danger me-2">
+                      <i class="fas fa-file-pdf me-1"></i> PDF
+                    </button>
+                    <button id="excelDownload" class="btn btn-success">
+                      <i class="fas fa-file-excel me-1"></i> Excel
+                    </button>
+                  </div>
+                </div>
+                <!-- Custom Date Range Input Fields -->
+                <div id="customDateRange" class="d-none">
+                  <input
+                    type="date"
+                    id="startDate"
+                    class="form-control d-inline-block me-2"
+                    placeholder="Start Date"
+                  />
+                  <input
+                    type="date"
+                    id="endDate"
+                    class="form-control d-inline-block me-2"
+                    placeholder="End Date"
+                  />
+                  <button class="btn btn-primary">Apply</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-body bg-dark">
+              <!-- Table for Sales Report -->
+              <table class="table table-striped table-hover table-bordered">
+                <thead class="thead-dark">
+                  <tr>
+                    <th>Date</th>
+                    <th>Total Sales Revenue</th>
+                    <th>Discount Applied</th>
+                    <th>Net Sales</th>
+                    <th>Number of Orders</th>
+                    <th>Total Items Sold</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Dynamic rows with sales data will go here -->
+                  <tr>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                  </tr>
+                  <!-- Repeat for more rows -->
+                </tbody>
+              </table>
+
+              <!-- Overall Sales Summary -->
+              <div class="row mt-4">
+                <div class="col-md-4">
+                  <div class="card bg-light">
+                    <div class="card-body">
+                      <h6>Total Sales Count</h6>
+                      <p id="totalSalesCount" class="text-success fw-semibold">
+                        0 Orders
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="card bg-light">
+                    <div class="card-body">
+                      <h6>Overall Order Amount</h6>
+                      <p id="overallOrderAmount" class="text-success fw-semibold">
+                        0
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="card bg-light">
+                    <div class="card-body">
+                      <h6>Overall Discount</h6>
+                      <p id="overallDiscount" class="text-success fw-semibold">0</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- Chart Section -->
+        <div class="col-12 mt-5">
+          <div class="card shadow-sm">
+            <div class="card-header bg-dark text-light">
+              <h5>Sales Chart</h5>
+              <div class="d-flex align-items-center">
+                <!-- Dropdown to filter chart data -->
+                <div class="dropdown float-end me-3">
+                  <button
+                    class="btn btn-dark dropdown-toggle px-4"
+                    id="chartFilterDropdown"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                  >
+                    Monthly
+                  </button>
+                  <ul class="dropdown-menu" aria-labelledby="chartFilterDropdown">
+                    <li>
+                      <a class="dropdown-item" href="#" data-value="Daily">Daily</a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="#" data-value="Weekly"
+                        >Weekly</a
+                      >
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="#" data-value="Monthly"
+                        >Monthly</a
+                      >
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="#" data-value="Yearly"
+                        >Yearly</a
+                      >
+                    </li>
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        href="#"
+                        data-value="Custom Date Range"
+                        >Custom Date Range</a
+                      >
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-body bg-dark">
+              <!-- Chart Container -->
+              <canvas id="salesChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row"></div>
+        <!-- Best Selling Products Section -->
+        <div class="container-fluid mt-5">
+          <div class="card shadow-sm">
+            <div class="card-header bg-dark text-light">
+              <h5>Best Selling Products (Top 10)</h5>
+            </div>
+            <div class="card-body bg-dark">
+              <table class="table table-dark table-striped table-hover table-bordered">
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Product Image</th>
+                    <th>Product Name</th>
+                    <th>Popularity</th>
+                  </tr>
+                </thead>
+                <tbody id="bestSellingProducts">
+                  <!-- Dynamic Product Rows will go here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      
+        <!-- Best Selling Categories Section -->
+        <div class="container-fluid mt-5">
+          <div class="card shadow-sm">
+            <div class="card-header bg-dark text-light">
+              <h5>Best Selling Categories (Top 3)</h5>
+            </div>
+            <div class="card-body bg-dark">
+              <table class="table table-dark table-striped table-hover table-bordered">
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Category Name</th>
+                    <th>Popularity</th>
+                  </tr>
+                </thead>
+                <tbody id="bestSellingCategories">
+                  <!-- Dynamic Category Rows will go here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detailed Orders Modal -->
+
+  {% endblock %}
+
+
+  {% block extra_scripts %}
+    <!-- Load jsPDF first -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Then load the autotable plugin -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <!-- Other libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Your scripts -->
+    <script src="{% static 'js/adminHome.js' %}"></script>
+    <script src="{% static 'js/salesData.js' %}"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %}
+</div>

@@ -1,0 +1,84 @@
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg bg-dark shadow-lg ">
+  <div class="container-fluid mx-5">
+    <a class="navbar-brand" href="#">
+      <h1 class="logo-text">cyan essence</h1>
+    </a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
+      <form class="d-flex col-md-4" role="search">
+        <input
+          class="form-control me-2 custom-search-input"
+          type="search"
+          placeholder="Search"
+          aria-label="Search"
+        />
+        <button class="btn btn-outline-light rounded-pill custom-search-button px-4" type="submit">Search</button>
+      </form>
+      <div class="col-md-4 d-flex align-items-center justify-content-end">
+        <div class="d-flex gap-3">
+          <a href="#">
+            <i class="fas fa-user-circle fa-2x text-light"></i>
+          </a>
+          <form action="/admin/logout" method="POST" style="display: inline;">
+            <button type="submit" class="btn btn-outline-light rounded-pill ms-3 px-4">Logout</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<style>
+  .navbar-dark .navbar-nav .nav-link {
+    color: #f8f9fa; /* Light text color for nav links */
+  }
+
+  .navbar-dark .navbar-nav .nav-link:hover {
+    color: #d6d6d6; /* Slightly lighter color on hover */
+  }
+
+  .navbar-dark .navbar-brand img {
+    filter: invert(1); /* Invert colors for logo if needed */
+  }
+
+  
+
+  .btn-outline-light.custom-search-button {
+    border-color: #e9ecef; /* Light border for button */
+    color: #e9ecef; /* Light text color for button */
+  }
+
+  .btn-outline-light.custom-search-button:hover {
+    background-color: #495057; /* Darker background on hover */
+    color: #ffffff; /* White text color on hover */
+  }
+
+  .btn-outline-light {
+    border-color: #ffffff; /* Light border for buttons */
+    color: #ffffff; /* Light text color for buttons */
+  }
+
+  .btn-outline-light:hover {
+    background-color: #ffffff; /* Light background on hover */
+    color: #000000; /* Dark text color on hover */
+  }
+  .logo-text {
+    font-size: 2rem; 
+    font-weight: bold;
+    color: #c99929;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  
+</style>

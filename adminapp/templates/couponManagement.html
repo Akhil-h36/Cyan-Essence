@@ -1,0 +1,378 @@
+{% extends 'layout.html' %}
+{% load myshop_filters %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+  <div class="row">
+    <!-- Main content -->
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+          <a href="/adminapp/" class="text-light">Admin</a>
+        </li>
+        <li class="breadcrumb-item active text-info" aria-current="page">
+          Coupon Management
+        </li>
+      </ol>
+    </nav>
+    <div class="container">
+      <div class="row">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h3 class="text-light">Coupon Management</h3>
+          <button
+            type="button"
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#addCouponModal"
+          >
+            Add New Coupon
+          </button>
+        </div>
+        {% if coupons.count == 0 %}
+          <div class="alert alert-info text-center" role="alert">No coupons found.</div>
+        {% else %}
+          <!-- Coupon Table -->
+          <div class="table-responsive">
+            <table class="table text-center">
+              <thead class="table-dark">
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Coupon Code</th>
+                  <th scope="col">Discount</th>
+                  <th scope="col">Max Discount</th>
+                  <th scope="col">Min Cart Value</th>
+                  <th scope="col">Usage Limit</th>
+                  <th scope="col">Valid From</th>
+                  <th scope="col">Valid Until</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Loop through coupons data -->
+                {% for coupon in coupons %}
+                  <tr data-coupon-id="{{ coupon.id }}">
+                    <th scope="row">{{ forloop.counter|add:coupons.start_index|add:-1 }}</th>
+                    <td id="couponCodeDisplay{{ coupon.id }}">{{ coupon.coupon_code }}</td>
+                    <td id="discountTypeDisplay{{ coupon.id }}">
+                      {% if coupon.discount_type == 'percentage' %}
+                        {{ coupon.discount_value }}%
+                      {% else %}
+                        ₹{{ coupon.discount_value }}
+                      {% endif %}
+                    </td>
+                    <td id="maxDiscountValueDisplay{{ coupon.id }}">
+                      {% if coupon.max_discount_value %}
+                        ₹{{ coupon.max_discount_value }}
+                      {% else %}
+                        -
+                      {% endif %}
+                    </td>
+                    <td id="minCartValueDisplay{{ coupon.id }}">
+                      {% if coupon.min_order_amount %}
+                        ₹{{ coupon.min_order_amount }}
+                      {% else %}
+                        -
+                      {% endif %}
+                    </td>
+                    <td id="usageLimitDisplay{{ coupon.id }}">
+                      {% if coupon.usage_limit %}
+                        {{ coupon.usage_limit }}
+                      {% else %}
+                        Unlimited
+                      {% endif %}
+                    </td>
+                    <td id="validFromDisplay{{ coupon.id }}">
+                      {{ coupon.valid_from|date:"Y-m-d" }}
+                    </td>
+                    <td id="validUntilDisplay{{ coupon.id }}">
+                      {{ coupon.valid_to|date:"Y-m-d" }}
+                    </td>
+                    <td>
+                      <span 
+                        id="isActiveDisplay{{ coupon.id }}" 
+                        class="badge w-100 py-2 {% if coupon.is_active %}bg-success{% else %}bg-danger{% endif %}" 
+                        style="cursor: pointer;" 
+                        onclick="toggleCouponStatus('{{ coupon.id }}')">
+                        {% if coupon.is_active %}Active{% else %}Inactive{% endif %}
+                      </span>
+                    </td>
+                    <td class="d-flex gap-2">
+                      <button class="btn btn-outline-light w-100" data-bs-toggle="modal" data-bs-target="#editCouponModal{{ coupon.id }}">Edit</button>
+                      <button class="btn btn-outline-danger w-100" onclick="deleteCoupon('{{ coupon.id }}')">Delete</button>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endif %}
+        <!-- Pagination Controls -->
+        {% if coupons.paginator.num_pages > 1 %}
+        <nav aria-label="Page navigation">
+          <ul class="pagination justify-content-center">
+            <!-- Previous page -->
+            {% if coupons.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ coupons.previous_page_number }}" aria-label="Previous">
+                  <span aria-hidden="true">&laquo;</span>
+                </a>
+              </li>
+            {% else %}
+              <li class="page-item disabled">
+                <a class="page-link" href="#" aria-label="Previous">
+                  <span aria-hidden="true">&laquo;</span>
+                </a>
+              </li>
+            {% endif %}
+            
+            <!-- Page numbers -->
+            {% for i in coupons.paginator.page_range %}
+              {% if coupons.number == i %}
+                <li class="page-item active">
+                  <a class="page-link" href="#">{{ i }}</a>
+                </li>
+              {% elif i > coupons.number|add:'-3' and i < coupons.number|add:'3' %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                </li>
+              {% endif %}
+            {% endfor %}
+            
+            <!-- Next page -->
+            {% if coupons.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ coupons.next_page_number }}" aria-label="Next">
+                  <span aria-hidden="true">&raquo;</span>
+                </a>
+              </li>
+            {% else %}
+              <li class="page-item disabled">
+                <a class="page-link" href="#" aria-label="Next">
+                  <span aria-hidden="true">&raquo;</span>
+                </a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+      {% endif %}
+        <!-- End of Pagination Controls -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap Modal for Adding Coupon -->
+<div
+  class="modal fade"
+  id="addCouponModal"
+  tabindex="-1"
+  aria-labelledby="addCouponModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark text-light">
+      <div class="modal-header bg-dark text-light">
+        <h5 class="modal-title" id="addCouponModalLabel">Add New Coupon</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <!-- Add Coupon Form -->
+        <form id="addCouponform" action="/adminapp/coupons/" method="POST"> 
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="couponCode" class="form-label">Coupon Code</label>
+            <input
+              type="text"
+              class="form-control custom-search-input"
+              id="couponCode"
+              placeholder="Enter Coupon Code"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="description" class="form-label">Description (Optional)</label>
+            <textarea
+              class="form-control custom-search-input"
+              id="description"
+              placeholder="Enter Coupon Description"
+            ></textarea>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="discountType" class="form-label">Discount Type</label>
+              <select class="form-select" id="discountType" required>
+                <option value="" selected>Select Discount Type</option>
+                <option value="percentage">Percentage</option>
+                <option value="fixed">Fixed Amount</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="discountValue" class="form-label">Discount Value</label>
+              <input
+                type="number"
+                class="form-control custom-search-input"
+                id="discountValue"
+                placeholder="Enter Discount Value"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="maxDiscountValue" class="form-label">Max Discount Value (Optional)</label>
+              <input
+                type="number"
+                class="form-control custom-search-input"
+                id="maxDiscountValue"
+                placeholder="Enter Max Discount Value"
+              />
+            </div>
+            <div class="col-md-6">
+              <label for="minCartValue" class="form-label">Minimum Cart Value (Optional)</label>
+              <input
+                type="number"
+                class="form-control custom-search-input"
+                id="minCartValue"
+                placeholder="Enter Minimum Cart Value"
+              />
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="validFrom" class="form-label">Valid From</label>
+              <input
+                type="date"
+                class="form-control custom-search-input"
+                id="validFrom"
+                required
+              />
+            </div>
+            <div class="col-md-6">
+              <label for="validUntil" class="form-label">Valid Until</label>
+              <input
+                type="date"
+                class="form-control custom-search-input"
+                id="validUntil"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="usageLimit" class="form-label">Usage Limit (Optional)</label>
+              <input
+                type="number"
+                class="form-control custom-search-input"
+                id="usageLimit"
+                placeholder="Enter Usage Limit"
+              />
+            </div>
+            <div class="col-md-6">
+              <label for="isActive" class="form-label">Coupon Status</label>
+              <select class="form-select" id="isActive" required>
+                <option value="true" selected>Active</option>
+                <option value="false">Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Add Coupon</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Coupon Modals (one for each coupon) -->
+{% for coupon in coupons %}
+  <div class="modal fade" id="editCouponModal{{ coupon.id }}" tabindex="-1" aria-labelledby="editCouponModalLabel{{ coupon.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content bg-dark text-light">
+        <div class="modal-header bg-dark text-light">
+          <h5 class="modal-title" id="editCouponModalLabel{{ coupon.id }}">Edit Coupon</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form class="edit-coupon-form" action="/adminapp/coupons/" method="POST" data-coupon-id="{{ coupon.id }}">
+            {% csrf_token %}
+            <label for="couponCode{{ coupon.id }}" class="form-label">Coupon Code</label>
+              <input type="text" class="form-control custom-search-input" id="couponCode{{ coupon.id }}" value="{{ coupon.coupon_code }}" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="description{{ coupon.id }}" class="form-label">Description (Optional)</label>
+              <textarea class="form-control custom-search-input" id="description{{ coupon.id }}">{{ coupon.description }}</textarea>
+            </div>
+
+            <div class="mb-3">
+              <label for="discountType{{ coupon.id }}" class="form-label">Discount Type</label>
+              <select class="form-select" id="discountType{{ coupon.id }}" required>
+                <option value="percentage" {% if coupon.discount_type == 'percentage' %}selected{% endif %}>Percentage</option>
+                <option value="fixed" {% if coupon.discount_type == 'fixed' %}selected{% endif %}>Fixed Amount</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="discountValue{{ coupon.id }}" class="form-label">Discount Value</label>
+              <input type="number" class="form-control custom-search-input" id="discountValue{{ coupon.id }}" value="{{ coupon.discount_value }}" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="maxDiscountValue{{ coupon.id }}" class="form-label">Max Discount Value (Optional)</label>
+              <input type="number" class="form-control custom-search-input" id="maxDiscountValue{{ coupon.id }}" value="{{ coupon.max_discount_value|default:'' }}">
+            </div>
+
+            <div class="mb-3">
+              <label for="minCartValue{{ coupon.id }}" class="form-label">Minimum Cart Value (Optional)</label>
+              <input type="number" class="form-control custom-search-input" id="minCartValue{{ coupon.id }}" value="{{ coupon.min_order_amount|default:'' }}">
+            </div>
+
+            <!-- Valid From field -->
+            <div class="mb-3">
+              <label for="validFrom{{ coupon.id }}" class="form-label">Valid From</label>
+              <input type="date" class="form-control custom-search-input" id="validFrom{{ coupon.id }}" value="{{ coupon.valid_from|date:'Y-m-d' }}" required>
+            </div>
+
+            <!-- Valid Until field -->
+            <div class="mb-3">
+              <label for="validUntil{{ coupon.id }}" class="form-label">Valid Until</label>
+              <input type="date" class="form-control custom-search-input" id="validUntil{{ coupon.id }}" value="{{ coupon.valid_to|date:'Y-m-d' }}" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="usageLimit{{ coupon.id }}" class="form-label">Usage Limit (Optional)</label>
+              <input type="number" class="form-control custom-search-input" id="usageLimit{{ coupon.id }}" value="{{ coupon.usage_limit|default:'' }}">
+            </div>
+
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" id="isActive{{ coupon.id }}" {% if coupon.is_active %}checked{% endif %}>
+              <label class="form-check-label" for="isActive{{ coupon.id }}">Is Active</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Update Coupon</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endfor %}
+{% endblock %}
+
+{% block extra_scripts %}
+  <script src="{% static 'js/couponManagement.js' %}"></script>
+{% endblock %}
+
+
+

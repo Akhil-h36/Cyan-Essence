@@ -1,0 +1,965 @@
+{% extends 'sidebar.html' %}
+{% load static %}
+
+{% block styles %}
+<style>
+  header {
+    height: 200px;
+    background-image: url('/api/placeholder/400/320');
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.4));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .header-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+  }
+  :root {
+        --teal:  #1b4a4a;
+        --light-teal: #1d5858;
+        --skyblueoff: #227870;
+        --light-skyblueoff: #45b59b;
+        --dark-teal: #006666;
+        --red: #c12e2a;
+        --light-red: #dc3545;
+        --dark-red: #a82a26;
+      }
+      
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: 'Gruppo', sans-serif;
+        background-color: #f9f9f9;
+        color: #333;
+        line-height: 1.6;
+      }
+      
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeIn 1s ease forwards;
+      }
+      
+      @keyframes fadeIn {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+      }
+      
+      .logo {
+        font-family: 'Grey Qo', cursive;
+        font-size: 2.5rem;
+        color: var(--teal);
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        transform: scale(0);
+        animation: scaleIn 0.8s ease-out 0.3s forwards;
+      }
+      
+      @keyframes scaleIn {
+        to {
+          transform: scale(1);
+        }
+      }
+      
+      .confirmation-card {
+        background: linear-gradient(135deg, var(--light-teal), var(--light-skyblueoff));
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+        transform: translateY(50px);
+        opacity: 0;
+        animation: slideUp 0.8s ease 0.5s forwards;
+      }
+      
+      /* Failed payment style for confirmation card */
+      .confirmation-card.payment-failed {
+        background: linear-gradient(135deg, var(--light-red), var(--red));
+      }
+      
+      @keyframes slideUp {
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      
+      .confirmation-card::before {
+        content: '';
+        position: absolute;
+        width: 200%;
+        height: 200%;
+        top: -50%;
+        left: -50%;
+        background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 60%);
+        transform: rotate(45deg);
+        z-index: 0;
+        opacity: 0;
+        animation: shimmer 3s ease-in-out 1s infinite;
+      }
+      
+      @keyframes shimmer {
+        0% { opacity: 0; transform: rotate(45deg) translateY(30px); }
+        30% { opacity: 0.4; }
+        70% { opacity: 0.1; }
+        100% { opacity: 0; transform: rotate(45deg) translateY(-30px); }
+      }
+      
+      .confirmation-title {
+        font-family: 'Grey Qo', cursive;
+        font-size: 2.8rem;
+        margin-bottom: 5px;
+        color: white;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      }
+      
+      .confirmation-subtitle {
+        font-size: 1.2rem;
+        color: white;
+        text-align: center;
+        margin-bottom: 20px;
+        position: relative;
+        z-index: 1;
+      }
+      
+      .confirmation-icon {
+        width: 70px;
+        height: 70px;
+        background-color: white;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto 20px;
+        position: relative;
+        z-index: 1;
+        transform: scale(0);
+        animation: pulseIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1s forwards;
+      }
+      
+      @keyframes pulseIn {
+        0% { transform: scale(0); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+      }
+      
+      .confirmation-icon::before {
+        content: '✓';
+        font-size: 2rem;
+        color: var(--teal);
+      }
+      
+      /* Failed payment icon */
+      .confirmation-icon.payment-failed::before {
+        content: '✕';
+        color: var(--red);
+      }
+      
+      .details-section {
+        background-color: white;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        transform: scale(0.9);
+        opacity: 0;
+        animation: popIn 0.6s ease 1.2s forwards;
+      }
+      
+      @keyframes popIn {
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      
+      .details-title {
+        font-size: 1.5rem;
+        color: var(--teal);
+        margin-bottom: 15px;
+        border-bottom: 2px solid var(--light-skyblueoff);
+        padding-bottom: 10px;
+        display: flex;
+        align-items: center;
+      }
+      
+      .details-title::before {
+        content: '';
+        display: inline-block;
+        width: 5px;
+        height: 20px;
+        background: linear-gradient(to bottom, var(--teal), var(--skyblueoff));
+        margin-right: 10px;
+        border-radius: 3px;
+      }
+      
+      .order-info {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+      }
+      
+      .info-item {
+        margin-bottom: 12px;
+      }
+      
+      .info-label {
+        font-weight: bold;
+        color: var(--dark-teal);
+        font-size: 0.9rem;
+        display: block;
+        margin-bottom: 4px;
+      }
+      
+      .info-value {
+        font-size: 1.1rem;
+      }
+      
+      .products-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+      }
+      
+      .products-table th {
+        background-color: var(--light-skyblueoff);
+        color: var(--dark-teal);
+        text-align: left;
+        padding: 12px;
+        font-weight: normal;
+      }
+      
+      .products-table td {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+      }
+      
+      .products-table tr:nth-child(even) {
+        background-color: rgba(135, 206, 235, 0.1);
+      }
+      
+      .product-row {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      
+      .product-row:nth-child(1) { animation: slideInRight 0.5s ease 1.5s forwards; }
+      .product-row:nth-child(2) { animation: slideInRight 0.5s ease 1.7s forwards; }
+      .product-row:nth-child(3) { animation: slideInRight 0.5s ease 1.9s forwards; }
+      
+      @keyframes slideInRight {
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      
+      .total-row {
+        font-weight: bold;
+        background-color: rgba(0, 128, 128, 0.05) !important;
+      }
+      
+      .button {
+        display: inline-block;
+        padding: 12px 25px;
+        background: linear-gradient(to right, var(--teal), var(--skyblueoff));
+        color: white;
+        border: none;
+        border-radius: 50px;
+        font-family: 'Gruppo', sans-serif;
+        font-size: 1.1rem;
+        cursor: pointer;
+        text-decoration: none;
+        box-shadow: 0 5px 15px rgba(0,128,128,0.2);
+        transition: all 0.3s ease;
+        margin-right: 10px;
+        margin-bottom: 10px;
+        position: relative;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      
+      .continue-btn { animation: fadeButton 0.5s ease 2.1s forwards; }
+      .view-orders-btn { animation: fadeButton 0.5s ease 2.3s forwards; }
+      
+      @keyframes fadeButton {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      
+      .button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,128,128,0.3);
+      }
+      
+      .button:active {
+        transform: translateY(-1px);
+      }
+      
+      .button::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255,255,255,0.3);
+        border-radius: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        transition: transform 0.4s ease-out;
+      }
+      
+      .button:hover::after {
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 0;
+      }
+      
+      .footer {
+        text-align: center;
+        margin-top: 40px;
+        color: #777;
+        font-size: 0.9rem;
+        opacity: 0;
+        animation: fadeIn 1s ease 2.5s forwards;
+      }
+      
+      .wave {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 15px;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z' opacity='.25' fill='%23008080'%3E%3C/path%3E%3Cpath d='M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z' opacity='.5' fill='%2387CEEB'%3E%3C/path%3E%3Cpath d='M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z' fill='%235fb5b5'%3E%3C/path%3E%3C/svg%3E") repeat-x;
+        animation: wave 20s linear infinite;
+      }
+      
+      /* Failed payment wave */
+      .confirmation-card.payment-failed .wave {
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z' opacity='.25' fill='%23c12e2a'%3E%3C/path%3E%3Cpath d='M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z' opacity='.5' fill='%23dc3545'%3E%3C/path%3E%3Cpath d='M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z' fill='%23a82a26'%3E%3C/path%3E%3C/svg%3E") repeat-x;
+      }
+      
+      @keyframes wave {
+        0% { background-position: 0; }
+        100% { background-position: 1200px; }
+      }
+      
+      @media (max-width: 768px) {
+        .order-info {
+          grid-template-columns: 1fr;
+        }
+        
+        .products-table {
+          font-size: 0.9rem;
+        }
+        
+        .confirmation-title {
+          font-size: 2.2rem;
+        }
+      }
+      .order-card {
+          border: 1px solid #e0e0e0;
+          border-radius: 8px;
+          padding: 20px;
+          margin-bottom: 20px;
+          transition: box-shadow 0.3s ease;
+      }
+      
+      .order-card:hover {
+          box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      }
+      
+      .order-header {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 15px;
+      }
+      
+      .order-id {
+          font-weight: bold;
+          color: var(--teal);
+      }
+      
+      .order-status {
+          padding: 5px 10px;
+          border-radius: 4px;
+          font-size: 0.9rem;
+      }
+      
+      .status-pending {
+          background-color: #FFF3CD;
+          color: #856404;
+      }
+      
+      .status-processing {
+          background-color: #CCE5FF;
+          color: #004085;
+      }
+      
+      .status-shipped {
+          background-color: #D4EDDA;
+          color: #155724;
+      }
+      
+      .status-delivered {
+          background-color: #D1ECF1;
+          color: #0C5460;
+      }
+      
+      .status-canceled {
+          background-color: #F8D7DA;
+          color: #721C24;
+      }
+      
+      .status-returned {
+          background-color: #E2E3E5;
+          color: #383D41;
+      }
+      
+      .order-details {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 15px;
+      }
+      
+      .detail-item {
+          margin-bottom: 10px;
+      }
+      
+      .detail-label {
+          font-weight: bold;
+          color: var(--dark-teal);
+          font-size: 0.9rem;
+      }
+      
+      .order-actions {
+          margin-top: 15px;
+          display: flex;
+          gap: 10px;
+      }
+      
+      .btn {
+          padding: 8px 15px;
+          border-radius: 4px;
+          text-decoration: none;
+          font-size: 0.9rem;
+          transition: all 0.3s ease;
+      }
+      
+      .btn-view {
+          background-color: var(--teal);
+          color: white;
+      }
+      
+      .btn-invoice {
+          background-color: var(--skyblueoff);
+          color: white;
+      }
+      
+      .btn-cancel {
+          background-color: #DC3545;
+          color: white;
+      }
+      
+      .btn-return {
+          background-color: #6C757D;
+          color: white;
+      }
+      
+      .btn:hover {
+          opacity: 0.9;
+          transform: translateY(-2px);
+      }
+      
+      @media (max-width: 768px) {
+          .order-details {
+              grid-template-columns: 1fr;
+          }
+      }
+      .tracking-timeline {
+      display: flex;
+      justify-content: space-between;
+      margin: 30px 0;
+      position: relative;
+  }
+  
+  .tracking-timeline::before {
+      content: '';
+      position: absolute;
+      top: 25px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: #e0e0e0;
+      z-index: 0;
+  }
+  
+  .timeline-step {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      width: 25%;
+  }
+  
+  .step-icon {
+      width: 50px;
+      height: 50px;
+      background-color: #e0e0e0;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 10px;
+      font-weight: bold;
+      color: #777;
+  }
+  
+  .timeline-step.active .step-icon {
+      background-color: var(--teal);
+      color: white;
+  }
+  
+  .step-info h4 {
+      margin: 0;
+      font-size: 14px;
+      color: var(--dark-teal);
+  }
+  
+  .step-info p {
+      margin: 5px 0 0;
+      font-size: 12px;
+      color: #777;
+  }
+  .retry-payment-btn {
+      background: linear-gradient(to right, #d9534f, #dc3545);
+      animation: fadeButton 0.5s ease 2.1s forwards;
+  }
+  .retry-payment-btn {
+      background: linear-gradient(to right, #d9534f, #dc3545);
+      animation: fadeButton 0.5s ease 2.1s forwards;
+  }
+  
+  /* Add status color for failed payment */
+  .status-failed {
+      background-color: #F8D7DA;
+      color: #721C24;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+  }
+  .retry-payment-btn {
+      background: linear-gradient(to right, #d9534f, #c12e2a);
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      margin-top: 10px;
+      transition: all 0.3s ease;
+  }
+  
+  .retry-payment-btn:hover {
+      background: linear-gradient(to right, #c12e2a, #a82a26);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  </style>
+{% endblock %}
+
+{% block content %}
+<header>
+	<img src="{% static 'images/checkoutbanner.webp' %}" alt="Shopping Cart" class="header-image" />
+	<div class="hero-overlay"></div>
+	<nav>
+		<ul>
+			<li><a href="#">HOME</a></li>
+			<li><a href="#">PRODUCTS</a></li>
+		</ul>
+	</nav>
+</header>
+<div class="container-fluid mt-5">
+    
+  <div class="confirmation-card {% if order.payment_status == 'Failed' or order.payment_status == 'failed' %}payment-failed{% endif %}">
+      
+    <h1 class="confirmation-title">
+      {% if order.payment_status == 'failed' or order.payment_status == 'failed' %}
+        Payment failed
+      {% else %}
+        Order Confirmed!
+      {% endif %}
+    </h1>
+    <p class="confirmation-subtitle">
+      {% if order.payment_status == 'failed' or order.payment_status == 'failed' %}
+        Your order requires payment
+      {% else %}
+        Thank you for your purchase
+      {% endif %}
+    </p>
+    <div class="confirmation-icon {% if order.payment_status == 'Failed' or order.payment_status == 'failed' %}payment-failed{% endif %}"></div>
+    <div class="wave"></div>
+  </div>
+  {% if order.payment_status == 'failed' %}
+  <div class="details-section">
+      <h2 class="details-title">Payment Failed</h2>
+      <p>Your payment was not completed. Please try again to complete your order.</p>
+      
+      <div style="margin-top: 20px;">
+          <a href="{% url 'retry_payment' order.id %}" class="button retry-payment-btn">
+              Retry Payment
+          </a>
+      </div>
+  </div>
+  {% endif %}
+    <div class="details-section">
+      <h2 class="details-title">Order Details</h2>
+      <div class="order-info">
+
+        <div class="info-item">
+          <span class="info-label">Payment Status</span>
+          <span class="info-value status-{{ order.payment_status|lower }}">{{ order.payment_status }}</span>
+        </div>
+
+          <div class="info-item">
+              <span class="info-label">Order ID</span>
+              <span class="info-value">#{{ order_id }}</span>
+          </div>
+          <div class="info-item">
+              <span class="info-label">Order Date</span>
+              <span class="info-value">{{ order_date }}</span>
+          </div>
+          <div class="info-item">
+              <span class="info-label">Grand Total</span>
+              <span class="info-value"> ₹ {{ order.grand_total }}</span>
+          </div>
+          <div class="info-item">
+              <span class="info-label">Payment Method</span>
+              <span class="info-value">{{ payment_method }}</span>
+          </div>
+          <div class="info-item">
+              <span class="info-label">Shipping Address</span>
+              <span class="info-value">{{ delivery_address }}</span>
+          </div>
+          
+          <div class="info-item">
+            <span class="info-label">Expected Delivery</span>
+            <span class="info-value">{{ expected_delivery }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Order Status</span>
+            <span class="info-value status-{{ order.order_status|lower }}">{{ order.order_status }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Payment Status</span>
+            <span class="info-value status-{{ order.payment_status|lower }}">{{ order.payment_status }}</span>
+        </div>
+      </div>
+  </div>
+  <!-- tracking section -->
+    <div class="details-section">
+      <h2 class="details-title">Order Tracking</h2>
+      <div class="tracking-timeline">
+          <div class="timeline-step {% if order.order_status != 'Pending' %}active{% endif %}">
+              <div class="step-icon"><i class="fa-solid fa-check"></i></div>
+              <div class="step-info">
+                  <h4>Order Placed</h4>
+                  <p>{{ order_date }}</p>
+              </div>
+          </div>
+          <div class="timeline-step {% if order.order_status == 'Processing' or order.order_status == 'Shipped' or order.order_status == 'Delivered' %}active{% endif %}">
+              <div class="step-icon"><i class="fa-solid fa-clipboard"></i></div>
+              <div class="step-info">
+                  <h4>Processing</h4>
+                  <p>Your order is being processed </p>
+              </div>
+          </div>
+          <div class="timeline-step {% if order.order_status == 'Shipped' or order.order_status == 'Delivered' %}active{% endif %}">
+              <div class="step-icon"><i class="fa-solid fa-truck-fast"></i></div>
+              <div class="step-info">
+                  <h4>Shipped</h4>
+                  <p>Your order is on the way</p>
+              </div>
+          </div>
+          <div class="timeline-step {% if order.order_status == 'Delivered' %}active{% endif %}">
+              <div class="step-icon"><i class="fa-solid fa-spray-can-sparkles"></i></div>
+              <div class="step-info">
+                  <h4>Delivered</h4>
+                  <p>Expected by {{ expected_delivery }}</p>
+              </div>
+          </div>
+      </div>
+  </div>
+
+<!-- bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb -->
+  <div class="details-section">
+      <h2 class="details-title">Products</h2>
+      <table class="products-table">
+          <thead>
+              <tr>
+                  <th>Product</th>
+                  <th>Quantity</th>
+                  <th>Price</th>
+                  <th>Total</th>
+              </tr>
+          </thead>
+          <tbody>
+              {% for item in cart_items %}
+              <tr class="product-row">
+                  <td>{{ item.product_variation.product.product_name }}</td>
+                  <td>{{ item.quantity }}</td>
+                  <td>${{ item.price }}</td>
+                  <td>${{ item.total_price }}</td>
+              </tr>
+              {% endfor %}
+              <tr class="product-row total-row">
+                  <td colspan="3">Subtotal</td>
+                  <td>${{ grand_total }}</td>
+              </tr>
+          </tbody>
+      </table>
+  </div>
+
+    <div id="cancelModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Cancel Order</h3>
+            <p>Are you sure you want to cancel this order?</p>
+            <textarea id="cancelReason" placeholder="Reason for cancellation (optional)" rows="3"></textarea>
+            <div class="modal-actions">
+                <button id="confirmCancel" class="btn btn-cancel">Confirm Cancel</button>
+                <button class="btn btn-secondary close-modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="returnModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Return Order</h3>
+            <p>Please provide the reason for returning this order.</p>
+            <textarea id="returnReason" placeholder="Reason for return (required)" rows="3" required></textarea>
+            <div class="modal-actions">
+                <button id="confirmReturn" class="btn btn-return">Submit Return</button>
+                <button class="btn btn-secondary close-modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="details-section">
+      <h2 class="details-title">What's Next?</h2>
+      <p>You will receive an email confirmation shortly at {{ order.user.email }}. We'll notify you when your order ships.</p>
+      <p>For any questions about your order, please contact our customer service at support@essenceelite.com or call us at 1-800-PERFUME.</p>
+      <div style="margin-top: 25px;">
+        <a href="{% url 'myshop' %}" class="button continue-btn">Continue Shopping</a>
+        <a href="{% url 'myorders' %}" class="button view-orders-btn">View All Orders</a>
+      </div>
+    </div>
+    
+  </div>
+  
+
+{% endblock %}
+
+{% block extra_scripts %} 
+<script>
+  // Add to your extra_scripts block
+function refreshOrderStatus() {
+    fetch(`/api/order-status/${currentOrderId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.order_status !== '{{ order.order_status }}') {
+                // Update status on page without full reload
+                document.querySelector('.order-status').textContent = data.order_status;
+                document.querySelector('.order-status').className = 
+                    'order-status status-' + data.order_status.toLowerCase();
+                
+                // Update tracking timeline
+                updateTrackingTimeline(data.order_status);
+            }
+        });
+}
+
+// Check every 60 seconds
+setInterval(refreshOrderStatus, 60000);
+    let currentOrderId = null;
+    
+    function showCancelModal(orderId) {
+        currentOrderId = orderId;
+        document.getElementById('cancelModal').style.display = 'block';
+    }
+    
+    function showReturnModal(orderId) {
+        currentOrderId = orderId;
+        document.getElementById('returnModal').style.display = 'block';
+    }
+    
+    // Close modals when clicking X or cancel button
+    document.querySelectorAll('.close, .close-modal').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.style.display = 'none';
+            });
+        });
+    });
+    
+    // Confirm cancel order
+    document.getElementById('confirmCancel').addEventListener('click', function() {
+        const reason = document.getElementById('cancelReason').value;
+        
+        fetch(`/orders/${currentOrderId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ reason: reason })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Order canceled successfully');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred');
+        });
+    });
+    
+    // Confirm return order
+    document.getElementById('confirmReturn').addEventListener('click', function() {
+        const reason = document.getElementById('returnReason').value;
+        
+        if (!reason) {
+            alert('Please provide a reason for return');
+            return;
+        }
+        
+        fetch(`/orders/${currentOrderId}/return/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ reason: reason })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Return request submitted successfully');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred');
+        });
+    });
+</script>
+<script>
+  // Set the current order ID when the page loads
+  document.addEventListener('DOMContentLoaded', function() {
+      currentOrderId = {{ order.id }};  // Make sure this matches your template variable
+  });
+  
+  // Add to your extra_scripts block
+  function refreshOrderStatus() {
+      if (!currentOrderId) return;  // Don't proceed if we don't have an order ID
+      
+      fetch(`/api/order-status/${currentOrderId}/`)
+          .then(response => {
+              if (!response.ok) {
+                  throw new Error('Network response was not ok');
+              }
+              return response.json();
+          })
+          .then(data => {
+              if (data.order_status !== '{{ order.order_status }}') {
+                  // Update status on page without full reload
+                  document.querySelector('.order-status').textContent = data.order_status;
+                  document.querySelector('.order-status').className = 
+                      'order-status status-' + data.order_status.toLowerCase();
+                  
+                  // Update tracking timeline
+                  updateTrackingTimeline(data.order_status);
+              }
+          })
+          .catch(error => {
+              console.error('Error fetching order status:', error);
+          });
+  }
+  
+  // Check every 60 seconds
+  setInterval(refreshOrderStatus, 60000);
+  </script>
+  <script>
+    function updateTrackingTimeline(status) {
+        // Reset all steps
+        document.querySelectorAll('.timeline-step').forEach(step => {
+            step.classList.remove('active');
+        });
+    
+        // Activate steps based on status
+        const steps = document.querySelectorAll('.timeline-step');
+        
+        // Always activate first step (Order Placed)
+        steps[0].classList.add('active');
+        
+        if (status === 'Processing' || status === 'Shipped' || status === 'Delivered') {
+            steps[1].classList.add('active');
+        }
+        if (status === 'Shipped' || status === 'Delivered') {
+            steps[2].classList.add('active');
+        }
+        if (status === 'Delivered') {
+            steps[3].classList.add('active');
+        }
+    }
+    </script>
+{% endblock %}

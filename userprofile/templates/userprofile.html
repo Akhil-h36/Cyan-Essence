@@ -1,0 +1,512 @@
+{% extends 'profiletemplate.html' %}
+
+{% load static %}
+
+{% block styles %}
+<style>
+    .input-group {
+        position: relative;
+        margin-bottom: 15px;
+    }
+    
+    .input-field {
+        transition: all 0.3s ease;
+    }
+    
+    .input-field.error {
+        border-color: #ff3333;
+        box-shadow: 0 0 5px rgba(255, 51, 51, 0.3);
+    }
+    
+    .validation-error {
+        color: #ff3333;
+        font-size: 12px;
+        margin-top: 2px;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .alert {
+        padding: 15px;
+        border-radius: 5px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 10px;
+        animation: slideIn 0.5s ease;
+    }
+    
+    .alert-error {
+        background-color: #ffebee;
+        color: #c62828;
+        border-left: 4px solid #c62828;
+    }
+    
+    .alert-success {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        border-left: 4px solid #2e7d32;
+    }
+    
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    .referral-code-display {
+        padding: 12px 15px;
+        border-radius: 30px;
+        background-color: rgba(0, 0, 0, 0.3);
+        color: white;
+        font-family: 'Gruppo';
+        font-size: 1.4rem;
+        letter-spacing: 2px;
+        text-align: center;
+        font-weight: bold;
+        border: 1px solid rgba(0, 255, 255, 0.3);
+        text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        margin-bottom: 15px;
+    }
+    
+    /* Make sure this input group animation works properly */
+    .input-group:nth-child(6) {
+        animation: slideInFromLeft 0.5s ease forwards;
+        animation-delay: 2.3s;
+}
+#refferal_code_id{
+    margin-top:15px;
+    margin-right:20px;
+}
+/* Mobile-first responsive styles */
+@media (max-width: 768px) {
+    .welcome {
+        font-size: 1.8rem;
+        text-align: center;
+        width: 100%;
+    }
+
+    .nav {
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .nav a {
+        font-size: 1.2rem;
+    }
+
+    .profile-card {
+        width: 95%;
+        padding: 20px;
+        margin: 0 auto;
+    }
+
+    .input-field {
+        font-size: 1rem;
+        padding: 10px 15px;
+    }
+
+    .form-title {
+        font-size: 1rem;
+    }
+
+    .update-btn {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+    }
+
+    .referral-code-display {
+        font-size: 1rem;
+        padding: 10px;
+    }
+
+    /* Adjust the 3D tilt effect for mobile */
+    .profile-container {
+        perspective: 500px;
+    }
+
+    /* Reduce animation delays for mobile */
+    .input-group:nth-child(2) { animation-delay: 0.5s; }
+    .input-group:nth-child(3) { animation-delay: 0.7s; }
+    .input-group:nth-child(4) { animation-delay: 0.9s; }
+    .input-group:nth-child(5) { animation-delay: 1.1s; }
+    .input-group:nth-child(6) { animation-delay: 1.3s; }
+    .update-btn { animation-delay: 1.5s; }
+}
+
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) and (max-width: 768px) {
+    .profile-card {
+        width: 80%;
+    }
+}
+
+/* Disable heavy animations on mobile */
+@media (max-width: 768px) {
+    body::before {
+        animation: none;
+        opacity: 0.5;
+    }
+    
+    .profile-card::before {
+        animation: none;
+    }
+    
+    .welcome {
+        animation: fadeIn 1.5s ease-in-out;
+    }
+}
+ /* Mobile-first responsive styles */
+ @media (max-width: 1200px) {
+        .logo {
+            width: 400px;
+            margin-left: 100px;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .logo {
+            width: 300px;
+            margin-left: 50px;
+        }
+        
+        .nav-icons {
+            gap: 15px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .navbar {
+            padding: 10px 15px;
+        }
+        
+        .logo {
+            width: 200px;
+            height: 50px;
+            margin-left: 20px;
+        }
+        
+        .nav-icons i {
+            font-size: 1rem;
+        }
+        
+        .sidebar {
+            width: 250px;
+        }
+        
+        .sidebar-menu li a {
+            font-size: 1.5rem;
+            padding: 12px 15px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .logo {
+            width: 150px;
+            margin-left: 10px;
+        }
+        
+        .nav-icons {
+            gap: 10px;
+        }
+        
+        .menu-icon, .nav-icons i {
+            font-size: 0.9rem;
+        }
+        
+        .sidebar {
+            width: 80%;
+        }
+    }
+    
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="welcome ">Welcome</div>
+    <header class="justify-content-center">
+        
+        <div class="nav text-center">
+            <a href="{% url 'userprofile' %}">profile / </a>
+            <a href="{% url 'myaccount' %}">My Account</a>
+        </div>
+    </header>
+
+    <div class="profile-container mt-3">
+        <form method="POST" action="{% url 'userprofile' %}" id="profileForm">
+            {% csrf_token %}
+            <div class="profile-card">
+                <div class="form-title" style="font-family: 'Gruppo';" id="editTitle">Edit profile</div>
+                <div class="input-group">
+                    <input type="text" class="input-field readonly-field" name="firstname" 
+                           placeholder="First name" value="{{ user.firstname }}" readonly>
+                </div>
+                <div class="input-group">
+                    <input type="text" class="input-field readonly-field" name="lastname" 
+                           placeholder="Last name" value="{{ user.lastname }}" readonly>
+                </div>
+    
+                <div class="input-group">
+                    <input type="email" class="input-field readonly-field" 
+                           placeholder="Email" value="{{ user.email }}" readonly>
+                </div>
+    
+                <div class="input-group">
+                    <input type="text" class="input-field readonly-field" name="phonenumber" 
+                           placeholder="Phone number" value="{{ user.phonenumber }}" readonly>
+                </div>
+    
+                <div class="input-group">
+                    <label for="referral-code" id="refferal_code_id" style="display: block; margin-bottom: 5px; color: #ffebee; font-family: 'Gruppo';">Referral Code</label>
+                    <div class="referral-code-display">{{ user.refferal_code }}</div>
+                </div>
+    
+                <button type="submit" class="update-btn save-btn">SAVE CHANGES</button>
+                <button type="button" class="update-btn cancel-btn" style="background-color: #6c757d; margin-top: 10px;">CANCEL</button>
+            </div>
+        </form>
+    </div>
+    
+</div>
+
+
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}" style="position: fixed; bottom: 20px; right: 20px;">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Detect mobile devices
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
+    // 3D Tilt Effect (Desktop only)
+    if (!isMobile) {
+        const card = document.querySelector('.profile-card');
+        const container = document.querySelector('.profile-container');
+
+        container.addEventListener('mousemove', (e) => {
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+            card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+        });
+
+        // Reset card position when mouse leaves
+        container.addEventListener('mouseleave', () => {
+            card.style.transform = 'rotateY(0deg) rotateX(0deg)';
+            card.style.transition = 'transform 0.5s ease';
+        });
+
+        // Remove transition when mouse enters for smoother effect
+        container.addEventListener('mouseenter', () => {
+            card.style.transition = 'none';
+        });
+    }
+
+    // Input field animations
+    document.querySelectorAll('.input-field').forEach(input => {
+        input.addEventListener('focus', function() {
+            this.style.transform = 'translateY(-3px)';
+            this.style.boxShadow = '0 0 15px rgba(0, 255, 255, 0.3)';
+        });
+        
+        input.addEventListener('blur', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'none';
+        });
+    });
+
+    // Button click effect
+    document.querySelectorAll('.update-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 150);
+            }, 150);
+        });
+    });
+
+    // Auto-hide messages after 3 seconds
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            alert.style.transition = 'opacity 1s';
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 1000);
+        });
+    }, 3000);
+
+    // Edit profile functionality
+    const editTitle = document.getElementById('editTitle');
+    const profileCard = document.querySelector('.profile-card');
+    const inputFields = document.querySelectorAll('.input-field');
+    const saveBtn = document.querySelector('.save-btn');
+    const cancelBtn = document.querySelector('.cancel-btn');
+    let originalValues = {};
+
+    // Store original values
+    inputFields.forEach(field => {
+        if (field.name) {
+            originalValues[field.name] = field.value;
+        }
+    });
+
+    // Toggle edit mode
+    editTitle.addEventListener('click', function() {
+        profileCard.classList.toggle('edit-mode');
+        
+        if (profileCard.classList.contains('edit-mode')) {
+            // Entering edit mode
+            this.textContent = 'Editing profile...';
+            inputFields.forEach(field => {
+                // Skip the email field, keep it readonly
+                if (field.type !== 'email') {
+                    field.readOnly = false;
+                    field.classList.remove('readonly-field');
+                }
+            });
+        } else {
+            // Exiting edit mode
+            this.textContent = 'Edit profile';
+            inputFields.forEach(field => {
+                field.readOnly = true;
+                field.classList.add('readonly-field');
+                // Restore original values if not saved
+                if (field.name) {
+                    field.value = originalValues[field.name];
+                }
+            });
+        }
+    });
+
+    // Cancel button functionality
+    cancelBtn.addEventListener('click', function() {
+        profileCard.classList.remove('edit-mode');
+        editTitle.textContent = 'Edit profile';
+        
+        inputFields.forEach(field => {
+            field.readOnly = true;
+            field.classList.add('readonly-field');
+            if (field.name) {
+                field.value = originalValues[field.name];
+            }
+        });
+    });
+
+    // Validation functions
+    function validateField(field, errorMessage) {
+        if (!field.value.trim()) {
+            showValidationError(field, errorMessage + ' cannot be empty');
+            return false;
+        }
+        return true;
+    }
+
+    function validatePhone(field) {
+        const value = field.value.trim();
+        if (!value) {
+            showValidationError(field, 'Phone number cannot be empty');
+            return false;
+        }
+        
+        if (!/^\d+$/.test(value)) {
+            showValidationError(field, 'Phone number should contain only digits');
+            return false;
+        }
+        
+        if (value.length < 10 || value.length > 15) {
+            showValidationError(field, 'Phone number should be between 10 and 15 digits');
+            return false;
+        }
+        
+        return true;
+    }
+
+    function showValidationError(field, message) {
+        // Create error message element
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'validation-error';
+        errorDiv.textContent = message;
+        errorDiv.style.color = '#ff3333';
+        errorDiv.style.fontSize = isMobile ? '10px' : '12px';
+        errorDiv.style.marginTop = '2px';
+        
+        // Remove any existing error messages
+        const existingError = field.parentNode.querySelector('.validation-error');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // Add error message after the input field
+        field.parentNode.appendChild(errorDiv);
+        
+        // Highlight the field
+        field.classList.add('error');
+        
+        // Remove error when field is focused
+        field.addEventListener('focus', function onFocus() {
+            const error = this.parentNode.querySelector('.validation-error');
+            if (error) {
+                error.remove();
+            }
+            this.classList.remove('error');
+            this.removeEventListener('focus', onFocus);
+        });
+    }
+
+    // Form submission handling with validation
+    document.getElementById('profileForm').addEventListener('submit', function(e) {
+        if (!profileCard.classList.contains('edit-mode')) {
+            e.preventDefault();
+            return;
+        }
+        
+        // Get fields
+        const firstnameField = this.querySelector('[name="firstname"]');
+        const lastnameField = this.querySelector('[name="lastname"]');
+        const phoneField = this.querySelector('[name="phonenumber"]');
+        
+        // Validate each field
+        let isValid = true;
+        
+        if (!validateField(firstnameField, 'First name')) isValid = false;
+        if (!validateField(lastnameField, 'Last name')) isValid = false;
+        if (!validatePhone(phoneField)) isValid = false;
+        
+        // Prevent submission if validation fails
+        if (!isValid) {
+            e.preventDefault();
+        }
+    });
+
+    // Mobile-specific adjustments
+    if (isMobile) {
+        // Adjust any mobile-specific behaviors here
+        document.querySelectorAll('.input-field').forEach(field => {
+            field.style.fontSize = '1rem';
+        });
+        
+        // Make sure the form fits on screen when keyboard appears
+        window.addEventListener('resize', function() {
+            if (document.activeElement.tagName === 'INPUT') {
+                document.activeElement.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}

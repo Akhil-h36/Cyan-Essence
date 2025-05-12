@@ -1,0 +1,340 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+  .disabled-status {
+    background-color: #f8f9fa; 
+    color: #1f5f55; 
+    border-color: #dee2e6;
+    cursor: not-allowed;
+  }
+  
+  
+  select[value="Cancelled"],
+  select[value="Cancelled"].disabled-status {
+    background-color: #f8d7da; 
+    color: #721c24; 
+    border-color: #f5c6cb;
+  }
+  
+  select[value="Returned"],
+  select[value="Returned"].disabled-status {
+    background-color: #fff3cd;
+    color: #856404; 
+    border-color: #ffeeba;
+  }
+  
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+  <div class="row">
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+          <a href="" class="text-light">Admin</a>
+        </li>
+        <li class="breadcrumb-item active text-info" aria-current="page">
+          Order Management
+        </li>
+      </ol>
+    </nav>
+    <div class="container">
+      <div class="table-container">
+        <h3 class="mb-4 text-light">Order Management</h3>
+        <div class="row mb-4">
+          <div class="col-md-6">
+              <form method="GET" action="" class="d-flex">
+                  <div class="input-group">
+                      <input type="text" 
+                             class="form-control" 
+                             name="search" 
+                             placeholder="Search by name, email, phone, or order ID..." 
+                             value="{{ search_query|default:'' }}"
+                             aria-label="Search orders">
+                      <button class="btn btn-outline-light" type="submit" title="Search">
+                          <i class="fas fa-search"></i> Search
+                      </button>
+                      {% if search_query %}
+                      <a href="{% url 'ordermanagement' %}" class="btn btn-outline-danger" title="Clear search">
+                          <i class="fas fa-times"></i> Clear
+                      </a>
+                      {% endif %}
+                  </div>
+              </form>
+          </div>
+      </div>
+
+
+
+
+      
+        <div class="table-responsive">
+          <table class="table text-dark">
+            <thead>
+              <tr>
+                <th scope="col">Sl</th>
+                <th scope="col">Order ID</th>
+                <th scope="col">User</th>
+                <th scope="col">Total Amount</th>
+                <th scope="col">Payment Method</th>
+                <th scope="col">Status</th>
+                <th scope="col">Request Status</th>
+                <th class="text-center" scope="col">Date Ordered</th>
+                <th class="text-center" scope="col">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for order in orders %}
+              <tr>
+                <th scope="row" class="text-center">{{ forloop.counter0|add:orders.start_index }}</th>
+                <td>{{ order.id }}</td>
+                <td>{{ order.user.get_full_name }}</td>
+                <td>₹{{ order.total_amount|floatformat:2 }}</td>
+                <td>{{ order.payment_method }}</td>
+                <td>
+                  <select
+                    class="form-select 
+                      {% if order.order_status == 'Cancelled' %}bg-danger bg-opacity-10 text-danger
+                      {% elif order.order_status == 'Returned' %}bg-warning bg-opacity-10 text-warning
+                      {% elif order.order_status == 'Cancelled' or order.order_status == 'Returned' %}bg-secondary bg-opacity-10 text-secondary
+                      {% endif %}"
+                    id="orderStatus_{{ order.id }}"
+                    name="status"
+                    onchange="updateOrderStatus('{{ order.id }}', this.value)"
+                    {% if order.order_status == 'Cancelled' or order.order_status == 'Returned' or order.is_cancelled or order.is_returned %}disabled{% endif %}
+                  >
+                    <!-- Dynamic options based on current status -->
+                    {% if order.order_status == 'Pending' %}
+                      <option value="Pending" selected>Pending</option>
+                      <option value="Processing">Processing</option>
+                      <option value="Cancelled">Cancelled</option>
+                    {% elif order.order_status == 'Processing' %}
+                      <option value="Processing" selected>Processing</option>
+                      <option value="Shipped">Shipped</option>
+                      <option value="Cancelled">Cancelled</option>
+                    {% elif order.order_status == 'Shipped' %}
+                      <option value="Shipped" selected>Shipped</option>
+                      <option value="Delivered">Delivered</option>
+                      <option value="Cancelled">Cancelled</option>
+                    {% elif order.order_status == 'Delivered' %}
+                      <option value="Delivered" selected>Delivered</option>
+                      <option value="Returned">Returned</option>
+                    {% elif order.order_status == 'Cancelled' %}
+                      <option value="Cancelled" selected>Cancelled</option>
+                    {% elif order.order_status == 'Returned' %}
+                      <option value="Returned" selected>Returned</option>
+                    {% endif %}
+                  </select>
+                </td>
+                <td>
+                  {% if order.is_returned %}
+                      <span class="badge bg-info">Returned</span>
+                  {% elif order.return_reason %}
+                      <span class="badge bg-warning">Return Requested</span>
+                  {% elif order.cancel_request_status == 'Requested' %}
+                      <span class="badge bg-danger">Cancel Requested</span>
+                  {% else %}
+                      {% with return_items=order.items.filter|dictsort:"return_status" %}
+                          {% if return_items %}
+                              <div>
+                                  {% for item in return_items %}
+                                      {% if item.return_status == 'Requested' %}
+                                          <span class="badge bg-warning return-badge" title="{{ item.return_reason }}">
+                                              Item Return Requested
+                                          </span>
+                                      {% elif item.return_status == 'Approved' %}
+                                          <span class="badge bg-info return-badge" title="{{ item.return_reason }}">
+                                              Item Return Approved
+                                          </span>
+                                      {% endif %}
+                                  {% endfor %}
+                              </div>
+                          {% else %}
+                              <span class="badge bg-success">No Request</span>
+                          {% endif %}
+                      {% endwith %}
+                  {% endif %}
+              </td>
+                <td class="text-center">{{ order.order_date|date:"d/m/Y" }}</td>
+                <td>
+                  <a href="{% url 'vieworder' %}?order_id={{ order.id }}" class="btn btn-outline-light w-100">View</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <!-- Pagination Controls -->
+          <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+              {% if orders.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?page=1">&laquo; First</a>
+                </li>
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ orders.previous_page_number }}">Previous</a>
+                </li>
+              {% endif %}
+
+              {% for num in orders.paginator.page_range %}
+                {% if num == orders.number %}
+                  <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                  </li>
+                {% elif num > orders.number|add:'-3' and num < orders.number|add:'3' %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                  </li>
+                {% endif %}
+              {% endfor %}
+
+              {% if orders.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ orders.next_page_number }}">Next</a>
+                </li>
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ orders.paginator.num_pages }}">Last &raquo;</a>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+          <!-- End of Pagination Controls -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block extra_scripts %}
+<!-- Add this before your script tag -->
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+// Function to approve return request
+function approveReturn(orderId) {
+    if (confirm('Are you sure you want to approve this return request?')) {
+        const csrftoken = getCookie('csrftoken');
+        const formData = new FormData();
+        formData.append('order_id', orderId);
+        
+        // Use the correct URL based on your urls.py configuration
+        fetch('/adminapp/admin/approve_return_request/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                console.error('Server error:', response.status);
+                return response.text().then(text => {
+                    console.error('Response text:', text);
+                    throw new Error(`Server error: ${response.status}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert('Success: ' + data.message);
+                // Redirect back to the order management page after successful approval
+                window.location.href = '/adminapp/ordermanagement/';
+            } else {
+                alert('Error: ' + (data.message || 'Operation failed'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Request failed: ' + error.message);
+        });
+    }
+}
+
+// Helper function to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+// Function to update order status
+function updateOrderStatus(orderId, status) {
+  // Get CSRF token
+  const csrftoken = getCookie('csrftoken');
+  
+  // Create FormData object (to match what your Django view expects)
+  const formData = new FormData();
+  formData.append('order_id', orderId);
+  formData.append('status', status);
+  
+  // Make the request
+  fetch('/adminapp/admin/update_order_status/', {  // Use the correct URL path
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': csrftoken
+    },
+    body: formData
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.text().then(text => {
+        throw new Error(`Server error: ${response.status} - ${text}`);
+      });
+    }
+    return response.json();
+  })
+  .then(data => {
+    if (data.success) {
+      alert('Order status updated successfully!');
+      // Optionally reload the page to show the updated status
+      window.location.reload();
+    } else {
+      alert('Error: ' + (data.message || 'Status update failed'));
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Request failed: ' + error.message);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Find all orders that have cancel requests
+  const orderRows = document.querySelectorAll('tr');
+  
+  orderRows.forEach(row => {
+    const statusCell = row.querySelector('td:nth-child(6)');
+    const requestCell = row.querySelector('td:nth-child(7)');
+    
+    if (statusCell && requestCell) {
+      const statusSelect = statusCell.querySelector('select');
+      const requestBadge = requestCell.querySelector('.badge');
+      
+      // If the order status is 'Shipped' but no active cancel request exists
+      // And the dropdown is disabled, enable it
+      if (statusSelect && statusSelect.disabled && 
+          statusSelect.value === 'Shipped' && 
+          requestBadge && requestBadge.textContent.trim() === 'No Request') {
+        statusSelect.disabled = false;
+      }
+    }
+  });
+});
+
+</script>
+{% endblock %}

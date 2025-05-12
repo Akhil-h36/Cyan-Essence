@@ -1,0 +1,1531 @@
+{% extends 'profiletemplate.html' %}
+{% load static %}
+
+{% block styles %}
+<style>
+    .status-rejected {
+        background-color: rgba(220, 53, 69, 0.2);
+        color: #fa0019;
+    }
+    
+    .rejection-message {
+        font-size: 0.9rem;
+        color: #ff0019;
+        background-color: rgba(220, 53, 69, 0.05);
+        padding: 8px 12px;
+        border-radius: 4px;
+        margin-top: 10px;
+        border-left: 3px solid #dc3545;
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .status-return-requested {
+        background-color: rgba(0, 123, 255, 0.2);
+        color: #007bff;
+    }
+
+    .status-indicator.return-requested {
+        font-size: 0.8rem;
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-top: 4px;
+        background-color: rgba(0, 123, 255, 0.1);
+        color: #007bff;
+    }
+
+    .return-request-message {
+        font-size: 0.9rem;
+        color: #ffffff;
+        background-color: rgba(0, 123, 255, 0.34);
+        padding: 8px 12px;
+        border-radius: 4px;
+        margin-top: 10px;
+        border-left: 3px solid #007bff;
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    .cancelled-item {
+        opacity: 0.7;
+        background-color: rgba(220, 53, 69, 0.05);
+    }
+
+    .cancelled-badge {
+        display: inline-block;
+        font-size: 0.75rem;
+        margin-top: 4px;
+        padding: 2px 6px;
+        background-color: rgba(243, 21, 43, 0.2);
+        color: #ff0019;
+        border-radius: 4px;
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .cancelled-status {
+        display: inline-block;
+        font-size: 0.85rem;
+        padding: 4px 8px;
+        border-radius: 4px;
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #e83345;
+        text-align: center;
+    }
+    /* Add new styles for payment failed/retry */
+    .status-failed {
+        background-color: rgba(255, 153, 0, 0.2);
+        color: #ff9900;
+    }
+    
+    .payment-failed-message {
+        font-size: 0.9rem;
+        color: #ff9900;
+        background-color: rgba(255, 153, 0, 0.05);
+        padding: 8px 12px;
+        border-radius: 4px;
+        margin-top: 10px;
+        border-left: 3px solid #ff9900;
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    .action-btn.retry-payment-btn {
+        background-color: #ff9900;
+        border-color: #ff9900;
+    }
+    
+    .action-btn.retry-payment-btn:hover {
+        background-color: #e68a00;
+        border-color: #e68a00;
+    }
+    
+    /* Add a payment animation */
+    @keyframes payPulse {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 153, 0, 0.7); }
+        70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 153, 0, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 153, 0, 0); }
+    }
+    
+    .pulse-animation {
+        animation: payPulse 2s infinite;
+    }
+    .action-btn.return-btn {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+    }
+    
+    .action-btn.return-btn:hover {
+        background-color: #0069d9;
+        border-color: #0062cc;
+    }
+    .return-item-btn {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+    }
+    
+    .return-item-btn:hover {
+        background-color: #0069d9;
+    }
+    
+    .status-indicator.return-requested {
+        background-color: rgba(0, 123, 255, 0.453);
+        color: #ffffff;
+    }
+    
+    .status-indicator.return-approved {
+        background-color: rgba(40, 167, 69, 0.2);
+        color: #28a745;
+    }
+    
+    .status-indicator.return-rejected {
+        background-color: rgba(220, 53, 69, 0.2);
+        color: #ff0019;
+    }
+
+    /* Mobile responsive additions */
+    .mobile-sidebar-toggle {
+        display: none;
+        background-color: #002a2a;
+        color: white;
+        border: 1px solid #00a0a0;
+        padding: 10px 15px;
+        margin-bottom: 15px;
+        cursor: pointer;
+        width: 100%;
+        text-align: center;
+        font-family: 'Gruppo';
+        font-size: 1.2rem;
+    }
+
+    .profile-layout {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .profile-sidebar.mobile-hidden {
+        display: block;
+    }
+
+    @media (max-width: 992px) {
+        .mobile-sidebar-toggle {
+            display: block;
+        }
+        
+        .profile-layout {
+            flex-direction: column;
+        }
+        
+        .profile-sidebar.mobile-hidden {
+            display: none;
+        }
+        
+        .profile-sidebar.mobile-visible {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+    }
+
+    @keyframes slideDown {
+        from {
+            transform: translateY(-20px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    /* Mobile Sidebar Toggle */
+.mobile-sidebar-toggle {
+    display: none;
+    background-color: #002a2a;
+    color: white;
+    border: 1px solid #00a0a0;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+    font-family: 'Gruppo';
+    font-size: 1.2rem;
+}
+
+/* Profile Layout */
+.profile-layout {
+    display: flex;
+    flex-direction: row;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 992px) {
+    .profile-layout {
+        flex-direction: column;
+    }
+    
+    .mobile-sidebar-toggle {
+        display: block;
+    }
+    
+    .profile-sidebar {
+        display: none;
+        width: 100%;
+        padding-right: 0;
+        margin-bottom: 20px;
+    }
+    
+    .profile-sidebar.mobile-visible {
+        display: block;
+        animation: slideDown 0.3s ease-out;
+    }
+    
+    .main-content {
+        padding-left: 0;
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 20px;
+    }
+    
+    /* Order Card Mobile Styles */
+    .order-card {
+        padding: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .order-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 1rem;
+    }
+    
+    .order-id, .order-date {
+        font-size: 1rem;
+    }
+    
+    .order-status {
+        font-size: 0.9rem;
+        padding: 3px 8px;
+    }
+    
+    .product-list {
+        display: block;
+        width: 100%;
+    }
+    
+    .product-list thead {
+        display: none;
+    }
+    
+    .product-list tr {
+        display: block;
+        margin-bottom: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .product-list td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px;
+        border: none;
+        font-size: 0.9rem;
+    }
+    
+    .product-list td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        margin-right: 10px;
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .product-info {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .product-image {
+        width: 50px;
+        height: 50px;
+        margin-bottom: 5px;
+    }
+    
+    .order-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .action-btn {
+        width: 100%;
+        font-size: 1rem;
+    }
+    
+    /* Modal adjustments */
+    .modal-content {
+        width: 90%;
+        margin: 20% auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .order-card {
+        padding: 8px;
+    }
+    
+    .product-list td {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .product-list td::before {
+        margin-bottom: 5px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        padding: 15px;
+    }
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Disable hover effects on touch devices */
+@media (hover: none) {
+    .order-card:hover {
+        transform: none;
+        box-shadow: none;
+        border-color: rgba(0, 160, 160, 0.3);
+    }
+    
+    .order-card::before {
+        opacity: 0;
+    }
+    
+    .action-btn:hover::after,
+    .confirm-btn:hover::after {
+        transform: translateX(-100%);
+    }
+}
+</style>
+{% endblock styles %}
+
+{% block content %}
+{% csrf_token %}
+<div class="page-transition"></div>
+    
+<header class="justify-content-center">
+    <div class="nav">
+        <a href="{% url 'userprofile' %}">profile / </a>
+        <a href="{% url 'myaccount' %}">My Account</a>
+    </div>
+</header>
+
+<div class="container-fluid">
+    <!-- Mobile Sidebar Toggle -->
+    <button class="mobile-sidebar-toggle">Menu</button>
+    
+    <div class="profile-layout">
+        <div class="profile-sidebar mobile-hidden">
+            <a href="{% url 'address' %}" class="text-decoration-none d-block text-white"><div class="profile-sidebar-option">manage address</div></a>
+            <a href="{% url 'myorders' %}" class="text-decoration-none d-block text-white"><div class="profile-sidebar-option active">my orders</div></a>
+            <a href="{% url 'mypassword' %}" class="text-decoration-none d-block text-white"><div class="profile-sidebar-option">change password</div></a>
+            <a href="{% url 'logout' %}" class="text-decoration-none d-block text-white"><div class="profile-sidebar-option"> <button class="logout-btn">LOG OUT</button></div></a>
+        </div>
+
+        <div class="main-content">
+            {% if orders %}
+            <div class="orders-container">
+                {% for order in orders %}
+                <div class="order-card" id="order-{{ order.id }}">
+                    <div class="order-header">
+                        <div class="order-id">{{ order.formatted_id }}</div>
+                        <div class="order-date">{{ order.order_date|date:"F d, Y" }}</div>
+                        
+                        <div class="order-status {% if order.cancel_request_status == 'Requested' %}status-requested{% elif order.return_status == 'Requested' %}status-return-requested{% else %}status-{{ order.order_status|lower }}{% endif %}">
+                            {% if order.cancel_request_status == 'Requested' %}
+                                Cancellation Requested
+                            {% elif order.return_status == 'Requested' %}
+                                Return Requested
+                            {% else %}
+                                {{ order.order_status }}
+                            {% endif %}
+                            
+                            {% if order.cancel_request_status == 'Rejected' %}
+                            <br>
+                            <span class="status-indicator rejection">Cancellation Rejected</span>
+                            {% endif %}
+                            
+                            {% if order.return_status == 'Rejected' %}
+                            <br>
+                            <span class="status-indicator rejection">Return Rejected</span>
+                            {% endif %}
+                        </div>
+                        {% if order.return_status == 'Requested' %}
+                        <div class="return-request-message">
+                            <strong>Your return request has been submitted and is being processed.</strong>
+                            {% if order.return_reason %}
+                            <p>Your reason: {{ order.return_reason }}</p>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        {% if order.cancel_request_status == 'Rejected' %}
+                        <div class="rejection-message">
+                            <strong>sorry,Your cancellation request was rejected.</strong>
+                            {% if order.cancel_description %}
+                            <p>Reason: {{ order.cancel_description }}</p>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        {% if order.return_status == 'Rejected' %}
+                        <div class="rejection-message">
+                            <strong>Sorry, your return request was rejected.</strong>
+                            {% if order.return_reason %}
+                            <p>Reason: {{ order.return_reason }}</p>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        {% if order.payment_status == 'failed' and order.payment_method == 'Razorpay' %}
+                        <div class="payment-failed-message">
+                            <strong>Payment pending for this order.</strong>
+                            <p>Your order has been registered but payment was not completed. Please complete payment to process your order.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="order-body">
+                        <table class="product-list">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Final Total</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.items.all %}
+                                    <tr class="product-item {% if item.is_cancelled %}cancelled-item{% endif %}" id="item-{{ item.id }}">
+                                        <td data-label="Product">
+                                            <div class="product-info">
+                                                {% with product_image=item.product_variation.product.images.first %}
+                                                    {% if product_image %}
+                                                        <img src="{{ product_image.image.url }}" alt="{{ item.product_variation.product.product_name }}" class="product-image floating-element">
+                                                    {% else %}
+                                                        <img src="{% static 'images/no-image.png' %}" alt="{{ item.product_variation.product.product_name }}" class="product-image floating-element">
+                                                    {% endif %}
+                                                {% endwith %}
+                                                <div>
+                                                    <div class="product-name">{{ item.product_variation.product.product_name }}</div>
+                                                    <div class="product-variant">{{ item.product_variation.size.size }} ml</div>
+                                                    {% if item.is_cancelled %}
+                                                    <div class="cancelled-badge">Cancelled</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td data-label="Quantity">
+                                            {{ item.quantity }}
+                                        </td>
+                                        <td data-label="Price">
+                                            ₹ {{ item.price }}
+                                        </td>
+                            
+                                        <td data-label="Total">
+                                            ₹ {{ item.total_price|floatformat:2 }}
+                                        </td>
+                                        
+                                        <td data-label="Action">
+                                            {% if order.order_status == 'Delivered' and not item.is_cancelled and not item.return_status %}
+                                            <button class="return-item-btn" 
+                                                    data-item-id="{{ item.id }}" 
+                                                    data-product-name="{{ item.product_variation.product.product_name }}">
+                                                Request Return
+                                            </button>
+                                            {% elif item.return_status == 'Requested' %}
+                                            <span class="status-indicator return-requested">Return Requested</span>
+                                            {% elif item.return_status == 'Approved' %}
+                                            <span class="status-indicator return-approved">Return Approved</span>
+                                            {% elif item.return_status == 'Rejected' %}
+                                            <span class="status-indicator return-rejected">Return Rejected</span>
+                                            {% elif item.is_cancelled %}
+                                            <span class="cancelled-status">Cancelled</span>
+                                            {% elif order.order_status == 'Pending' or order.order_status == 'Processing' %}
+                                            <button class="cancel-item-btn" 
+                                                    data-item-id="{{ item.id }}" 
+                                                    data-product-name="{{ item.product_variation.product.product_name }}"
+                                                    {% if order.items.count == 1 %}data-last-item="true"{% endif %}>
+                                                Cancel
+                                            </button>
+                                            {% elif order.order_status == 'Delivered' %}
+                                            <!-- No button for delivered items -->
+                                            {% else %}
+                                            <!-- For other statuses like 'Shipped' -->
+                                            <button class="cancel-item-btn" disabled>Cancel</button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                        <div class="order-actions">
+                            <a href="{% url 'order_detail' order.id %}" class="action-btn view-btn">View Details</a>
+                            
+                            {% if order.order_status == 'Delivered' and not order.return_status %}
+                                <button class="action-btn return-btn" data-order-id="{{ order.id }}">
+                                    Request Return
+                                </button>
+                            {% elif order.order_status == 'Pending' or order.order_status == 'Processing' or order.order_status == 'Shipped' %}
+                                {% if order.cancel_request_status != 'Rejected' %}
+                                <button class="action-btn cancel-btn" data-order-id="{{ order.id }}">
+                                    {% if order.order_status == 'Shipped' %}
+                                        Request Cancellation
+                                    {% else %}
+                                        Cancel Order
+                                    {% endif %}
+                                </button>
+                                {% endif %}
+                            {% endif %}
+                            
+                            {% if order.payment_status == 'Failed' and order.payment_method == 'Razorpay' %}
+                            <button class="action-btn retry-payment-btn pulse-animation" data-order-id="{{ order.id }}">
+                                <i class="fas fa-sync-alt"></i> Retry Payment
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                <!-- Pagination -->
+                {% if orders.has_other_pages %}
+                <div class="pagination-container">
+                    <ul class="pagination">
+                        {% if orders.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="{% url 'myorders' %}?page={{ orders.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                                <span class="sr-only">Previous</span>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&laquo;</span>
+                        </li>
+                        {% endif %}
+                        
+                        {% if orders.number|add:'-4' > 1 %}
+                        <li class="page-item">
+                            <a class="page-link" href="{% url 'myorders' %}?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">1</a>
+                        </li>
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                        
+                        {% for i in orders.paginator.page_range %}
+                            {% if orders.number == i %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ i }}</span>
+                                </li>
+                            {% elif i > orders.number|add:'-4' and i < orders.number|add:'4' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{% url 'myorders' %}?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if orders.number|add:'4' < orders.paginator.num_pages %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="{% url 'myorders' %}?page={{ orders.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ orders.paginator.num_pages }}</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% if orders.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{% url 'myorders' %}?page={{ orders.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                                <span class="sr-only">Next</span>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&raquo;</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    
+                    <div class="pagination-info">
+                        Page {{ orders.number }} of {{ orders.paginator.num_pages }} ({{ orders.paginator.count }} orders total)
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="orders-container">
+                <div class="particles"></div>
+                <div class="no-orders-text">No orders yet</div>
+                <div class="box-icon">
+                    <div class="box"></div>
+                    <div class="sparkle"></div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Order Modal -->
+<div id="cancelOrderModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Cancel Order</h2>
+            <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to cancel this order?</p>
+            <p class="order-id-display"></p>
+            
+            <div class="form-group">
+                <label for="cancelOrderReason" class="form-label">Reason for cancellation (optional)</label>
+                <textarea id="cancelOrderReason" class="form-control" rows="3" placeholder="Please tell us why you're canceling this order..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="confirmCancelOrder" class="confirm-btn">Confirm Cancel</button>
+            <button class="cancel-modal-btn close-modal">Go Back</button>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Item Modal -->
+<div id="cancelItemModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Cancel Item</h2>
+            <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p  style="color: #ffffff;">Are you sure you want to cancel this item?</p>
+            <p class="item-name-display"></p>
+            
+            <div class="form-group">
+                <label for="cancelItemReason" class="form-label" style="color: #ffffff;">Reason for cancellation (optional)</label>
+                <textarea id="cancelItemReason" class="form-control" rows="3" placeholder="Please tell us why you're canceling this item..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="confirmCancelItem" class="confirm-btn">Confirm Cancel</button>
+            <button class="cancel-modal-btn close-modal">Go Back</button>
+        </div>
+    </div>
+</div>
+
+<div id="returnOrderModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Request Return</h2>
+            <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Please provide details for your return request:</p>
+            <p class="order-id-display"></p>
+            
+            <div class="form-group">
+                <label for="returnOrderReason" class="form-label">Reason for return (required)</label>
+                <textarea id="returnOrderReason" class="form-control" rows="3" placeholder="Please tell us why you're returning this order..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="confirmReturnOrder" class="confirm-btn">Submit Return Request</button>
+            <button class="cancel-modal-btn close-modal">Go Back</button>
+        </div>
+    </div>
+</div>
+
+<!-- Return Item Modal -->
+<div id="returnItemModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Request Item Return</h2>
+            <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="color: #ffffff;">Please provide details for your item return request:</p>
+            <p class="item-name-display"></p>
+            
+            <div class="form-group">
+                <label for="returnItemReason" class="form-label" style="color: #ffffff;">Reason for return (required)</label>
+                <textarea id="returnItemReason" class="form-control" rows="3" placeholder="Please tell us why you're returning this item..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="confirmReturnItem" class="confirm-btn">Submit Return Request</button>
+            <button class="cancel-modal-btn close-modal">Go Back</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %} 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all page elements
+    initPageTransition();
+    initParticles();
+    initSidebarHover();
+    initButtonRipples();
+    initCancelButtons();
+    initCancelItemButtons();
+    initRetryPaymentButtons();
+    initReturnButtons();
+    initReturnItemButtons();
+    initModals();
+    setupResponsiveBehaviors();
+    initMobileSidebar();
+    
+    // Add data-labels for mobile table cells
+    document.querySelectorAll('.product-list th').forEach((th, index) => {
+        const label = th.textContent;
+        document.querySelectorAll('.product-list td:nth-child(' + (index + 1) + ')').forEach(td => {
+            td.setAttribute('data-label', label);
+        });
+    });
+});
+
+// Mobile Sidebar Toggle
+function initMobileSidebar() {
+    const toggleBtn = document.querySelector('.mobile-sidebar-toggle');
+    const sidebar = document.querySelector('.profile-sidebar');
+    
+    if (toggleBtn && sidebar) {
+        toggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('mobile-visible');
+        });
+    }
+}
+
+function initPageTransition() {
+    const pageTransition = document.querySelector('.page-transition');
+    if (pageTransition) {
+        pageTransition.style.opacity = '0';
+        setTimeout(() => {
+            pageTransition.style.display = 'none';
+        }, 500);
+    }
+}
+
+
+function initParticles() {
+    const particlesContainer = document.querySelector('.particles');
+    if (!particlesContainer) return;
+    
+    for (let i = 0; i < 30; i++) {
+        const particle = document.createElement('div');
+        particle.classList.add('particle');
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 5 + 's';
+        particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+        particlesContainer.appendChild(particle);
+    }
+}
+
+
+
+// Sidebar hover effects
+function initSidebarHover() {
+    const sidebarOptions = document.querySelectorAll('.profile-sidebar-option:not(.active)');
+    
+    sidebarOptions.forEach(option => {
+        option.addEventListener('mouseenter', () => {
+            option.style.backgroundColor = 'rgba(0, 160, 160, 0.2)';
+        });
+        
+        option.addEventListener('mouseleave', () => {
+            option.style.backgroundColor = '';
+        });
+    });
+}
+
+// Button ripple effects
+function initButtonRipples() {
+    const buttons = document.querySelectorAll('.action-btn, .confirm-btn, .cancel-modal-btn, .return-item-btn, .cancel-item-btn');
+    
+    buttons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const rect = button.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const ripple = document.createElement('span');
+            ripple.classList.add('ripple');
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            
+            button.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+}
+
+// Cancel Order Button Initialization
+// Cancel Order Button Initialization
+// Cancel Order Button - Fixed Version
+function initCancelButtons() {
+    const cancelButtons = document.querySelectorAll('.cancel-btn');
+    const modal = document.getElementById('cancelOrderModal');
+    const confirmButton = document.getElementById('confirmCancelOrder');
+    const orderIdDisplay = modal ? modal.querySelector('.order-id-display') : null;
+    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+    
+    cancelButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            if (modal && orderIdDisplay) {
+                orderIdDisplay.textContent = `Order ID: ${document.querySelector(`#order-${orderId} .order-id`).textContent}`;
+                modal.style.display = 'block';
+                
+                // Store the order ID for the confirm button
+                confirmButton.setAttribute('data-order-id', orderId);
+            }
+        });
+    });
+    
+    if (confirmButton) {
+        confirmButton.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            const reason = document.getElementById('cancelOrderReason').value;
+            
+            // Send as JSON
+            const data = {
+                reason: reason,
+                csrfmiddlewaretoken: csrfToken
+            };
+            
+            fetch(`/userp/orders/${orderId}/cancel/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json().then(data => {
+                        return { isJson: true, data: data };
+                    });
+                } else {
+                    // Handle non-JSON response
+                    return { isJson: false };
+                }
+            })
+            .then(result => {
+                // Close modal first to prevent issues
+                modal.style.display = 'none';
+                
+                if (!result.isJson) {
+                    // Handle redirect case
+                    showNotification('Processing your cancellation request...', 'success');
+                    setTimeout(() => window.location.reload(), 1000);
+                    return;
+                }
+                
+                const data = result.data;
+                if (data.success) {
+                    // Update UI to show cancellation status
+                    const orderCard = document.getElementById(`order-${orderId}`);
+                    const orderStatus = orderCard.querySelector('.order-status');
+                    
+                    orderStatus.className = 'order-status status-requested';
+                    orderStatus.textContent = 'Cancellation Requested';
+                    
+                    // Remove cancel button
+                    const cancelBtn = orderCard.querySelector('.cancel-btn');
+                    if (cancelBtn) {
+                        cancelBtn.remove();
+                    }
+                    
+                    // Show success message
+                    showNotification('Cancellation request submitted successfully');
+                } else {
+                    showNotification('Failed to cancel order: ' + (data.message || ''), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred. Please try again.', 'error');
+                
+                // Close modal on error
+                modal.style.display = 'none';
+            });
+        });
+    }
+}
+
+
+// Cancel Item Button - Fixed Version
+function initCancelItemButtons() {
+    const cancelItemButtons = document.querySelectorAll('.cancel-item-btn');
+    const modal = document.getElementById('cancelItemModal');
+    const confirmButton = document.getElementById('confirmCancelItem');
+    const itemNameDisplay = modal ? modal.querySelector('.item-name-display') : null;
+    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+    
+    cancelItemButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.getAttribute('data-item-id');
+            const productName = this.getAttribute('data-product-name');
+            const isLastItem = this.getAttribute('data-last-item') === 'true';
+            
+            if (modal && itemNameDisplay) {
+                itemNameDisplay.textContent = `Item: ${productName}`;
+                modal.style.display = 'block';
+                
+                // Store the item ID for the confirm button
+                confirmButton.setAttribute('data-item-id', itemId);
+                confirmButton.setAttribute('data-last-item', isLastItem);
+            }
+        });
+    });
+    
+    if (confirmButton) {
+        confirmButton.addEventListener('click', function() {
+            const itemId = this.getAttribute('data-item-id');
+            const isLastItem = this.getAttribute('data-last-item') === 'true';
+            const reason = document.getElementById('cancelItemReason').value;
+            
+            // Send as JSON
+            const data = {
+                reason: reason,
+                csrfmiddlewaretoken: csrfToken
+            };
+            
+            fetch(`/userp/order-items/${itemId}/cancel/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json().then(data => {
+                        return { isJson: true, data: data };
+                    });
+                } else {
+                    // Handle non-JSON response
+                    return { isJson: false };
+                }
+            })
+            .then(result => {
+                // Close modal first to prevent issues
+                modal.style.display = 'none';
+                
+                if (!result.isJson) {
+                    // Handle redirect case
+                    showNotification('Processing your cancellation request...', 'success');
+                    setTimeout(() => window.location.reload(), 1000);
+                    return;
+                }
+                
+                const data = result.data;
+                if (data.success) {
+                    // Update UI to show cancellation status
+                    const itemRow = document.getElementById(`item-${itemId}`);
+                    
+                    if (isLastItem) {
+                        // If this is the last item, update whole order
+                        const orderId = itemRow.closest('.order-card').id.replace('order-', '');
+                        const orderStatus = document.querySelector(`#order-${orderId} .order-status`);
+                        
+                        orderStatus.className = 'order-status status-requested';
+                        orderStatus.textContent = 'Cancellation Requested';
+                        
+                        // Remove cancel button from order
+                        const cancelBtn = document.querySelector(`#order-${orderId} .cancel-btn`);
+                        if (cancelBtn) {
+                            cancelBtn.remove();
+                        }
+                    } else {
+                        // Add cancelled class to item
+                        itemRow.classList.add('cancelled-item');
+                        
+                        // Add cancelled badge
+                        const productInfo = itemRow.querySelector('.product-info div');
+                        const badge = document.createElement('div');
+                        badge.className = 'cancelled-badge';
+                        badge.textContent = 'Cancelled';
+                        productInfo.appendChild(badge);
+                        
+                        // Replace cancel button with cancelled status
+                        const actionCell = itemRow.querySelector('td:last-child');
+                        actionCell.innerHTML = '<span class="cancelled-status">Cancelled</span>';
+                    }
+                    
+                    // Show success message
+                    showNotification('Item cancelled successfully');
+                } else {
+                    showNotification('Failed to cancel item: ' + (data.message || ''), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred. Please try again.', 'error');
+                
+                // Close modal on error
+                modal.style.display = 'none';
+            });
+        });
+    }
+}
+
+
+// Retry Payment Button Initialization
+function initRetryPaymentButtons() {
+    const retryButtons = document.querySelectorAll('.retry-payment-btn');
+    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+    
+    retryButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            
+            // Send as JSON
+            const data = {
+                csrfmiddlewaretoken: csrfToken
+            };
+            
+            fetch(`/userp/orders/${orderId}/retry-payment/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json().then(data => {
+                        return { isJson: true, data: data };
+                    });
+                } else {
+                    // Handle non-JSON response (likely a redirect)
+                    return { isJson: false };
+                }
+            })
+            .then(result => {
+                if (!result.isJson) {
+                    // For payment gateways, it might be a direct redirect
+                    showNotification('Redirecting to payment gateway...', 'success');
+                    setTimeout(() => window.location.reload(), 1500);
+                    return;
+                }
+                
+                const data = result.data;
+                if (data.success && data.payment_url) {
+                    // Redirect to payment gateway
+                    window.location.href = data.payment_url;
+                } else if (data.success) {
+                    // Generic success
+                    showNotification('Payment processing initiated', 'success');
+                    // Refresh page after a delay
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showNotification('Failed to process payment: ' + (data.message || ''), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred. Please try again.', 'error');
+            });
+        });
+    });
+}
+
+// Return Item Button Initialization - This was missing
+function initReturnItemButtons() {
+    const returnItemButtons = document.querySelectorAll('.return-item-btn');
+    const modal = document.getElementById('returnItemModal');
+    const confirmButton = document.getElementById('confirmReturnItem');
+    const itemNameDisplay = modal ? modal.querySelector('.item-name-display') : null;
+    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+    
+    returnItemButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.getAttribute('data-item-id');
+            const productName = this.getAttribute('data-product-name');
+            
+            if (modal && itemNameDisplay) {
+                itemNameDisplay.textContent = `Item: ${productName}`;
+                modal.style.display = 'block';
+                
+                // Store the item ID for the confirm button
+                confirmButton.setAttribute('data-item-id', itemId);
+            }
+        });
+    });
+    
+    if (confirmButton) {
+        confirmButton.addEventListener('click', function() {
+            const itemId = this.getAttribute('data-item-id');
+            const reason = document.getElementById('returnItemReason').value;
+            
+            if (!reason.trim()) {
+                showNotification('Please provide a reason for your return request', 'error');
+                return;
+            }
+            
+            // Send as JSON
+            const data = {
+                reason: reason,
+                csrfmiddlewaretoken: csrfToken
+            };
+            
+            fetch(`/userp/order-items/${itemId}/request-return/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json().then(data => {
+                        return { isJson: true, data: data };
+                    });
+                } else {
+                    // Handle non-JSON response
+                    return { isJson: false };
+                }
+            })
+            .then(result => {
+                // Close modal first to prevent issues
+                modal.style.display = 'none';
+                
+                // Clear the form
+                document.getElementById('returnItemReason').value = '';
+                
+                if (!result.isJson) {
+                    // Handle redirect case
+                    showNotification('Processing your return request...', 'success');
+                    setTimeout(() => window.location.reload(), 1000);
+                    return;
+                }
+                
+                const data = result.data;
+                if (data.success) {
+                    // Update UI to show return request status
+                    const itemRow = document.getElementById(`item-${itemId}`);
+                    const actionCell = itemRow.querySelector('td:last-child');
+                    
+                    // Replace return button with status indicator
+                    actionCell.innerHTML = '<span class="status-indicator return-requested">Return Requested</span>';
+                    
+                    // Show success message
+                    showNotification('Return request submitted successfully', 'success');
+                } else {
+                    showNotification('Failed to submit return request: ' + (data.message || ''), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred. Please try again.', 'error');
+                
+                // Close modal on error
+                modal.style.display = 'none';
+            });
+        });
+    }
+}
+
+// Return Order Button - Fixed Version
+function initReturnButtons() {
+    const returnButtons = document.querySelectorAll('.return-btn');
+    const modal = document.getElementById('returnOrderModal');
+    const confirmButton = document.getElementById('confirmReturnOrder');
+    const orderIdDisplay = modal ? modal.querySelector('.order-id-display') : null;
+    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+    
+    returnButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            
+            if (modal && orderIdDisplay) {
+                orderIdDisplay.textContent = `Order ID: ${document.querySelector(`#order-${orderId} .order-id`).textContent}`;
+                modal.style.display = 'block';
+                
+                // Store the order ID for the confirm button
+                confirmButton.setAttribute('data-order-id', orderId);
+            }
+        });
+    });
+    
+    if (confirmButton) {
+        confirmButton.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            const reason = document.getElementById('returnOrderReason').value;
+            
+            if (!reason.trim()) {
+                showNotification('Please provide a reason for your return request', 'error');
+                return;
+            }
+            
+            // Send as JSON
+            const data = {
+                reason: reason,
+                csrfmiddlewaretoken: csrfToken
+            };
+            
+            fetch(`/userp/orders/${orderId}/request-return/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json().then(data => {
+                        return { isJson: true, data: data };
+                    });
+                } else {
+                    // Handle non-JSON response
+                    return { isJson: false };
+                }
+            })
+            .then(result => {
+                // Close modal first to prevent issues
+                modal.style.display = 'none';
+                
+                // Clear the form
+                document.getElementById('returnOrderReason').value = '';
+                
+                if (!result.isJson) {
+                    // Handle redirect case
+                    showNotification('Processing your return request...', 'success');
+                    setTimeout(() => window.location.reload(), 1000);
+                    return;
+                }
+                
+                const data = result.data;
+                if (data.success) {
+                    // Update UI to show return request status
+                    const orderCard = document.getElementById(`order-${orderId}`);
+                    const orderStatus = orderCard.querySelector('.order-status');
+                    
+                    orderStatus.className = 'order-status status-return-requested';
+                    orderStatus.textContent = 'Return Requested';
+                    
+                    // Add return message
+                    const orderHeader = orderCard.querySelector('.order-header');
+                    const returnMessage = document.createElement('div');
+                    returnMessage.className = 'return-request-message';
+                    returnMessage.innerHTML = `<strong>Your return request has been submitted and is being processed.</strong>
+                        <p>Your reason: ${reason}</p>`;
+                    orderHeader.appendChild(returnMessage);
+                    
+                    // Remove return button
+                    const returnBtn = orderCard.querySelector('.return-btn');
+                    if (returnBtn) {
+                        returnBtn.remove();
+                    }
+                    
+                    // Show success message
+                    showNotification('Return request submitted successfully', 'success');
+                } else {
+                    showNotification('Failed to submit return request: ' + (data.message || ''), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred. Please try again.', 'error');
+                
+                // Close modal on error
+                modal.style.display = 'none';
+            });
+        });
+    }
+}
+
+// Modal Initialization
+function initModals() {
+    const modals = document.querySelectorAll('.modal');
+    const closeButtons = document.querySelectorAll('.close-modal');
+    
+    // Close modal when clicking the X or "Go Back" button
+    closeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const modal = this.closest('.modal');
+            if (modal) {
+                modal.style.display = 'none';
+                
+                // Reset form fields if any
+                const textarea = modal.querySelector('textarea');
+                if (textarea) {
+                    textarea.value = '';
+                }
+            }
+        });
+    });
+    
+    // Close modal when clicking outside of it
+    window.addEventListener('click', function(event) {
+        modals.forEach(modal => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+                
+                // Reset form fields if any
+                const textarea = modal.querySelector('textarea');
+                if (textarea) {
+                    textarea.value = '';
+                }
+            }
+        });
+    });
+}
+
+// Notification system
+function showNotification(message, type = 'success') {
+    // Check if notification container exists, create if not
+    let notifContainer = document.querySelector('.notification-container');
+    if (!notifContainer) {
+        notifContainer = document.createElement('div');
+        notifContainer.className = 'notification-container';
+        document.body.appendChild(notifContainer);
+        
+        // Add CSS for notifications if not already in the document
+        if (!document.getElementById('notification-styles')) {
+            const style = document.createElement('style');
+            style.id = 'notification-styles';
+            style.textContent = `
+                .notification-container {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 9999;
+                }
+                .notification {
+                    margin-bottom: 10px;
+                    padding: 15px;
+                    border-radius: 4px;
+                    color: white;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                    animation: slideIn 0.3s ease-out, fadeOut 0.5s ease-in 2.5s forwards;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    min-width: 250px;
+                    max-width: 400px;
+                }
+                .notification.success {
+                    background-color: #28a745;
+                }
+                .notification.error {
+                    background-color: #dc3545;
+                }
+                .notification-close {
+                    background: none;
+                    border: none;
+                    color: white;
+                    font-size: 16px;
+                    cursor: pointer;
+                    margin-left: 15px;
+                }
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes fadeOut {
+                    from { opacity: 1; }
+                    to { opacity: 0; visibility: hidden; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    
+    // Create message container
+    const messageContainer = document.createElement('div');
+    messageContainer.textContent = message;
+    
+    // Create close button
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'notification-close';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.addEventListener('click', () => notification.remove());
+    
+    // Assemble notification
+    notification.appendChild(messageContainer);
+    notification.appendChild(closeBtn);
+    notifContainer.appendChild(notification);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 3000);
+}
+
+// Responsive behaviors setup
+function setupResponsiveBehaviors() {
+    const productItems = document.querySelectorAll('.product-item');
+    
+    productItems.forEach(item => {
+        const actionCell = item.querySelector('td:last-child');
+        if (actionCell) {
+            const buttons = actionCell.querySelectorAll('button');
+            if (window.innerWidth < 768) {
+                buttons.forEach(btn => {
+                    btn.style.width = '100%';
+                    btn.style.margin = '5px 0';
+                    btn.style.padding = '10px';
+                });
+            } else {
+                buttons.forEach(btn => {
+                    btn.style.width = '';
+                    btn.style.margin = '';
+                    btn.style.padding = '';
+                });
+            }
+        }
+    });
+    
+    // Adjust modal sizes for mobile
+    if (window.innerWidth < 768) {
+        document.querySelectorAll('.modal-content').forEach(modal => {
+            modal.style.width = '90%';
+        });
+    }
+}
+
+// Rest of your existing JavaScript...
+// (Keep all the other JavaScript functions you already have)
+
+</script>
+{% endblock %}

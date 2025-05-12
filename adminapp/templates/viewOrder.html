@@ -1,0 +1,633 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% load json_filters %}
+{% block content %}
+<div class="container-fluid mt-4">
+  <div class="row">
+    <!-- Order Details Header -->
+    <div class="col-12">
+      <h4 class="text-light mb-3">Order Details</h4>
+    </div>
+
+    <!-- User Information -->
+    <div class="col-lg-6 mb-4">
+      <div class="card shadow-lg bg-dark text-light">
+        <div class="card-header text-light">
+          <h6 class="mb-0 text-info">User Information</h6>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <h6 class="mb-2">User ID</h6>
+            <p class="card-text">
+              <span class="badge bg-secondary">{{ order.user.id }}</span>
+            </p>
+          </div>
+          <div class="mb-3">
+            <h6 class="mb-2">Name</h6>
+            <p class="card-text">
+              {{ order.user.get_full_name }}
+            </p>
+          </div>
+          <div class="mb-3">
+            <h6 class="mb-2">Email</h6>
+            <p class="card-text">{{ order.user.email }}</p>
+          </div>
+          <div class="mb-3">
+            <h6 class="mb-2">Mobile</h6>
+            <p class="card-text">{{ order.user.mobile }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Info -->
+    <div class="col-lg-6 mb-4">
+      <div class="card shadow-lg bg-dark text-light">
+        <div
+          class="card-header d-flex justify-content-between align-items-center text-light"
+        >
+          <h6 class="mb-0 text-info">Order Information</h6>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <h6 class="mb-2">Order ID</h6>
+            <p class="card-text">
+              <span class="badge bg-secondary">{{ order.id }}</span>
+            </p>
+          </div>
+          <div class="mb-3">
+            <h6 class="mb-2">Order Date</h6>
+            <p class="card-text">
+              {{ order.order_date|date:"d/m/Y H:i" }}
+            </p>
+          </div>
+
+          <!-- Display cancellation details -->
+          {% if order.order_status == 'Cancelled' or order.is_cancelled %}
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span><strong>Cancellation Details</strong></span>
+              <div class="text-end">
+                <div class="text-danger">{{ order.cancel_description }}</div>
+                <small class="text-muted">Cancelled on: {{ order.canceled_date|date:"d/m/Y H:i" }}</small>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Shipping Address -->
+    <div class="col-lg-12 mb-4">
+      <div class="card shadow-lg bg-dark text-light">
+        <div class="card-body">
+          <h6 class="mb-3 text-info">Shipping Address</h6>
+          <p class="card-text">
+            {% if order.shipping_address %}
+              <!-- Display shipping address if available -->
+              {{ order.shipping_address.address_line1 }},
+              {% if order.shipping_address.address_line2 %}{{ order.shipping_address.address_line2 }},{% endif %}
+              {{ order.shipping_address.city }},
+              {{ order.shipping_address.state }},
+              {% if order.shipping_address.country %}{{ order.shipping_address.country }},{% endif %}
+              
+            {% else %}
+              <!-- Parse and display delivery address as JSON -->
+              {% with delivery_address=order.delivery_address|parse_json %}
+                {{ delivery_address.full_name }},
+                {{ delivery_address.phone_number }},
+                {{ delivery_address.address_line1 }},
+                {% if delivery_address.address_line2 %}{{ delivery_address.address_line2 }},{% endif %}
+                {{ delivery_address.city }},
+                {{ delivery_address.state }},
+                {{ delivery_address.postal_code }}
+              {% endwith %}
+            {% endif %}
+          </p>
+          <!-- <p class="card-text">
+            {{ order.delivery_address }}
+            {% if order.shipping_address %}
+              <br>
+              {{ order.shipping_address.address_line1 }},
+              {% if order.shipping_address.address_line2 %}{{ order.shipping_address.address_line2 }},{% endif %}
+              {{ order.shipping_address.city }},
+              {{ order.shipping_address.state }},
+              {{ order.shipping_address.country }},
+              {{ order.shipping_address.zipcode }}
+            {% endif %}
+          </p> -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Method -->
+    <div class="col-lg-12 mb-4">
+      <div class="card shadow-lg bg-dark text-light">
+        <div class="card-body">
+          <h6 class="mb-3 text-info">Payment Method</h6>
+          <p class="card-text">{{ order.payment_method }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Items -->
+    <div class="col-lg-12 mb-4">
+      <div class="card shadow-lg bg-dark text-light">
+        <div class="card-body">
+          <h6 class="mb-3 text-info">Order Items</h6>
+          <table class="table table-bordered table-hover table-dark">
+            <thead class="bg-info text-dark">
+              <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Price (Each)</th>
+                <th>Total Price</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in order_items %}
+              <tr>
+                <td>
+                  {% if item.product_variation.product %}
+                    {{ item.product_variation.product.product_name }}
+                  {% else %}
+                    Product no longer available
+                  {% endif %}
+                </td>
+                <td>{{ item.quantity }}</td>
+                <td>₹{{ item.price|floatformat:2 }}</td>
+                <td>₹{{ item.total_price|floatformat:2 }}</td>
+                <td>
+                  {% if item.is_returned %}
+                    <span class="badge bg-info">Returned</span>
+                  {% elif item.is_cancelled %}
+                    <span class="badge bg-danger">Cancelled</span>
+                  {% elif item.return_status == 'Requested' %}
+                    <span class="badge bg-warning">Return Requested</span>
+                  {% else %}
+                    <span class="badge bg-success">{{ order.order_status }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if item.return_status == 'Requested' %}
+                    <button class="btn btn-success btn-sm approve-item-return" data-item-id="{{ item.id }}">
+                      Approve Return
+                    </button>
+                    <button class="btn btn-danger btn-sm reject-item-return" data-item-id="{{ item.id }}">
+                      Reject Return
+                    </button>
+                  {% endif %}
+                </td>
+              </tr>
+              {% if item.return_status == 'Requested' %}
+              <tr class="return-reason-row bg-dark text-warning">
+                <td colspan="6">
+                  <strong>Return Reason:</strong> {{ item.return_reason }}
+                </td>
+              </tr>
+              {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="col-lg-12 mb-4">
+      <div class="card shadow-lg bg-dark text-light">
+        <div class="card-body">
+          <h5 class="mb-4 text-info">Order Summary</h5>
+
+          <!-- Divider to separate sections -->
+          <hr class="bg-secondary" />
+
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span><strong>Total Amount</strong></span>
+            <span>₹{{ order.total_amount|floatformat:2 }}</span>
+          </div>
+
+          {% if order.is_coupon_applied or order.is_offer_applied %}
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span><strong>Discount Applied</strong></span>
+            <span>₹{{ order.refund_amount|floatformat:2 }}</span>
+          </div>
+          {% endif %}
+
+          <hr class="bg-secondary" />
+
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span><strong>Status</strong></span>
+            <span>
+              <span class="badge 
+                {% if order.order_status == 'Delivered' %}bg-success
+                {% elif order.order_status == 'Returned' %}bg-info
+                {% elif order.order_status == 'Cancelled' %}bg-danger
+                {% else %}bg-primary{% endif %} px-3 py-2">
+                {{ order.order_status }}
+              </span>
+            </span>
+          </div>
+          
+          {% if order.order_status == 'Cancelled' or order.is_cancelled %}
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span><strong>Cancellation Details</strong></span>
+              <div class="text-end">
+                <div class="text-danger">{{ order.cancel_description }}</div>
+                <small class="text-muted">Cancelled on: {{ order.canceled_date|date:"d/m/Y H:i" }}</small>
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- Divider to separate buttons -->
+          <hr class="bg-secondary" />
+
+          <div class="text-center mt-4">
+            <a href="{% url 'ordermanagement' %}" class="btn btn-primary">Back to Orders</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Return Details Section - for full order returns -->
+    {% if order.is_returned == False and order.return_reason and order.return_status != 'rejected'%}
+      <div class="col-lg-12 mb-4">
+        <div class="card shadow-lg bg-dark text-light">
+          <div class="card-header text-light">
+            <h6 class="mb-0 text-warning">Return Request (Full Order)</h6>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <h6 class="mb-2">Return Reason</h6>
+              <p class="card-text text-danger">{{ order.return_reason }}</p>
+            </div>
+            <div class="mb-3">
+              <h6 class="mb-2">Request Date</h6>
+              <p class="card-text">{{ order.return_request_date|date:"d/m/Y H:i" }}</p>
+            </div>
+            <div class="text-end">
+              <button id="approveReturnBtn" data-order-id="{{ order.id }}" class="btn btn-success">
+                Approve Return
+              </button>
+              <button id="rejectReturnBtn" data-order-id="{{ order.id }}" class="btn btn-danger">
+                Reject Return
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if order.cancel_request_status == 'Requested' %}
+    <div class="col-lg-12 mb-4">
+      <div class="card shadow-lg bg-dark text-light">
+        <div class="card-header text-light">
+          <h6 class="mb-0 text-danger">Cancellation Request</h6>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <h6 class="mb-2">Cancellation Reason</h6>
+            <p class="card-text text-danger">{{ order.cancel_description }}</p>
+          </div>
+          <div class="mb-3">
+            <h6 class="mb-2">Request Date</h6>
+            <p class="card-text">{{ order.cancel_request_date|date:"d/m/Y H:i" }}</p>
+          </div>
+          <div class="text-end">
+            <button id="approveCancelBtn" data-order-id="{{ order.id }}" class="btn btn-success me-2">
+              Approve Cancellation
+            </button>
+            <button id="rejectCancelBtn" data-order-id="{{ order.id }}" class="btn btn-danger">
+              Reject Cancellation
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script src="{% static '/js/orderManagement.js' %}"></script>
+  <script>
+// Function to approve return request
+function approveReturn(orderId) {
+    if (confirm('Are you sure you want to approve this return request?')) {
+        const csrftoken = getCookie('csrftoken');
+        const formData = new FormData();
+        formData.append('order_id', orderId);
+        
+        fetch('/adminapp/admin/approve_return_request/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                console.error('Server error:', response.status);
+                return response.text().then(text => {
+                    console.error('Response text:', text);
+                    throw new Error(`Server error: ${response.status}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert('Success: ' + data.message);
+                window.location.href = '/adminapp/ordermanagement/';
+            } else {
+                alert('Error: ' + (data.message || 'Operation failed'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Request failed: ' + error.message);
+        });
+    }
+}
+
+// Function to approve item return request
+function approveItemReturn(itemId) {
+    if (confirm('Are you sure you want to approve this item return request?')) {
+        const csrftoken = getCookie('csrftoken');
+        const formData = new FormData();
+        formData.append('item_id', itemId);
+        
+        fetch('/adminapp/admin/approve_item_return_request/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                console.error('Server error:', response.status);
+                return response.text().then(text => {
+                    console.error('Response text:', text);
+                    throw new Error(`Server error: ${response.status}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert('Success: ' + data.message);
+                window.location.reload(); // Reload to show updated status
+            } else {
+                alert('Error: ' + (data.message || 'Operation failed'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Request failed: ' + error.message);
+        });
+    }
+}
+
+// Function to reject item return request
+function rejectItemReturn(itemId) {
+    if (confirm('Are you sure you want to reject this item return request?')) {
+        const csrftoken = getCookie('csrftoken');
+        const formData = new FormData();
+        formData.append('item_id', itemId);
+        
+        fetch('/adminapp/admin/reject_item_return_request/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                console.error('Server error:', response.status);
+                return response.text().then(text => {
+                    console.error('Response text:', text);
+                    throw new Error(`Server error: ${response.status}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert('Success: ' + data.message);
+                window.location.reload(); // Reload to show updated status
+            } else {
+                alert('Error: ' + (data.message || 'Operation failed'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Request failed: ' + error.message);
+        });
+    }
+}
+
+// Function to process cancellation request
+function processCancellationRequest(orderId, action) {
+    if (confirm(`Are you sure you want to ${action} this cancellation request?`)) {
+        const csrftoken = getCookie('csrftoken');
+        const formData = new FormData();
+        formData.append('order_id', orderId);
+        formData.append('action', action);
+        
+        fetch('/adminapp/admin/process_cancellation_request/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                console.error('Server error:', response.status);
+                return response.text().then(text => {
+                    console.error('Response text:', text);
+                    throw new Error(`Server error: ${response.status}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert('Success: ' + data.message);
+                window.location.href = '/adminapp/ordermanagement/';
+            } else {
+                alert('Error: ' + (data.message || 'Operation failed'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Request failed: ' + error.message);
+        });
+    }
+}
+
+// Helper function to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Function to update order status
+function updateOrderStatus(orderId, status) {
+    const csrftoken = getCookie('csrftoken');
+    
+    const formData = new FormData();
+    formData.append('order_id', orderId);
+    formData.append('status', status);
+    
+    fetch('/adminapp/admin/update_order_status/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken
+        },
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(`Server error: ${response.status} - ${text}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            alert('Order status updated successfully!');
+            window.location.reload();
+        } else {
+            alert('Error: ' + (data.message || 'Status update failed'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Request failed: ' + error.message);
+    });
+}
+
+// Function to reject return
+function rejectReturn(orderId) {
+    if (confirm('Are you sure you want to reject this return request?')) {
+        const csrftoken = getCookie('csrftoken');
+        const formData = new FormData();
+        formData.append('order_id', orderId);
+        
+        fetch('/adminapp/admin/reject_return_request/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                console.error('Server error:', response.status);
+                return response.text().then(text => {
+                    console.error('Response text:', text);
+                    throw new Error(`Server error: ${response.status}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert('Success: ' + data.message);
+                window.location.href = '/adminapp/ordermanagement/';
+            } else {
+                alert('Error: ' + (data.message || 'Operation failed'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Request failed: ' + error.message);
+        });
+    }
+}
+
+// Add all event listeners when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Return request approval (full order)
+    const approveReturnBtn = document.getElementById('approveReturnBtn');
+    if (approveReturnBtn) {
+        approveReturnBtn.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            approveReturn(orderId);
+        });
+    }
+    
+    // Reject return request (full order)
+    const rejectReturnBtn = document.getElementById('rejectReturnBtn');
+    if (rejectReturnBtn) {
+        rejectReturnBtn.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            rejectReturn(orderId);
+        });
+    }
+    
+    // Item return approval buttons
+    const approveItemReturnBtns = document.querySelectorAll('.approve-item-return');
+    approveItemReturnBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const itemId = this.getAttribute('data-item-id');
+            approveItemReturn(itemId);
+        });
+    });
+    
+    // Item return rejection buttons
+    const rejectItemReturnBtns = document.querySelectorAll('.reject-item-return');
+    rejectItemReturnBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const itemId = this.getAttribute('data-item-id');
+            rejectItemReturn(itemId);
+        });
+    });
+    
+    // Cancellation request approval/rejection
+    const approveCancelBtn = document.getElementById('approveCancelBtn');
+    if (approveCancelBtn) {
+        approveCancelBtn.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            processCancellationRequest(orderId, 'approve');
+        });
+    }
+    
+    const rejectCancelBtn = document.getElementById('rejectCancelBtn');
+    if (rejectCancelBtn) {
+        rejectCancelBtn.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            processCancellationRequest(orderId, 'reject');
+        });
+    }
+});
+  </script>
+{% endblock %}

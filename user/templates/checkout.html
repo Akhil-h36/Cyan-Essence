@@ -1,0 +1,1795 @@
+{% extends 'sidebar.html' %}
+{% load static %}
+
+{% block styles %}
+<style>
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	font-family: 'Gruppo', sans-serif;
+	background-color: #f5f5f5;
+	color: #333;
+}
+
+header {
+	height: 200px;
+	background-image: url('/api/placeholder/400/320');
+	background-size: cover;
+	background-position: center;
+	position: relative;
+	overflow: hidden;
+}
+
+.hero-overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.4));
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.header-image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	position: absolute;
+}
+
+nav {
+	position: absolute;
+	top: 20px;
+	left: 20px;
+	z-index: 10;
+}
+
+nav ul {
+	display: flex;
+	list-style: none;
+}
+
+nav ul li {
+	margin-right: 20px;
+}
+
+nav ul li a {
+	color: #fff;
+	text-decoration: none;
+	font-size: 14px;
+	letter-spacing: 1px;
+	opacity: 0.8;
+	transition: opacity 0.3s ease;
+}
+
+nav ul li a:hover {
+	opacity: 1;
+}
+
+.container {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 20px;
+}
+
+h1 {
+	font-family: 'Grey Qo';
+	color: #2a9d8f;
+	text-align: center;
+	font-size: 60px;
+	margin: 30px 0;
+	text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+	animation: fadeIn 1.5s ease-out;
+}
+
+.checkout-container {
+	display: flex;
+	gap: 30px;
+	margin-bottom: 30px;
+}
+
+.checkout-left {
+	flex: 2;
+}
+
+.checkout-right {
+	flex: 1;
+}
+
+.checkout-section {
+	background-color: #fff;
+	border-radius: 8px;
+	box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+	padding: 20px;
+	margin-bottom: 20px;
+	animation: slideUp 0.6s ease-out;
+}
+
+.section-title {
+	color: #2a9d8f;
+	font-size: 18px;
+	margin-bottom: 15px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #eee;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+}
+
+.address-box {
+	border: 1px solid #eee;
+	padding: 15px;
+	border-radius: 6px;
+	margin-bottom: 20px;
+	position: relative;
+	transition: all 0.3s ease;
+	animation: fadeIn 0.8s ease-out;
+    cursor: pointer;
+}
+
+.address-box.active {
+	border: 2px solid #2a9d8f;
+	background-color: rgba(42, 157, 143, 0.05);
+}
+
+.address-box.active::before {
+	content: "✓";
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	color: #2a9d8f;
+	font-size: 14px;
+	font-weight: bold;
+}
+
+.address-box:hover {
+	transform: translateY(-3px);
+	box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+}
+
+.address-actions {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 10px;
+}
+
+.btn-edit-address {
+	background: none;
+	border: none;
+	color: #2a9d8f;
+	cursor: pointer;
+	font-size: 14px;
+	transition: color 0.3s ease;
+}
+
+.btn-edit-address:hover {
+	color: #1c6b61;
+	text-decoration: underline;
+}
+
+.btn-add-address {
+	background-color: #f0f0f0;
+	border: 1px dashed #ccc;
+	border-radius: 6px;
+	padding: 15px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	animation: fadeIn 0.8s ease-out;
+    width: 100%;
+}
+
+.btn-add-address:hover {
+	background-color: #e8e8e8;
+	border-color: #2a9d8f;
+	color: #2a9d8f;
+}
+
+.order-summary {
+	margin-top: 30px;
+}
+
+.order-item {
+	display: flex;
+	margin-bottom: 15px;
+	padding-bottom: 15px;
+	border-bottom: 1px solid #eee;
+	animation: fadeIn 0.8s ease-out;
+}
+
+.order-item:last-child {
+	border-bottom: none;
+}
+
+.order-item-image {
+	width: 80px;
+	height: 80px;
+	object-fit: cover;
+	border-radius: 4px;
+	margin-right: 15px;
+	flex-shrink: 0;
+}
+
+.order-item-details {
+	flex-grow: 1;
+}
+
+.order-item-name {
+	font-weight: bold;
+	margin-bottom: 5px;
+}
+
+.order-item-brand {
+	font-size: 12px;
+	color: #888;
+	margin-bottom: 5px;
+}
+
+.order-item-price {
+	font-weight: bold;
+	color: #2a9d8f;
+}
+
+.order-item-quantity {
+	font-size: 12px;
+	color: #888;
+}
+
+.order-total {
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 10px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #eee;
+}
+
+.order-total:last-child {
+	border-bottom: none;
+	font-weight: bold;
+	font-size: 18px;
+	margin-top: 15px;
+	padding-top: 15px;
+	border-top: 1px solid #eee;
+}
+
+.payment-method {
+    border: 1px solid #eee;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: fadeIn 0.8s ease-out;
+}
+
+.payment-method:hover {
+    border-color: #2a9d8f;
+    background-color: rgba(42, 157, 143, 0.05);
+}
+
+.payment-method.active {
+    border-color: #2a9d8f;
+    background-color: rgba(42, 157, 143, 0.05);
+}
+
+.payment-option-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.payment-option-header label {
+	display: flex;
+	align-items: center;
+	cursor: pointer;
+	flex-grow: 1;
+}
+
+.payment-option-header input[type="radio"] {
+	margin-right: 10px;
+}
+
+.payment-option-content {
+	margin-top: 10px;
+	padding-top: 10px;
+	border-top: 1px solid #eee;
+	display: none;
+}
+
+.payment-option.active .payment-option-content {
+	display: block;
+	animation: fadeIn 0.5s ease-out;
+}
+
+.payment-description {
+	color: #666;
+	font-size: 14px;
+	line-height: 1.5;
+}
+
+.coupon-section {
+	margin-top: 30px;
+}
+
+.available-coupons {
+	margin-bottom: 20px;
+}
+
+.coupon-item {
+	border: 1px dashed #2a9d8f;
+	padding: 10px;
+	border-radius: 4px;
+	margin-bottom: 10px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	background-color: rgba(42, 157, 143, 0.05);
+	cursor: pointer;
+	transition: all 0.3s ease;
+	animation: fadeIn 0.8s ease-out;
+}
+
+.coupon-item:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.coupon-code {
+	font-weight: bold;
+	color: #2a9d8f;
+}
+
+.coupon-discount {
+	color: #e63946;
+	font-weight: bold;
+}
+
+.coupon-form {
+	display: flex;
+	margin-top: 15px;
+}
+
+.coupon-input {
+	flex-grow: 1;
+	padding: 10px;
+	border: 1px solid #ddd;
+	border-radius: 4px 0 0 4px;
+	font-family: 'Gruppo', sans-serif;
+	transition: border-color 0.3s ease;
+}
+
+.coupon-input:focus {
+	outline: none;
+	border-color: #2a9d8f;
+}
+
+.btn-apply-coupon {
+	background-color: #2a9d8f;
+	color: white;
+	border: none;
+	padding: 10px 15px;
+	border-radius: 0 4px 4px 0;
+	cursor: pointer;
+	font-family: 'Gruppo', sans-serif;
+	transition: background-color 0.3s ease;
+}
+
+.btn-apply-coupon:hover {
+	background-color: #1c6b61;
+}
+
+.place-order-btn {
+	display: block;
+	width: 100%;
+	background-color: #2a9d8f;
+	color: white;
+	border: none;
+	padding: 15px;
+	border-radius: 4px;
+	margin-top: 20px;
+	cursor: pointer;
+	font-family: 'Gruppo', sans-serif;
+	font-size: 16px;
+	letter-spacing: 1px;
+	transition: all 0.3s ease;
+	text-transform: uppercase;
+	box-shadow: 0 4px 8px rgba(42, 157, 143, 0.2);
+	animation: pulse 2s infinite;
+}
+
+.place-order-btn:hover {
+	background-color: #1c6b61;
+	transform: translateY(-2px);
+	box-shadow: 0 6px 12px rgba(42, 157, 143, 0.3);
+}
+
+.place-order-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    animation: none;
+}
+
+.coupon-applied {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 10px;
+	background-color: rgba(42, 157, 143, 0.1);
+	border-radius: 4px;
+	margin-top: 15px;
+	animation: slideDown 0.5s ease-out;
+}
+
+.coupon-applied-text {
+	color: #2a9d8f;
+	font-weight: bold;
+}
+
+.btn-remove-coupon {
+	background: none;
+	border: none;
+	color: #e63946;
+	cursor: pointer;
+	font-size: 14px;
+	transition: color 0.3s ease;
+}
+
+.btn-remove-coupon:hover {
+	color: #c81e2a;
+}
+
+.address-form {
+    display: none;
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.address-form.active {
+    display: block;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: 'Gruppo', sans-serif;
+    transition: border-color 0.3s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #2a9d8f;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #2a9d8f;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-cancel {
+    background-color: #f0f0f0;
+    color: #333;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Gruppo', sans-serif;
+    transition: background-color 0.3s ease;
+}
+
+.btn-cancel:hover {
+    background-color: #e0e0e0;
+}
+
+.btn-save {
+    background-color: #2a9d8f;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Gruppo', sans-serif;
+    transition: background-color 0.3s ease;
+}
+
+.btn-save:hover {
+    background-color: #1c6b61;
+}
+
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    background-color: #2a9d8f;
+    color: white;
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transform: translateX(200%);
+    transition: transform 0.5s ease;
+    z-index: 1000;
+}
+
+.notification.show {
+    transform: translateX(0);
+}
+
+.error-message {
+    color: #e74c3c;
+    font-size: 12px;
+    margin-top: 5px;
+    display: none;
+}
+
+.payment-error {
+    color: #e74c3c;
+    font-size: 14px;
+    margin-top: 10px;
+    display: none;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+    100% { transform: scale(1); }
+}
+
+@media screen and (max-width: 768px) {
+    .checkout-container {
+        flex-direction: column;
+    }
+    
+    .checkout-right {
+        order: -1;
+    }
+}
+/* Add these styles to your existing CSS */
+
+/* Coupon Section */
+.coupon-section {
+    margin-top: 20px;
+}
+
+.btn-view-coupons {
+    background: none;
+    border: 1px solid #2a9d8f;
+    color: #2a9d8f;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-family: 'Gruppo', sans-serif;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.btn-view-coupons:hover {
+    background-color: rgba(42, 157, 143, 0.1);
+}
+
+/* Coupon Modal */
+.coupon-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.coupon-modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    width: 80%;
+    max-width: 800px;
+    animation: slideDown 0.4s ease-out;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.coupon-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.coupon-modal-header h2 {
+    color: #2a9d8f;
+    margin: 0;
+    font-size: 24px;
+}
+
+.close-modal {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close-modal:hover {
+    color: #2a9d8f;
+}
+
+.coupon-modal-body {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+/* Coupon Cards */
+.coupon-card {
+    border: 1px dashed #2a9d8f;
+    border-radius: 8px;
+    padding: 15px;
+    background-color: rgba(42, 157, 143, 0.05);
+    position: relative;
+    transition: all 0.3s ease;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.coupon-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.coupon-card-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.coupon-discount {
+    font-size: 18px;
+    font-weight: bold;
+    color: #e63946;
+}
+
+.coupon-code-container {
+    background-color: #f8f8f8;
+    border: 1px dashed #ccc;
+    border-radius: 4px;
+    padding: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.coupon-code {
+    font-family: monospace;
+    font-weight: bold;
+    color: #2a9d8f;
+    letter-spacing: 1px;
+}
+
+.copy-btn {
+    background: none;
+    border: none;
+    color: #2a9d8f;
+    cursor: pointer;
+    padding: 2px 5px;
+    font-size: 12px;
+    transition: all 0.3s ease;
+}
+
+.copy-btn:hover {
+    color: #1c6b61;
+    text-decoration: underline;
+}
+
+.coupon-details {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #666;
+}
+
+.coupon-min-order {
+    margin-top: 5px;
+}
+
+.coupon-validity {
+    margin-top: 5px;
+    font-style: italic;
+}
+
+.coupon-description {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #333;
+}
+
+/* Coupon Applied Message */
+.coupon-applied {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: rgba(42, 157, 143, 0.1);
+    border-radius: 4px;
+    border: 1px solid rgba(42, 157, 143, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.coupon-applied-text {
+    color: #2a9d8f;
+    font-weight: bold;
+}
+
+.applied-coupon-code {
+    font-family: monospace;
+    background-color: rgba(255, 255, 255, 0.5);
+    padding: 2px 4px;
+    border-radius: 2px;
+}
+
+/* No Coupons Message */
+.no-coupons-message {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-style: italic;
+}
+.wallet-warning {
+    color: #d9534f;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-top: 8px;
+    font-size: 14px;
+}
+
+.payment-error {
+    color: #d9534f;
+    margin-top: 10px;
+    display: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<header>
+    <img src="{% static 'images/checkoutbanner.webp' %}" alt="Shopping Cart" class="header-image" />
+    <div class="hero-overlay"></div>
+    <nav>
+        <ul>
+            <li><a href="{% url 'home' %}">HOME</a></li>
+            <li><a href="{% url 'myshop' %}">PRODUCTS</a></li>
+        </ul>
+    </nav>
+</header>
+
+<div class="container">
+    <h1>Checkout</h1>
+    
+    <div class="checkout-container">
+        <div class="checkout-left">
+            <div class="checkout-section">
+                <div class="section-title">DELIVERY ADDRESS</div>
+                
+                {% for address in addresses %}
+				<div class="address-box {% if forloop.first %}active{% endif %}" data-address-id="{{ address.address_id }}" onclick="selectAddress(this, '{{ address.address_id }}')">
+					<div class="address-content">
+						<strong>{{ address.full_name }}</strong><br>
+						{{ address.address_line1 }}<br>
+						{% if address.address_line2 %}{{ address.address_line2 }}<br>{% endif %}
+						{{ address.city }}, {{ address.state }} - {{ address.postal_code }}<br>
+						{{ address.country }}<br>
+						Phone: {{ address.phone_number }}
+					</div>
+				</div>
+				{% endfor %}
+                
+                <button class="btn-add-address" onclick="showNewAddressForm()">
+                    + ADD NEW ADDRESS
+                </button>
+                
+               
+                <div id="new-address-form" class="address-form">
+                    <form id="add-address-form">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" name="full_name" required>
+                            <div class="error-message" id="full_name_error_new">Please enter full name</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="text" name="phone_number" required>
+                            <div class="error-message" id="phone_error_new">Please enter phone number</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Address Line 1</label>
+                            <input type="text" name="address_line1" required>
+                            <div class="error-message" id="address_line1_error_new">Please enter address</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Address Line 2 (Optional)</label>
+                            <input type="text" name="address_line2">
+                        </div>
+                        <div class="form-group">
+                            <label>City</label>
+                            <input type="text" name="city" required>
+                            <div class="error-message" id="city_error_new">Please enter city</div>
+                        </div>
+                        <div class="form-group">
+                            <label>State</label>
+                            <input type="text" name="state" required>
+                            <div class="error-message" id="state_error_new">Please enter state</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Postal Code</label>
+                            <input type="text" name="postal_code" required>
+                            <div class="error-message" id="postal_code_error_new">Please enter postal code</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Country</label>
+                            <input type="text" name="country" required>
+                            <div class="error-message" id="country_error_new">Please enter country</div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-cancel" onclick="hideNewAddressForm()">CANCEL</button>
+                            <button type="button" class="btn-save" onclick="saveNewAddress()">SAVE ADDRESS</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="checkout-section">
+                <div class="section-title">PAYMENT METHOD</div>
+                
+                <div class="payment-method active" onclick="selectPaymentMethod('COD')">
+                    <input type="radio" name="payment_method" value="COD" checked id="payment_cod">
+                    <label for="payment_cod">Cash on Delivery (COD)</label>
+                    <p>Pay with cash when your order is delivered.</p>
+                </div>
+                
+                <div class="payment-method" onclick="selectPaymentMethod('Razorpay')">
+                    <input type="radio" name="payment_method" value="Razorpay" id="payment_razorpay">
+                    <label for="payment_razorpay">Razorpay (Credit/Debit Card, UPI, Netbanking)</label>
+                    <p>Secure payment with Razorpay.</p>
+                </div>
+                
+                <div class="payment-method" onclick="selectPaymentMethod('Wallet')">
+                    <input type="radio" name="payment_method" value="Wallet" id="payment_wallet">
+                    <label for="payment_wallet">Wallet (Balance: ₹{{ wallet_balance }})</label>
+                    <p>Use your wallet balance to pay.</p>
+                    {% if wallet_balance < total %}
+                    <div class="wallet-warning">
+                        <strong>Insufficient balance!</strong> Please add money to your wallet or choose a different payment method.
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div id="payment-error" class="payment-error">
+                    Please select a payment method
+                </div>
+            </div>
+        </div>
+        
+        <div class="checkout-right">
+            <div class="checkout-section">
+                <div class="section-title">ORDER SUMMARY</div>
+                
+                {% for item in cart_items %}
+                <div class="order-item">
+                    <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.product_name }}" class="order-item-image">
+                    <div class="order-item-details">
+                        <div class="order-item-name">{{ item.product.product_name }}</div>
+                        <div class="order-item-brand">{{ item.product.brand.brand_name }}</div>
+                        <div class="order-item-quantity">Qty: {{ item.quantity }}</div>
+                        <div class="order-item-size">{{ item.variance.size.size }} ml</div>
+                    </div>
+                    <div class="order-item-price">₹{{ item.total_price|floatformat:2 }}</div>
+                </div>
+                {% endfor %}
+                
+                <div class="order-total">
+                    <div>Subtotal</div>
+                    <div>₹{{ subtotal|floatformat:2 }}</div>
+                </div>
+                
+                <div class="order-total">
+                    <div>Discount</div>
+                    <div>-₹{{ discount|floatformat:2 }}</div>
+                </div>
+                
+                <div class="order-total">
+                    <div>VAT (5%)</div>
+                    <div>₹{{ vat|floatformat:2 }}</div>
+                </div>
+                
+                <div class="order-total">
+                    <div>Total</div>
+                    <div>₹{{ total|floatformat:2 }}</div>
+                </div>
+                
+                <button class="place-order-btn" onclick="placeOrder()">
+                    <span class="btn-text">PLACE ORDER</span>
+                    <span class="loading-spinner" style="display:none;">
+                        <i class="fas fa-spinner fa-spin"></i> Processing...
+                    </span>
+                </button>
+            </div>
+
+            <div class="checkout-section coupon-section">
+                <div class="section-title">APPLY COUPON</div>
+                
+                <div class="coupon-form">
+                    <input type="text" id="coupon-code" class="coupon-input" placeholder="Enter coupon code">
+                    <button class="btn-apply-coupon" onclick="applyCoupon()">APPLY</button>
+                </div>
+                
+                <div id="coupon-applied" class="coupon-applied" style="display: none;">
+                    <span class="coupon-applied-text">Coupon <span id="applied-coupon-code"></span> applied!</span>
+                    <button class="btn-remove-coupon" onclick="removeCoupon()">REMOVE</button>
+                </div>
+                
+                <div style="margin-top: 15px; text-align: center;">
+                    <button class="btn-view-coupons" onclick="openCouponModal()">VIEW AVAILABLE COUPONS</button>
+                </div>
+            </div>
+            
+            <!-- Add this at the bottom of the page, before the closing </div> of container -->
+            <div class="coupon-modal" id="couponModal">
+                <div class="coupon-modal-content">
+                    <div class="coupon-modal-header">
+                        <h2>Available Coupons</h2>
+                        <span class="close-modal" onclick="closeCouponModal()">&times;</span>
+                    </div>
+                    <div class="coupon-modal-body" id="coupon-cards-container">
+                        <!-- Coupon cards will be inserted here by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+
+
+        </div>
+    </div>
+</div>
+
+<div id="notification" class="notification"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function showNotification(message, isError = false) {
+    const notification = document.getElementById('notification');
+    notification.textContent = message;
+    notification.style.backgroundColor = isError ? '#e74c3c' : '#2a9d8f';
+    notification.classList.add('show');
+    
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, 3000);
+}
+
+// Initialize selected address
+let selectedAddressId = null;
+
+// Debug function to inspect address boxes
+function debugAddressBoxes() {
+    console.log("---- DEBUG: Address Boxes ----");
+    const boxes = document.querySelectorAll('.address-box');
+    console.log(`Found ${boxes.length} address boxes`);
+    
+    boxes.forEach((box, index) => {
+        const rawId = box.getAttribute('data-address-id');
+        const parsedId = parseInt(rawId);
+        const isActive = box.classList.contains('active');
+        
+        console.log(`Box ${index}: data-address-id="${rawId}", parsed=${parsedId}, isActive=${isActive}`);
+        console.log(box.outerHTML);
+    });
+}
+
+// DOM Content Loaded initialization
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM Content Loaded");
+    
+    // Debug address boxes
+    debugAddressBoxes();
+    
+    // Directly set up address boxes and their click events
+    const addressBoxes = document.querySelectorAll('.address-box');
+    addressBoxes.forEach(box => {
+        const addressId = box.getAttribute('data-address-id');
+        console.log(`Setting up address box with ID: ${addressId}`);
+        
+        // Add click event with explicit ID value
+        box.addEventListener('click', function() {
+            const clickedAddressId = this.getAttribute('data-address-id');
+            console.log(`Address box clicked, ID attribute: ${clickedAddressId}`);
+            selectAddress(this, clickedAddressId);
+        });
+        
+        // If this is the active one, set it as selected
+        if (box.classList.contains('active')) {
+            selectedAddressId = addressId;
+            console.log(`Found active address box, setting selectedAddressId to ${selectedAddressId}`);
+        }
+    });
+    
+    // If no active address was found but we have addresses, select the first one
+    if (!selectedAddressId && addressBoxes.length > 0) {
+        const firstAddressId = addressBoxes[0].getAttribute('data-address-id');
+        selectedAddressId = firstAddressId;
+        addressBoxes[0].classList.add('active');
+        console.log(`No active address found, selecting first one with ID: ${selectedAddressId}`);
+    }
+    
+    // Set default payment method
+    const defaultPayment = document.querySelector('input[name="payment_method"]:checked');
+    if (defaultPayment) {
+        selectPaymentMethod(defaultPayment.value);
+    }
+});
+
+function selectAddress(element, addressId) {
+    console.log(`selectAddress called with element:`, element, `addressId:`, addressId);
+    
+    // Remove active class from all address boxes
+    document.querySelectorAll('.address-box').forEach(box => {
+        box.classList.remove('active');
+    });
+    
+    // Add active class to clicked address box
+    element.classList.add('active');
+    
+    // Set selected address ID - store as string since that's how it comes from getAttribute
+    selectedAddressId = addressId;
+    console.log(`Address selected, ID set to: ${selectedAddressId}`);
+}
+
+function validateAddressForm(formData, formId) {
+    let isValid = true;
+    const requiredFields = [
+        'full_name', 'phone_number', 'address_line1', 
+        'city', 'state', 'postal_code', 'country'
+    ];
+    
+    requiredFields.forEach(field => {
+        const errorElement = document.getElementById(`${field}_error_${formId}`);
+        if (!formData.get(field) || formData.get(field).trim() === '') {
+            if (errorElement) errorElement.style.display = 'block';
+            isValid = false;
+        } else {
+            if (errorElement) errorElement.style.display = 'none';
+        }
+    });
+    
+    return isValid;
+}
+
+function showNewAddressForm() {
+    // Hide all address forms
+    document.querySelectorAll('.address-form').forEach(form => {
+        form.classList.remove('active');
+    });
+    
+    // Show new address form
+    const form = document.getElementById('new-address-form');
+    form.classList.add('active');
+    form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function hideNewAddressForm() {
+    const form = document.getElementById('new-address-form');
+    form.classList.remove('active');
+    
+    // Clear form fields
+    form.querySelectorAll('input').forEach(input => {
+        input.value = '';
+    });
+    
+    // Hide all error messages
+    form.querySelectorAll('.error-message').forEach(error => {
+        error.style.display = 'none';
+    });
+}
+
+function saveNewAddress() {
+    const form = document.getElementById('add-address-form');
+    const formData = new FormData(form);
+    
+    if (!validateAddressForm(formData, 'new')) {
+        return;
+    }
+    
+    const csrftoken = getCookie('csrftoken');
+    
+    // Show loading state
+    const saveBtn = form.querySelector('.btn-save');
+    const originalText = saveBtn.textContent;
+    saveBtn.textContent = 'Saving...';
+    saveBtn.disabled = true;
+    
+    fetch('/save-address/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            full_name: formData.get("full_name"),
+            phone_number: formData.get("phone_number"),
+            address_line1: formData.get("address_line1"),
+            address_line2: formData.get("address_line2"),
+            city: formData.get("city"),
+            state: formData.get("state"),
+            postal_code: formData.get("postal_code"),
+            country: formData.get("country")
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Address added successfully');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showNotification('Failed to add address', true);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred', true);
+    })
+    .finally(() => {
+        // Reset button state
+        saveBtn.textContent = originalText;
+        saveBtn.disabled = false;
+    });
+}
+
+// Payment method handling
+function selectPaymentMethod(method) {
+    // Remove active class from all payment methods
+    document.querySelectorAll('.payment-method').forEach(box => {
+        box.classList.remove('active');
+    });
+    
+    // Find and select the clicked payment method
+    const paymentMethodElements = document.querySelectorAll('.payment-method');
+    for (let i = 0; i < paymentMethodElements.length; i++) {
+        const input = paymentMethodElements[i].querySelector('input[type="radio"]');
+        if (input.value === method) {
+            paymentMethodElements[i].classList.add('active');
+            input.checked = true;
+            break;
+        }
+    }
+    
+    // Hide payment error if shown
+    document.getElementById('payment-error').style.display = 'none';
+}
+
+// Place order function
+function placeOrder() {
+    console.log("Starting placeOrder function with addressId:", selectedAddressId);
+    
+    // Debug address boxes
+    debugAddressBoxes();
+    
+    // Double-check if we have a selected address
+    if (!selectedAddressId) {
+        const activeAddress = document.querySelector('.address-box.active');
+        console.log("Looking for active address box:", activeAddress);
+        
+        if (activeAddress) {
+            const tempId = activeAddress.getAttribute('data-address-id');
+            console.log(`Found active address with data-address-id="${tempId}"`);
+            selectedAddressId = tempId;
+        }
+    }
+    
+    // Final check and validation
+    if (!selectedAddressId) {
+        showNotification('Please select a delivery address', true);
+        return;
+    }
+    
+    // Get selected payment method
+    const selectedPaymentMethod = document.querySelector('input[name="payment_method"]:checked');
+    if (!selectedPaymentMethod) {
+        document.getElementById('payment-error').style.display = 'block';
+        return;
+    }
+    
+    const paymentMethod = selectedPaymentMethod.value;
+    
+    console.log(`Sending order with address ID: "${selectedAddressId}", Payment method: "${paymentMethod}"`);
+    
+    // Show loading state
+    const orderBtn = document.querySelector('.place-order-btn');
+    const btnText = orderBtn.querySelector('.btn-text');
+    const loadingSpinner = orderBtn.querySelector('.loading-spinner');
+    
+    btnText.style.display = 'none';
+    loadingSpinner.style.display = 'inline-block';
+    orderBtn.disabled = true;
+    
+    const csrftoken = getCookie('csrftoken');
+    
+    // Prepare the request payload
+    const orderData = {
+        address_id: selectedAddressId,
+        payment_method: paymentMethod
+    };
+    
+    // Log the exact data being sent to aid in debugging
+    console.log("Sending order data:", JSON.stringify(orderData)); 
+    
+    fetch('/place-order/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body: JSON.stringify(orderData)
+    })
+    .then(response => {
+        console.log("Response status:", response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log("Response data:", data);
+        
+        if (data.success) {
+            showNotification('Order placed successfully!');
+            
+            if (paymentMethod === 'Razorpay' && data.payment_data) {
+                // Handle Razorpay payment
+                handleRazorpayPayment(data.payment_data, data.order_id);
+            } else if (paymentMethod === 'Wallet') {
+                if (data.success) {
+                    // Payment successful
+                    window.location.href = '/order-confirmation/' + data.order_id + '/';
+                } else {
+                    // Show the error message
+                    showNotification(data.message || 'Insufficient wallet balance', true);
+                    // Reset button state
+                    btnText.style.display = 'inline-block';
+                    loadingSpinner.style.display = 'none';
+                    orderBtn.disabled = false;
+                }
+            } else {
+                // Redirect to order confirmation page for other payment methods (like COD)
+                setTimeout(() => {
+                    window.location.href = '/order-confirmation/' + data.order_id + '/';
+                }, 1500);
+            }
+        } else if (data.error) {
+            showNotification(data.error, true);
+            
+            // Reset button state
+            btnText.style.display = 'inline-block';
+            loadingSpinner.style.display = 'none';
+            orderBtn.disabled = false;
+        } else {
+            showNotification(data.message || 'Failed to place order', true);
+            
+            // Reset button state
+            btnText.style.display = 'inline-block';
+            loadingSpinner.style.display = 'none';
+            orderBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred while processing your order', true);
+        
+        // Reset button state
+        btnText.style.display = 'inline-block';
+        loadingSpinner.style.display = 'none';
+        orderBtn.disabled = false;
+    });
+}
+</script>
+<script>
+function handleRazorpayPayment(paymentData, orderId) {
+    console.log("Initializing Razorpay with payment data:", paymentData);
+    
+    const options = {
+        key: paymentData.key_id,
+        amount: paymentData.amount,
+        currency: paymentData.currency,
+        name: "Perfume Shop",
+        description: "Purchase Transaction",
+        order_id: paymentData.order_id,
+        handler: function (response) {
+            console.log("Payment successful, verifying payment...", response);
+            // On successful payment
+            verifyPayment(response, orderId);
+        },
+        prefill: {
+            name: paymentData.name || "",
+            email: paymentData.email || "",
+            contact: paymentData.phone || ""
+        },
+        notes: {
+            order_id: orderId
+        },
+        theme: {
+            color: "#2a9d8f"
+        },
+        modal: {
+            ondismiss: function() {
+                console.log('Payment modal dismissed');
+                // Handle modal dismissal (user clicked back/closed the modal)
+                updatePaymentStatus(orderId, 'cancelled', 'Payment process cancelled by user');
+                
+                // Reset order button
+                const orderBtn = document.querySelector('.place-order-btn');
+                const btnText = orderBtn.querySelector('.btn-text');
+                const loadingSpinner = orderBtn.querySelector('.loading-spinner');
+                btnText.style.display = 'inline-block';
+                loadingSpinner.style.display = 'none';
+                orderBtn.disabled = false;
+                
+                showNotification('Payment process cancelled', true);
+            }
+        }
+    };
+
+    try {
+        console.log("Creating Razorpay instance with options:", options);
+        const rzp1 = new Razorpay(options);
+        
+        rzp1.on('payment.failed', function (response) {
+            console.error('Payment failed:', response.error);
+            showNotification('Payment failed: ' + response.error.description, true);
+            
+            // Update the order status to indicate payment failure
+            updatePaymentStatus(orderId, 'failed', response.error.description);
+            
+            // Reset order button
+            const orderBtn = document.querySelector('.place-order-btn');
+            const btnText = orderBtn.querySelector('.btn-text');
+            const loadingSpinner = orderBtn.querySelector('.loading-spinner');
+            btnText.style.display = 'inline-block';
+            loadingSpinner.style.display = 'none';
+            orderBtn.disabled = false;
+        });
+
+        // Open Razorpay checkout modal
+        console.log("Opening Razorpay checkout");
+        rzp1.open();
+    } catch (error) {
+        console.error("Error initializing Razorpay:", error);
+        showNotification('Failed to initialize payment gateway. Please try again.', true);
+        
+        // Reset order button
+        const orderBtn = document.querySelector('.place-order-btn');
+        const btnText = orderBtn.querySelector('.btn-text');
+        const loadingSpinner = orderBtn.querySelector('.loading-spinner');
+        btnText.style.display = 'inline-block';
+        loadingSpinner.style.display = 'none';
+        orderBtn.disabled = false;
+    }
+}
+
+function verifyPayment(paymentResponse, orderId) {
+    console.log("Verifying payment for order:", orderId, "Response:", paymentResponse);
+    const csrftoken = getCookie('csrftoken');
+    
+    fetch('/verify-payment/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body: JSON.stringify({
+            razorpay_payment_id: paymentResponse.razorpay_payment_id,
+            razorpay_order_id: paymentResponse.razorpay_order_id,
+            razorpay_signature: paymentResponse.razorpay_signature,
+            order_id: orderId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Payment verification response:", data);
+        
+        if (data.success) {
+            showNotification('Payment successful!');
+            setTimeout(() => {
+                window.location.href = '/order-confirmation/' + orderId + '/';
+            }, 1500);
+        } else {
+            showNotification('Payment verification failed: ' + (data.message || 'Unknown error'), true);
+            // Update order status to failed
+            updatePaymentStatus(orderId, 'failed', 'Payment verification failed');
+            // Reset order button
+            const orderBtn = document.querySelector('.place-order-btn');
+            const btnText = orderBtn.querySelector('.btn-text');
+            const loadingSpinner = orderBtn.querySelector('.loading-spinner');
+            btnText.style.display = 'inline-block';
+            loadingSpinner.style.display = 'none';
+            orderBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error during payment verification:', error);
+        showNotification('An error occurred during payment verification', true);
+        // Update order status to failed
+        updatePaymentStatus(orderId, 'failed', 'Payment verification error');
+        // Reset order button
+        const orderBtn = document.querySelector('.place-order-btn');
+        const btnText = orderBtn.querySelector('.btn-text');
+        const loadingSpinner = orderBtn.querySelector('.loading-spinner');
+        btnText.style.display = 'inline-block';
+        loadingSpinner.style.display = 'none';
+        orderBtn.disabled = false;
+    });
+}
+
+// Function to update payment status when payment fails or is cancelled
+function updatePaymentStatus(orderId, status, reason) {
+    const csrftoken = getCookie('csrftoken');
+    
+    fetch('/update-payment-status/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body: JSON.stringify({
+            order_id: orderId,
+            status: status,
+            reason: reason || 'Payment cancelled by user'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Payment status updated successfully');
+            // Redirect to order confirmation page to show the failed status
+            setTimeout(() => {
+                window.location.href = '/order-confirmation/' + orderId + '/';
+            }, 1500);
+        } else {
+            console.error('Failed to update payment status:', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error updating payment status:', error);
+    });
+}
+
+
+
+let availableCoupons = [];
+
+// Function to fetch available coupons
+function fetchAvailableCoupons() {
+    const csrftoken = getCookie('csrftoken');
+    
+    fetch('/get-available-coupons/', {
+        method: 'GET',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            availableCoupons = data.coupons;
+            renderCouponCards();
+        } else {
+            console.error('Failed to load coupons:', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching coupons:', error);
+    });
+}
+
+// Function to render coupon cards in the modal
+function renderCouponCards() {
+    const container = document.getElementById('coupon-cards-container');
+    container.innerHTML = '';
+    
+    if (availableCoupons.length === 0) {
+        container.innerHTML = '<div class="no-coupons-message">No coupons available at this time.</div>';
+        return;
+    }
+    
+    availableCoupons.forEach(coupon => {
+        const discountText = coupon.discount_type === 'percentage' 
+            ? `${coupon.discount_value}% OFF` 
+            : `₹${coupon.discount_value} OFF`;
+            
+        const validFrom = new Date(coupon.valid_from).toLocaleDateString();
+        const validTo = new Date(coupon.valid_to).toLocaleDateString();
+        
+        const card = document.createElement('div');
+        card.className = 'coupon-card';
+        card.innerHTML = `
+            <div class="coupon-card-header">
+                <div class="coupon-discount">${discountText}</div>
+                ${coupon.usage_limit ? `<div class="coupon-limit">Uses: ${coupon.usage_limit}</div>` : ''}
+            </div>
+            <div class="coupon-description">${coupon.description || 'Special discount coupon'}</div>
+            <div class="coupon-code-container">
+                <span class="coupon-code">${coupon.coupon_code}</span>
+                <button class="copy-btn" onclick="copyCouponCode('${coupon.coupon_code}')">COPY</button>
+            </div>
+            <div class="coupon-details">
+                ${coupon.min_order_amount ? `<div class="coupon-min-order">Min. Order: ₹${coupon.min_order_amount}</div>` : ''}
+                ${coupon.max_discount_value ? `<div class="coupon-max-discount">Max Discount: ₹${coupon.max_discount_value}</div>` : ''}
+                <div class="coupon-validity">Valid from ${validFrom} to ${validTo}</div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// Function to copy coupon code to clipboard
+function copyCouponCode(code) {
+    // Fill the coupon input field
+    document.getElementById('coupon-code').value = code;
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(code)
+        .then(() => {
+            showNotification('Coupon code copied to clipboard!');
+            closeCouponModal();
+        })
+        .catch(err => {
+            console.error('Failed to copy coupon code:', err);
+        });
+}
+
+// Function to open coupon modal
+function openCouponModal() {
+    fetchAvailableCoupons();
+    document.getElementById('couponModal').style.display = 'block';
+    document.body.style.overflow = 'hidden'; // Prevent scrolling behind modal
+}
+
+// Function to close coupon modal
+function closeCouponModal() {
+    document.getElementById('couponModal').style.display = 'none';
+    document.body.style.overflow = 'auto'; // Re-enable scrolling
+}
+
+// Function to apply coupon
+function applyCoupon() {
+    const couponCode = document.getElementById('coupon-code').value.trim();
+    
+    if (!couponCode) {
+        showNotification('Please enter a coupon code', true);
+        return;
+    }
+    
+    const csrftoken = getCookie('csrftoken');
+    
+    // Show loading state
+    const applyBtn = document.querySelector('.btn-apply-coupon');
+    const originalText = applyBtn.textContent;
+    applyBtn.textContent = 'Applying...';
+    applyBtn.disabled = true;
+    
+    fetch('/apply-coupon/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            coupon_code: couponCode
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show applied coupon message
+            document.getElementById('applied-coupon-code').textContent = couponCode;
+            document.getElementById('coupon-applied').style.display = 'flex';
+            
+            // Update price information
+            updateOrderSummary(data.cart_data);
+            
+            showNotification('Coupon applied successfully!');
+        } else {
+            showNotification(data.message || 'Failed to apply coupon', true);
+        }
+    })
+    .catch(error => {
+        console.error('Error applying coupon:', error);
+        showNotification('An error occurred while applying the coupon', true);
+    })
+    .finally(() => {
+        // Reset button state
+        applyBtn.textContent = originalText;
+        applyBtn.disabled = false;
+    });
+}
+
+// Function to remove applied coupon
+function removeCoupon() {
+    const csrftoken = getCookie('csrftoken');
+    
+    // Show loading state
+    const removeBtn = document.querySelector('.btn-remove-coupon');
+    const originalText = removeBtn.textContent;
+    removeBtn.textContent = 'Removing...';
+    removeBtn.disabled = true;
+    
+    fetch('/remove-coupon/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Hide applied coupon message
+            document.getElementById('coupon-applied').style.display = 'none';
+            document.getElementById('coupon-code').value = '';
+            
+            // Update price information
+            updateOrderSummary(data.cart_data);
+            
+            showNotification('Coupon removed successfully!');
+        } else {
+            showNotification(data.message || 'Failed to remove coupon', true);
+        }
+    })
+    .catch(error => {
+        console.error('Error removing coupon:', error);
+        showNotification('An error occurred while removing the coupon', true);
+    })
+    .finally(() => {
+        // Reset button state
+        removeBtn.textContent = originalText;
+        removeBtn.disabled = false;
+    });
+}
+
+// Function to update order summary after applying/removing coupon
+// Function to update order summary after applying/removing coupon
+function updateOrderSummary(cartData) {
+    // Get all order total rows
+    const orderTotalRows = document.querySelectorAll('.order-total');
+    
+    // Update subtotal (first row)
+    if (orderTotalRows[0]) {
+        const subtotalValueElement = orderTotalRows[0].querySelector('div:last-child');
+        if (subtotalValueElement) {
+            subtotalValueElement.textContent = `₹${cartData.subtotal.toFixed(2)}`;
+        }
+    }
+    
+    // Update discount (second row)
+    if (orderTotalRows[1]) {
+        const discountValueElement = orderTotalRows[1].querySelector('div:last-child');
+        if (discountValueElement) {
+            discountValueElement.textContent = `-₹${cartData.discount.toFixed(2)}`;
+        }
+    }
+    
+    // Update VAT (third row)
+    if (orderTotalRows[2]) {
+        const vatValueElement = orderTotalRows[2].querySelector('div:last-child');
+        if (vatValueElement) {
+            vatValueElement.textContent = `₹${cartData.vat.toFixed(2)}`;
+        }
+    }
+    
+    // Update total (fourth row)
+    if (orderTotalRows[3]) {
+        const totalValueElement = orderTotalRows[3].querySelector('div:last-child');
+        if (totalValueElement) {
+            totalValueElement.textContent = `₹${cartData.total.toFixed(2)}`;
+        }
+    }
+}
+
+// Close the modal if user clicks outside of it
+window.onclick = function(event) {
+    const modal = document.getElementById('couponModal');
+    if (event.target === modal) {
+        closeCouponModal();
+    }
+};
+
+// Check if there's an applied coupon when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const existingCoupon = '{{ applied_coupon_code }}';
+    if (existingCoupon && existingCoupon !== '') {
+        document.getElementById('applied-coupon-code').textContent = existingCoupon;
+        document.getElementById('coupon-applied').style.display = 'flex';
+    }
+});
+</script>
+{% endblock %}

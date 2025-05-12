@@ -1,0 +1,610 @@
+{% extends 'sidebar.html' %}
+{% load static %}
+
+{% block styles %}
+<style>
+    :root {
+      --teal:  #1b4a4a;
+      --light-teal: #1d5858;
+      --skyblueoff: #227870;
+      --light-skyblueoff: #45b59b;
+      --dark-teal: #006666;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Gruppo', sans-serif;
+      background-color: #f9f9f9;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    header {
+        height: 200px;
+        background-image: url('/api/placeholder/400/320');
+        background-size: cover;
+        background-position: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.4));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .header-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        position: absolute;
+    }
+    
+    .payment-container {
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 30px;
+        background: linear-gradient(135deg, var(--light-teal), var(--light-skyblueoff));
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        position: relative;
+        overflow: hidden;
+        transform: translateY(50px);
+        opacity: 0;
+        animation: slideUp 0.8s ease 0.5s forwards;
+    }
+    
+    @keyframes slideUp {
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    .payment-container::before {
+      content: '';
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      top: -50%;
+      left: -50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 60%);
+      transform: rotate(45deg);
+      z-index: 0;
+      opacity: 0;
+      animation: shimmer 3s ease-in-out 1s infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { opacity: 0; transform: rotate(45deg) translateY(30px); }
+      30% { opacity: 0.4; }
+      70% { opacity: 0.1; }
+      100% { opacity: 0; transform: rotate(45deg) translateY(-30px); }
+    }
+    
+    .payment-header {
+        text-align: center;
+        margin-bottom: 25px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .payment-header h1 {
+        font-family: 'Grey Qo', cursive;
+        font-size: 2.8rem;
+        margin-bottom: 10px;
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .payment-header p {
+        font-size: 1.2rem;
+        color: white;
+    }
+    
+    .order-summary {
+        background-color: white;
+        padding: 25px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        position: relative;
+        z-index: 1;
+        transform: scale(0.9);
+        opacity: 0;
+        animation: popIn 0.6s ease 1.2s forwards;
+    }
+    
+    @keyframes popIn {
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    
+    .summary-title {
+        font-size: 1.5rem;
+        color: var(--teal);
+        margin-bottom: 15px;
+        border-bottom: 2px solid var(--light-skyblueoff);
+        padding-bottom: 10px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .summary-title::before {
+        content: '';
+        display: inline-block;
+        width: 5px;
+        height: 20px;
+        background: linear-gradient(to bottom, var(--teal), var(--skyblueoff));
+        margin-right: 10px;
+        border-radius: 3px;
+    }
+    
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .summary-row:last-child {
+        border-bottom: none;
+        font-weight: bold;
+        color: var(--dark-teal);
+        font-size: 1.1rem;
+    }
+    
+    .summary-label {
+        font-weight: bold;
+        color: var(--dark-teal);
+    }
+    
+    .payment-methods {
+        background-color: white;
+        padding: 25px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        position: relative;
+        z-index: 1;
+        transform: scale(0.9);
+        opacity: 0;
+        animation: popIn 0.6s ease 1.4s forwards;
+    }
+    
+    .payment-button {
+        background: linear-gradient(to right, var(--teal), var(--skyblueoff));
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 15px 25px;
+        font-family: 'Gruppo', sans-serif;
+        font-size: 1.1rem;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 20px;
+        box-shadow: 0 5px 15px rgba(0,128,128,0.2);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeButton 0.5s ease 1.6s forwards;
+    }
+    
+    @keyframes fadeButton {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .payment-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,128,128,0.3);
+    }
+    
+    .payment-button:active {
+        transform: translateY(-1px);
+    }
+    
+    .payment-button::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255,255,255,0.3);
+        border-radius: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        transition: transform 0.4s ease-out;
+    }
+    
+    .payment-button:hover::after {
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 0;
+    }
+    
+    .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        color: white;
+        text-decoration: none;
+        font-weight: bold;
+        position: relative;
+        z-index: 1;
+        opacity: 0;
+        animation: fadeIn 1s ease 1.8s forwards;
+    }
+    
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+    
+    .back-link:hover {
+        text-decoration: underline;
+    }
+    
+    .secure-payment {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 15px;
+        color: white;
+        font-size: 0.9rem;
+        opacity: 0;
+        animation: fadeIn 1s ease 2s forwards;
+    }
+    
+    .secure-payment::before {
+        content: '🔒';
+        margin-right: 5px;
+    }
+    
+    .wave {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 15px;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z' opacity='.25' fill='%23008080'%3E%3C/path%3E%3Cpath d='M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z' opacity='.5' fill='%2387CEEB'%3E%3C/path%3E%3Cpath d='M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z' fill='%235fb5b5'%3E%3C/path%3E%3C/svg%3E") repeat-x;
+        animation: wave 20s linear infinite;
+    }
+    
+    @keyframes wave {
+      0% { background-position: 0; }
+      100% { background-position: 1200px; }
+    }
+    
+    /* Order Items Section */
+    .order-items {
+        background-color: white;
+        padding: 25px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        position: relative;
+        z-index: 1;
+        transform: scale(0.9);
+        opacity: 0;
+        animation: popIn 0.6s ease 1.3s forwards;
+    }
+    
+    .item-list {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .item {
+        display: flex;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .item:last-child {
+        border-bottom: none;
+    }
+    
+    .item-details {
+        flex-grow: 1;
+    }
+    
+    .item-name {
+        font-weight: bold;
+        color: var(--teal);
+    }
+    
+    .item-price {
+        color: var(--dark-teal);
+        font-weight: bold;
+    }
+    
+    /* Loading state */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255,255,255,0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    
+    .spinner {
+        width: 60px;
+        height: 60px;
+        border: 6px solid var(--light-skyblueoff);
+        border-radius: 50%;
+        border-top-color: var(--teal);
+        animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .loading .loading-overlay {
+        display: flex;
+    }
+    
+    /* Error message */
+    .error-message {
+        background-color: #fff;
+        color: #d9534f;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        border-left: 4px solid #d9534f;
+        display: none;
+    }
+    
+    @media (max-width: 768px) {
+        .payment-container {
+            margin: 20px 15px;
+            padding: 20px;
+        }
+        
+        .payment-header h1 {
+            font-size: 2.2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<header>
+    <img src="{% static 'images/checkoutbanner.webp' %}" alt="Payment" class="header-image" />
+    <div class="hero-overlay"></div>
+    <nav>
+        <ul>
+            <li><a href="{% url 'home' %}">HOME</a></li>
+            <li><a href="{% url 'products' %}">PRODUCTS</a></li>
+        </ul>
+    </nav>
+</header>
+
+<div class="payment-container">
+    <div class="payment-header">
+        <h1>Complete Your Payment</h1>
+        <p>Order #{{ order.id }}</p>
+    </div>
+    
+    <div class="error-message" id="error-message"></div>
+    
+    <div class="order-summary">
+        <h2 class="summary-title">Order Summary</h2>
+        <div class="summary-row">
+            <span class="summary-label">Order Date:</span>
+            <span>{{ order.order_date|date:"M d, Y" }}</span>
+        </div>
+        {% if order.items.count > 0 %}
+        <div class="summary-row">
+            <span class="summary-label">Items:</span>
+            <span>{{ order.items.count }}</span>
+        </div>
+        {% endif %}
+        <div class="summary-row">
+            <span class="summary-label">Total Amount:</span>
+            <span>${{ order.total_amount }}</span>
+        </div>
+    </div>
+    
+    {% if order.items.count > 0 %}
+    <div class="order-items">
+        <h2 class="summary-title">Order Items</h2>
+        <ul class="item-list">
+            {% for item in order.items.all %}
+            <li class="item">
+                <div class="item-details">
+                    <div class="item-name">{{ item.product_variation.product.product_name }}</div>
+                    <div class="item-meta">Quantity: {{ item.quantity }}</div>
+                </div>
+                <div class="item-price">${{ item.price }}</div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
+    <div id="razorpay-button"></div>
+    
+    <div class="secure-payment">
+        Secure payment processed by Razorpay
+    </div>
+    
+    <a href="{% url 'order_detail' order.id %}" class="back-link">Back to Order Details</a>
+    
+    <div class="wave"></div>
+</div>
+
+<div class="loading-overlay">
+    <div class="spinner"></div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const errorMessageEl = document.getElementById('error-message');
+        
+        var options = {
+            "key": "{{ payment_data.key_id }}",
+            "amount": "{{ payment_data.amount }}",
+            "currency": "{{ payment_data.currency }}",
+            "name": "{{ payment_data.name }}",
+            "description": "Order #{{ order.id }}",
+            "order_id": "{{ payment_data.order_id }}",
+            "prefill": {
+                "name": "{{ payment_data.name }}",
+                "email": "{{ payment_data.email }}",
+                "contact": "{{ payment_data.phone }}"
+            },
+            "handler": function (response) {
+                // Show loading indicator
+                document.body.classList.add('loading');
+                
+                // Send verification to backend
+                fetch('{% url "verify_payment" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_signature: response.razorpay_signature,
+                        order_id: '{{ order.id }}'
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Hide loading indicator
+                    document.body.classList.remove('loading');
+                    
+                    if (data.success) {
+                        // Show success animation before redirecting
+                        const successAnimation = document.createElement('div');
+                        successAnimation.style.position = 'fixed';
+                        successAnimation.style.top = '0';
+                        successAnimation.style.left = '0';
+                        successAnimation.style.width = '100%';
+                        successAnimation.style.height = '100%';
+                        successAnimation.style.backgroundColor = 'rgba(255,255,255,0.9)';
+                        successAnimation.style.display = 'flex';
+                        successAnimation.style.justifyContent = 'center';
+                        successAnimation.style.alignItems = 'center';
+                        successAnimation.style.zIndex = '9999';
+                        
+                        const successContent = document.createElement('div');
+                        successContent.style.textAlign = 'center';
+                        successContent.innerHTML = '<div style="width: 80px; height: 80px; background-color: #5cb85c; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px; font-size: 40px; color: white;">✓</div><h2 style="color: #5cb85c; margin-bottom: 10px;">Payment Successful!</h2><p>Redirecting to your order confirmation...</p>';
+                        
+                        successAnimation.appendChild(successContent);
+                        document.body.appendChild(successAnimation);
+                        
+                        setTimeout(function() {
+                            window.location.href = "{% url 'order_confirmation' order.id %}";
+                        }, 2000);
+                    } else {
+                        // Show error message
+                        errorMessageEl.style.display = 'block';
+                        errorMessageEl.textContent = "Payment verification failed: " + data.message;
+                    }
+                })
+                .catch(error => {
+                    // Hide loading indicator
+                    document.body.classList.remove('loading');
+                    
+                    // Show error message
+                    errorMessageEl.style.display = 'block';
+                    errorMessageEl.textContent = "An error occurred during payment processing. Please try again.";
+                    console.error('Error:', error);
+                });
+            },
+            "modal": {
+                "ondismiss": function() {
+                    // When user closes the payment modal without completing payment
+                    fetch('{% url "razorpay_payment_cancel" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({
+                            razorpay_order_id: "{{ payment_data.order_id }}",
+                            order_id: '{{ order.id }}'
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            if (data.redirect_url) {
+                                window.location.href = data.redirect_url;
+                            } else {
+                                window.location.reload();
+                            }
+                        } else {
+                            errorMessageEl.style.display = 'block';
+                            errorMessageEl.textContent = 'Failed to process cancellation: ' + (data.message || 'Unknown error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        errorMessageEl.style.display = 'block';
+                        errorMessageEl.textContent = 'An error occurred while processing your cancellation';
+                    });
+                }
+            },
+            "theme": {
+                "color": "#1b4a4a"
+            }
+        };
+                
+        var rzp = new Razorpay(options);
+        
+        // Create and append a button to initiate payment
+        var button = document.createElement('button');
+        button.className = 'payment-button';
+        button.textContent = 'Pay Now';
+        button.onclick = function() {
+            rzp.open();
+        };
+        
+        document.getElementById('razorpay-button').appendChild(button);
+    });
+</script>
+{% endblock %}

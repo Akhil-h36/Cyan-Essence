@@ -1,0 +1,1705 @@
+{% extends 'sidebar.html' %}
+{% load static %}
+{% block styles %}
+<style>
+
+    
+.product-tabs p{
+  font-size:30px;
+}
+.nav-tabs{
+  font-family:Gruppo ;
+  font-size:20px;
+}
+.product-info h1 {
+  color: #007474;
+}
+.product-description p {
+  font-size: 30px;
+  font-family: 'Cormorant Garamond', cursive;
+}
+.product_spec p {
+  font-size: 20px;
+  font-family: 'Cormorant Garamond', cursive;
+}
+.variance-radio {
+  position: absolute;
+  opacity: 0;
+}
+.variance-label {
+  display: inline-block;
+  padding: 10px 15px;
+  border: 2px solid #007474;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  min-width: 100px;
+}
+.variance-label:hover {
+  background-color: rgba(0, 116, 116, 0.1);
+}
+.variance-label.active {
+  background-color: #007474;
+  color: white;
+  border-color: #007474;
+}
+.variance-label.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: #cccccc;
+}
+.variance-label .size {
+  display: block;
+  font-weight: bold;
+}
+.variance-label .price {
+  display: block;
+  font-size: 0.9rem;
+}
+.btn-outline-teal {
+  color: #007474;
+  border-color: #007474;
+}
+.btn-outline-teal:hover {
+  color: white;
+  background-color: #007474;
+}
+.quantity-control {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+.quantity-control button {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #007474;
+  background: white;
+  color: #007474;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.quantity-control button:hover {
+  background-color: #007474;
+  color: white;
+}
+.quantity-control input {
+  width: 60px;
+  height: 40px;
+  text-align: center;
+  border: 1px solid #007474;
+  border-left: none;
+  border-right: none;
+  margin: 0 -1px;
+}
+.product-card {
+    background-color: #ffffff;
+    margin-bottom: 30px;
+    height: 550px;
+    border-radius: 0px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+}
+.product-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+}
+.product-name {
+  color: #007474;
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.text-teal {
+  color: #007474;
+}
+.nav-tabs .nav-link {
+  color: #495057;
+  border: none;
+  padding: 10px 20px;
+}
+.nav-tabs .nav-link.active {
+  color: #007474;
+  background-color: transparent;
+  border-bottom: 2px solid #007474;
+  font-weight: bold;
+}
+.tab-content {
+  padding: 20px 0;
+}
+.product-image-container {
+  height: 200px;
+  overflow: hidden;
+}
+.product-image-container img {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+#details .table {  /* Space instead of dot */
+  font-size: 30px;
+}
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #2a9d8f;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+    transition: all 0.3s ease;
+    transform: translateX(150%);
+    opacity: 0;
+}
+
+.notification.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.notification.error {
+    background-color: #e74c3c;
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255,255,255,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.loading-overlay.show {
+    visibility: visible;
+    opacity: 1;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #2a9d8f;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.size-selection {
+    margin: 20px 0;
+}
+
+.size-options {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.size-option {
+    padding: 10px 15px;
+    border: 2px solid #007474;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    min-width: 80px;
+    background: white;
+}
+
+.size-option:hover {
+    background-color: rgba(0, 116, 116, 0.1);
+}
+
+.size-option.active {
+    background-color: #007474;
+    color: white;
+    border-color: #007474;
+}
+
+.size-option.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    border-color: #cccccc;
+}
+
+.size-option .size {
+    color: rgb(187, 180, 180);
+    font-family:'Gruppo';
+    display: block;
+    font-weight: bold;
+}
+
+.size-option .price {
+    font-family:'Gruppo';
+    display: block;
+    font-size: 1.2rem;
+    color: rgb(187, 180, 180);
+}
+
+/* Add to cart button */
+.add-to-cart-btn {
+    background-color: #007474;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 20px;
+}
+
+.add-to-cart-btn:hover {
+    background-color: #005b5b;
+}
+
+.add-to-cart-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+
+/* Image Zoom Styles - Fixed */
+.main-image-container {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  overflow:visible; 
+  display: flex;
+}
+
+.main-image {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+
+.main-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.img-zoom-lens {
+  position: absolute;
+  border: 2px solid #007474;
+  width: 100px;
+  height: 100px;
+  background-color: rgba(0, 116, 116, 0.1);
+  cursor: none;
+  display: none;
+  z-index: 100;
+  pointer-events: none;
+  border-radius: 50%;
+}
+
+.img-zoom-result {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 10px;
+  background-color: white;
+  display: none;
+  z-index: 999;
+  
+  pointer-events: none;
+  background-repeat: no-repeat;
+  top: 0; /* Align with top of main image */
+  left: 50%;
+}
+
+@media (max-width: 700px) {
+  .img-zoom-result, .img-zoom-lens {
+    display: none !important;
+  }
+  
+  .main-image {
+    cursor: default;
+  }
+}
+/* Wishlist Button Styles */
+.heart-btn {
+    margin: top 10px;;
+    position: static; /* Change from absolute to static */
+    background: none;
+    border: none;
+    font-size: 1.9rem;
+    cursor: pointer;
+    color: #a5a5a5;
+    transition: all 0.3s ease;
+    z-index: 10;
+    padding: 30px 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.heart-btn:hover {
+    color: #28b090;
+}
+
+.heart-btn.in-wishlist {
+    color: #005b5b;
+}
+
+.heart-btn i {
+    pointer-events: none;
+}
+
+/* Reset the wishlist section positioning */
+.wishlist-section {
+    position: static;
+    margin-top: 20px;
+    display: inline-block;
+}
+
+/* Make the buttons container display flex for horizontal alignment */
+.row .wishlist-section + div {
+    display: inline-block;
+}
+.row:has(.wishlist-section) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+.price-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-top: 15px;
+}
+
+.original-price {
+    text-decoration: line-through;
+    color: #999;
+    margin-right: 15px;
+    font-size: 1.2rem;
+}
+
+.discount-price {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color:#007474;
+}
+
+.discount-badge {
+    position: relative;
+    background-color: #0f7171;
+    color: white;
+    padding: 5px 15px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    margin-left: 15px;
+    animation: pulse 2s infinite;
+    box-shadow: 0 0 10px rgba(21, 117, 79, 0.5);
+}
+
+.discount-badge:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 30px;
+    border: 2px solid #007474;
+    animation: ripple 2s infinite;
+}
+
+.offer-details {
+    margin-top: 10px;
+    padding: 15px;
+    background-color: rgba(0, 116, 116, 0.1);
+    border-left: 4px solid #007474;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.offer-details:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.countdown-timer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.time-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #007474;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    min-width: 50px;
+}
+
+.time-unit span:first-child {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.time-unit span:last-child {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* Flash animation for size discount */
+@keyframes flash {
+    0%, 100% {
+        background-color: rgba(0, 116, 116, 0.1);
+    }
+    50% {
+        background-color: rgba(57, 230, 118, 0.23);
+    }
+}
+
+.size-option.has-discount {
+    position: relative;
+    animation: flash 2s infinite;
+}
+
+.size-option.has-discount:after {
+    content: "SALE";
+    font-family: 'Gruppo';
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background-color:  #007474;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 5px;
+    border-radius: 2px;
+    
+}
+
+.size-option.has-discount .price {
+    color:  #007474;
+    font-weight: bold;
+}
+/* Reviews Section Styles */
+.reviews-container {
+    font-family: 'Gruppo', cursive;
+}
+
+.average-rating {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+}
+
+.average-score {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+}
+
+.stars {
+    font-size: 1.5rem;
+}
+
+.review-item {
+    transition: all 0.3s ease;
+}
+
+.review-item:hover {
+    background-color: rgba(0, 116, 116, 0.05);
+}
+
+/* Rating Stars */
+.rating-stars {
+    direction: rtl;
+    unicode-bidi: bidi-override;
+    display: inline-block;
+}
+
+.rating-stars input {
+    display: none;
+}
+
+.rating-stars label {
+    color: #ddd;
+    font-size: 1.5rem;
+    padding: 0 3px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.rating-stars input:checked ~ label,
+.rating-stars label:hover,
+.rating-stars label:hover ~ label {
+    color: #ffc107;
+}
+
+.rating-stars input:checked + label {
+    color: #ffc107;
+}
+
+.star-label {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.star-label:hover {
+    transform: scale(1.2);
+}
+
+/* Review Form */
+.review-form-container {
+    background-color: rgba(0, 116, 116, 0.05);
+    border-left: 4px solid var(--primary-color);
+}
+
+.review-form-container h4 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+.btn-teal {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.btn-teal:hover {
+    background-color: #005b5b;
+    color: white;
+}
+
+#currentPrice{
+    font-size: 35px;
+}
+</style>
+{% endblock styles %}
+
+{% block content %}
+<div class="single-product-page">
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" style="color: #007474;">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'myshop' %}" style="color: #007474;">Shop</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ product.product_name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Product Main Section -->
+    <div class="row">
+        <!-- Product Images -->
+        <div class="col-md-6 d-block product-gallery">
+            <div class="col-md-8 main-image-container ms-5 mb-3">
+                <div class="main-image">
+                    {% if main_image %}
+                        <img src="{{ main_image.image.url }}" class="img-fluid" alt="{{ product.product_name }}">
+                    {% else %}
+                        <img src="{% static 'images/placeholder.jpg' %}" class="img-fluid" alt="Placeholder">
+                    {% endif %}
+                </div>
+            </div>
+            <div class="thumbnail-container d-flex justify-content-between">
+                {% for image in other_images|slice:":2" %}
+                    <div class="thumbnail-wrapper" style="width: 48%;">
+                        <img src="{{ image.image.url }}" class="img-fluid thumbnail" alt="Product Thumbnail">
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Product Information -->
+        <div class="col-md-6 product-info">
+            <h1>{{ product.product_name }}</h1>
+            <div class="product-description text-start">
+                <p>{{ product.description }}</p>
+            </div>
+            <div class="product_spec text-start mt-5 ms-3">
+                <p><strong style="color: #007474;">Brand:</strong> {{ product.brand.brand_name }}</p>
+                <p><strong style="color: #007474;">Gender:</strong> {{ product.gender.gender }}</p>
+                <p><strong style="color: #007474;">Occasion:</strong> {{ product.occasion.occasion }}</p>
+                <p><strong style="color: #007474;">Fragrance:</strong> {{ product.fragrance.fragrance_type }}</p>
+                <p><strong style="color: #007474;">Concentration:</strong> {{ product.concentration.concentration }}</p>
+                <div class="availability">
+                    <p class="{% if not product.isOutOfStock %}text-success{% else %}text-danger{% endif %}">
+                        {% if not product.isOutOfStock %}In Stock{% else %}Out of Stock{% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Size and Price Selection -->
+            
+            <div class="size-selection mt-4">
+                <h4 class="text-start fw-bold mb-3" style="color: #007474;">SELECT SIZE:</h4>
+                <div class="size-options">
+                    {% for variance in variances %}
+                    <div class="size-option {% if variance.size.size == selected_size %}active{% endif %} {% if variance.stock == 0 %}disabled{% endif %} {% if variance.has_discount %}has-discount{% endif %}"
+                        data-variance-id="{{ variance.id }}"
+                        data-original-price="{{ variance.original_price }}"
+                        data-final-price="{{ variance.final_price }}"
+                        data-has-discount="{{ variance.has_discount|lower }}"
+                        data-discount-percentage="{{ variance.discount_percentage|floatformat:0 }}"
+                        data-stock="{{ variance.stock }}"
+                        {% if variance.applied_offer %}
+                        data-offer-name="{{ variance.applied_offer.name }}"
+                        data-offer-description="{{ variance.applied_offer.description }}"
+                        data-offer-expiry="{{ variance.applied_offer.valid_to|date:'Y-m-d H:i:s' }}"
+                        {% endif %}
+                        >
+                        <span class="size">{{ variance.size.size }}ml</span>
+                        {% if variance.has_discount %}
+                        <span class="price">₹{{ variance.final_price }}</span>
+                        {% else %}
+                        <span class="price">₹{{ variance.price }}</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                <input type="hidden" id="selectedVarianceId" value="{{ default_variance.id }}">
+            </div>
+
+
+
+            <!-- Current Price Display -->
+            <!-- Price Display with Discount -->
+            <div class="current-price ">
+                <h4 style="color: #007474;" class=" d-flex" >PRICE:</h4>
+                <div class="price-container ms-3 d-flex">
+                    {% if default_variance.has_discount %}
+                        <span class="original-price">₹{{ default_variance.original_price }}</span>
+                        <span id="currentPrice" class="discount-price">₹{{ default_variance.final_price }}</span>
+                        <span class="discount-badge">{{ default_variance.discount_percentage|floatformat:0 }}% OFF</span>
+                    {% else %}
+                        <span id="currentPrice" class="fw-bold" style="color: #007474;">₹{{ default_variance.price }}</span>
+                    {% endif %}
+                </div>
+                
+                <!-- Offer Details -->
+                {% if default_variance.has_discount and default_variance.applied_offer %}
+                <div class="offer-details">
+                    <i class="fas fa-tag me-2"></i>
+                    <strong>{{ default_variance.applied_offer.name }}</strong>: {{ default_variance.applied_offer.description }}
+                    
+                    {% if default_variance.applied_offer.valid_to %}
+                    <div class="countdown-timer mt-2" data-end-date="{{ default_variance.applied_offer.valid_to|date:'Y-m-d H:i:s' }}">
+                        <span><i class="far fa-clock me-2"></i> Offer ends in:</span>
+                        <div class="time-unit days"><span>00</span><span>days</span></div>
+                        <div class="time-unit hours"><span>00</span><span>hrs</span></div>
+                        <div class="time-unit minutes"><span>00</span><span>min</span></div>
+                        <div class="time-unit seconds"><span>00</span><span>sec</span></div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Quantity Controls -->
+            <div class="quantity-section mt-5 d-flex">
+                <h4 style="color: #007474;">QUANTITY:</h4>
+                <div class="quantity-control ms-5">
+                    <button type="button" class="quantity-btn minus">-</button>
+                    <input type="number" id="quantity-input" value="1" min="1" max="10">
+                    <button type="button" class="quantity-btn plus">+</button>
+                </div>
+            </div>
+
+    
+            <div class="row justify-content-center mt-4">
+                <div class="col-auto">
+                    <button id="addToCartBtn" class="add-to-cart-btn" {% if product.isOutOfStock %}disabled{% endif %}>
+                        ADD TO CART
+                    </button>
+                </div>
+                <div class="col-auto">
+                    <button id="wishlistBtn" class="heart-btn {% if in_wishlist %}in-wishlist{% endif %}" 
+                            data-product-id="{{ product.product_id }}"
+                            title="{% if in_wishlist %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+                        <i class="{% if in_wishlist %}fas{% else %}far{% endif %} fa-heart"></i>
+                    </button>
+                </div>
+            </div>
+             
+        </div>
+    </div>
+
+    <!-- Product Tabs -->
+    <div class="product-tabs mt-5">
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#reviews">Reviews ({{ product.reviews.count }})</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#description">Description</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#details">Details</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#related">Related Products</a>
+            </li>
+        </ul>
+
+        <div class="tab-content mt-3">
+            <!-- review Tab -->
+            <div id="reviews" class="tab-pane fade">
+                <div class="reviews-container">
+                    <h3>Customer Reviews</h3>
+                    
+                    <!-- Add a hidden input with the product ID -->
+                    <input type="hidden" id="product-id" value="{{ product.product_id }}">
+                    
+                    <!-- Average Rating -->
+                    <div class="average-rating mb-4">
+                        {% if reviews.count > 0 %}
+                            <div class="d-flex align-items-center">
+                                <div class="average-score me-3">
+                                    <span class="display-4 fw-bold">{{ avg_rating|floatformat:1 }}</span>
+                                    <span class="text-muted">/ 5</span>
+                                </div>
+                                <div class="stars">
+                                    {% for i in "12345" %}
+                                        {% if i|add:0 <= avg_rating %}
+                                            <i class="fas fa-star text-warning"></i>
+                                        {% elif i|add:"-0.5" <= avg_rating %}
+                                            <i class="fas fa-star-half-alt text-warning"></i>
+                                        {% else %}
+                                            <i class="far fa-star text-warning"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <span class="ms-2">({{ reviews.count }} reviews)</span>
+                                </div>
+                            </div>
+                        {% else %}
+                            <p>No reviews yet. Be the first to review!</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Review Form (for authenticated users) -->
+                    {% if user.is_authenticated %}
+                        <div class="review-form-container mb-5 p-4 bg-light rounded">
+                            <h4>Write a Review</h4>
+                            <form id="reviewForm" method="POST" action="{% url 'submit_review' product.product_id %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label class="form-label">Your Rating</label>
+                                    <div class="rating-stars">
+                                        {% for i in "54321" %}
+                                            <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" required>
+                                            <label for="star{{ i }}" class="star-label"><i class="far fa-star"></i></label>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="reviewText" class="form-label">Your Review</label>
+                                    <textarea class="form-control" id="reviewText" name="review_text" rows="4" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-teal">Submit Review</button>
+                            </form>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            Please <a href="{% url 'login' %}?next={{ request.path }}" class="alert-link">login</a> to write a review.
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Loading Indicator -->
+                    <div id="reviews-loading" class="text-center d-none">
+                        <div class="spinner-border text-teal" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading reviews...</p>
+                    </div>
+                    
+                    <!-- Reviews List -->
+                    <div class="reviews-list">
+                        <!-- Reviews will be loaded here via JavaScript -->
+                        {% if reviews %}
+                            {% for review in reviews %}
+                                <div class="review-item mb-4 p-3 border-bottom">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div>
+                                            <h5 class="mb-0">{{ review.user.get_full_name }}</h5>
+                                            <small class="text-muted">{{ review.created_at|date:"F d, Y" }}</small>
+                                        </div>
+                                        <div class="stars">
+                                            {% for i in "12345" %}
+                                                {% if i|add:0 <= review.rating %}
+                                                    <i class="fas fa-star text-warning"></i>
+                                                {% else %}
+                                                    <i class="far fa-star text-warning"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="review-content">
+                                        <p>{{ review.review_text }}</p>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <p class="text-muted">No reviews yet for this product.</p>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">No reviews yet for this product.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+
+
+
+        
+
+            <!-- Description Tab -->
+            <div id="description" class="tab-pane fade show active"style="font-family: 'Cormorant Garamond', serif;">
+                <h3>Product Description</h3>
+                <p>{{ product.description }}</p>
+            </div>
+
+            <!-- Details Tab -->
+            <div id="details" class="tab-pane fade" style="font-family: 'Cormorant Garamond', serif;">
+                <h3>Product Details</h3>
+                <table class="table">
+                    <tr>
+                        <th>Brand</th>
+                        <td>{{ product.brand.brand_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Gender</th>
+                        <td>{{ product.gender.gender }}</td>
+                    </tr>
+                    <tr>
+                        <th>Occasion</th>
+                        <td>{{ product.occasion.occasion }}</td>
+                    </tr>
+                    <tr>
+                        <th>Fragrance Type</th>
+                        <td>{{ product.fragrance.fragrance_type }}</td>
+                    </tr>
+                    <tr>
+                        <th>Concentration</th>
+                        <td>{{ product.concentration.concentration }}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Related Products Tab -->
+            <div id="related" class="tab-pane fade">
+                <h3>product you might also like</h3>
+                <div class="row">
+                    {% for related_product in related_products %}
+                        <div class="col-md-3 mb-4">
+                            <div class="product-card h-100 d-flex flex-column">
+                                <div class="product-image-container">
+                                    {% with first_image=related_product.images.first %}
+                                        {% if first_image %}
+                                            <img src="{{ first_image.image.url }}" 
+                                                 class="img-fluid"
+                                                 alt="{{ related_product.product_name }}">
+                                        {% else %}
+                                            <img src="{% static 'images/placeholder-perfume.jpg' %}" 
+                                                 class="img-fluid"
+                                                 alt="Placeholder">
+                                        {% endif %}
+                                    {% endwith %}
+                                </div>
+                                <div class="product-info p-3 flex-grow-1">
+                                    <h5 class="product-name">{{ related_product.product_name }}</h5>
+                                    <div class="product-price mb-2">
+                                        {% with lowest_variance=related_product.varience.all|dictsort:"price"|first %}
+                                            {% if lowest_variance %}
+                                                <span class="text-teal fw-bold">₹{{ lowest_variance.price|floatformat:2 }}</span>
+                                            {% else %}
+                                                <span class="text-muted">Price not available</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </div>
+                                </div>
+                                <div class="p-3">
+                                    <a href="{% url 'singleproduct' related_product.product_id %}" 
+                                       class="btn btn-sm btn-outline-teal w-100">View Product</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-12">
+                            <p class="text-muted">No other products found from {{ product.brand.brand_name }}.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="notification" class="notification"></div>
+<div class="loading-overlay">
+    <div class="spinner"></div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Combine all your JavaScript into one cohesive script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Utility functions
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function showNotification(message, isError = false) {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = `notification ${isError ? 'error' : ''}`;
+        notification.classList.add('show');
+        
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 3000);
+    }
+
+    function showLoading() {
+        const overlay = document.querySelector('.loading-overlay');
+        if (overlay) overlay.classList.add('show');
+    }
+
+    function hideLoading() {
+        const overlay = document.querySelector('.loading-overlay');
+        if (overlay) overlay.classList.remove('show');
+    }
+    
+    // Size selection functionality
+    function selectSize(element) {
+        if (element.classList.contains('disabled')) return;
+
+        // Remove active class from all size options
+        document.querySelectorAll('.size-option').forEach(option => {
+            option.classList.remove('active');
+        });
+        
+        // Add active class to selected size
+        element.classList.add('active');
+        
+        // Update the selected variance ID
+        const varianceId = element.getAttribute('data-variance-id');
+        const hiddenInput = document.getElementById('selectedVarianceId');
+        hiddenInput.value = varianceId;
+        
+        // Handle discount display
+        const hasDiscount = element.getAttribute('data-has-discount') === 'true';
+        const originalPrice = element.getAttribute('data-original-price');
+        const finalPrice = element.getAttribute('data-final-price') || element.getAttribute('data-price');
+        const discountPercentage = element.getAttribute('data-discount-percentage');
+        
+        // Update the displayed price section
+        const priceContainer = document.querySelector('.price-container');
+        if (priceContainer) {
+            // Clear previous content
+            priceContainer.innerHTML = '';
+            
+            if (hasDiscount) {
+                // Create elements for discounted price display
+                const originalPriceSpan = document.createElement('span');
+                originalPriceSpan.className = 'original-price';
+                originalPriceSpan.textContent = '₹' + originalPrice;
+                
+                const discountPriceSpan = document.createElement('span');
+                discountPriceSpan.id = 'currentPrice';
+                discountPriceSpan.className = 'discount-price';
+                discountPriceSpan.textContent = '₹' + finalPrice;
+                
+                const discountBadge = document.createElement('span');
+                discountBadge.className = 'discount-badge';
+                discountBadge.textContent = discountPercentage + '% OFF';
+                
+                priceContainer.appendChild(originalPriceSpan);
+                priceContainer.appendChild(discountPriceSpan);
+                priceContainer.appendChild(discountBadge);
+            } else {
+                // Create regular price display
+                const priceSpan = document.createElement('span');
+                priceSpan.id = 'currentPrice';
+                priceSpan.className = 'fw-bold';
+                priceSpan.style.color = '#007474';
+                priceSpan.textContent = '₹' + finalPrice;
+                
+                priceContainer.appendChild(priceSpan);
+            }
+        }
+        
+        // Handle offer details display
+        const offerDetailsContainer = document.querySelector('.offer-details');
+        if (offerDetailsContainer) {
+            offerDetailsContainer.remove();
+        }
+        
+        // Create new offer details if applicable
+        if (hasDiscount && element.hasAttribute('data-offer-name')) {
+            const offerName = element.getAttribute('data-offer-name');
+            const offerDescription = element.getAttribute('data-offer-description');
+            const offerExpiry = element.getAttribute('data-offer-expiry');
+            
+            const offerDetails = document.createElement('div');
+            offerDetails.className = 'offer-details';
+            
+            let offerHTML = `<i class="fas fa-tag me-2"></i><strong>${offerName}</strong>: ${offerDescription}`;
+            
+            if (offerExpiry) {
+                offerHTML += `
+                    <div class="countdown-timer mt-2" data-end-date="${offerExpiry}">
+                        <span><i class="far fa-clock me-2"></i> Offer ends in:</span>
+                        <div class="time-unit days"><span>00</span><span>days</span></div>
+                        <div class="time-unit hours"><span>00</span><span>hrs</span></div>
+                        <div class="time-unit minutes"><span>00</span><span>min</span></div>
+                        <div class="time-unit seconds"><span>00</span><span>sec</span></div>
+                    </div>
+                `;
+            }
+            
+            offerDetails.innerHTML = offerHTML;
+            
+            // Append after price container
+            const currentPriceDiv = document.querySelector('.current-price');
+            if (currentPriceDiv) {
+                currentPriceDiv.appendChild(offerDetails);
+                
+                // Initialize countdown
+                if (offerExpiry) {
+                    initCountdown(offerDetails.querySelector('.countdown-timer'));
+                }
+            }
+        }
+        
+        // Update quantity max based on stock
+        const stock = parseInt(element.getAttribute('data-stock'));
+        const quantityInput = document.getElementById('quantity-input');
+        quantityInput.max = stock > 10 ? 10 : stock;
+        
+        // If current quantity exceeds new stock, adjust it
+        if (parseInt(quantityInput.value) > quantityInput.max) {
+            quantityInput.value = quantityInput.max;
+        }
+        
+        // Enable/disable add to cart button based on stock
+        const addToCartBtn = document.getElementById('addToCartBtn');
+        if (stock > 0) {
+            addToCartBtn.disabled = false;
+        } else {
+            addToCartBtn.disabled = true;
+        }
+    }
+
+    // Countdown timer function
+    function initCountdown(countdownElement) {
+        if (!countdownElement) return;
+        
+        const endDate = new Date(countdownElement.getAttribute('data-end-date')).getTime();
+        
+        // Update countdown every second
+        const countdownInterval = setInterval(function() {
+            const now = new Date().getTime();
+            const distance = endDate - now;
+            
+            // If the countdown is over, clear interval
+            if (distance < 0) {
+                clearInterval(countdownInterval);
+                countdownElement.innerHTML = '<span class="text-danger">Offer expired</span>';
+                return;
+            }
+            
+            // Time calculations for days, hours, minutes and seconds
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            // Update the countdown display
+            countdownElement.querySelector('.days span:first-child').textContent = days.toString().padStart(2, '0');
+            countdownElement.querySelector('.hours span:first-child').textContent = hours.toString().padStart(2, '0');
+            countdownElement.querySelector('.minutes span:first-child').textContent = minutes.toString().padStart(2, '0');
+            countdownElement.querySelector('.seconds span:first-child').textContent = seconds.toString().padStart(2, '0');
+        }, 1000);
+    }
+
+    // Function to load all reviews when the page loads
+    function loadAllReviews() {
+        const reviewsList = document.querySelector('.reviews-list');
+        const productId = document.querySelector('[data-product-id]')?.getAttribute('data-product-id');
+        
+        if (!reviewsList || !productId) return;
+        
+        showLoading();
+        
+        fetch(`/user/get-product-reviews/${productId}/`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Clear the current reviews list
+                reviewsList.innerHTML = '';
+                
+                if (data.reviews && data.reviews.length > 0) {
+                    // Add all reviews to the list
+                    data.reviews.forEach(review => {
+                        const reviewItem = document.createElement('div');
+                        reviewItem.className = 'review-item mb-4 p-3 border-bottom';
+                        
+                        // Create stars HTML based on rating
+                        let starsHtml = '';
+                        for (let i = 1; i <= 5; i++) {
+                            if (i <= review.rating) {
+                                starsHtml += '<i class="fas fa-star text-warning"></i>';
+                            } else {
+                                starsHtml += '<i class="far fa-star text-warning"></i>';
+                            }
+                        }
+                        
+                        reviewItem.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <h5 class="mb-0">${review.username}</h5>
+                                    <small class="text-muted">${review.created_at}</small>
+                                </div>
+                                <div class="stars">
+                                    ${starsHtml}
+                                </div>
+                            </div>
+                            <div class="review-content">
+                                <p>${review.review_text}</p>
+                            </div>
+                        `;
+                        
+                        reviewsList.appendChild(reviewItem);
+                    });
+                } else {
+                    // Show "no reviews" message
+                    reviewsList.innerHTML = '<p class="text-muted">No reviews yet. Be the first to review this product!</p>';
+                }
+            } else {
+                showNotification('Could not load reviews. Please refresh the page.', true);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading reviews:', error);
+            reviewsList.innerHTML = '<p class="text-muted">Error loading reviews. Please refresh the page.</p>';
+        })
+        .finally(() => {
+            hideLoading();
+        });
+    }
+
+    // Review form submission
+    const reviewForm = document.getElementById('reviewForm');
+    if (reviewForm) {
+        reviewForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            showLoading();
+            
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Review submitted successfully!');
+                    
+                    // Add the new review to the list
+                    const reviewsList = document.querySelector('.reviews-list');
+                    if (reviewsList) {
+                        const reviewItem = document.createElement('div');
+                        reviewItem.className = 'review-item mb-4 p-3 border-bottom';
+                        
+                        // Create stars HTML based on rating
+                        let starsHtml = '';
+                        for (let i = 1; i <= 5; i++) {
+                            if (i <= data.review.rating) {
+                                starsHtml += '<i class="fas fa-star text-warning"></i>';
+                            } else {
+                                starsHtml += '<i class="far fa-star text-warning"></i>';
+                            }
+                        }
+                        
+                        reviewItem.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <h5 class="mb-0">${data.review.username}</h5>
+                                    <small class="text-muted">${data.review.created_at}</small>
+                                </div>
+                                <div class="stars">
+                                    ${starsHtml}
+                                </div>
+                            </div>
+                            <div class="review-content">
+                                <p>${data.review.review_text}</p>
+                            </div>
+                        `;
+                        
+                        // Remove "no reviews" message if it exists
+                        const noReviewsMsg = reviewsList.querySelector('.text-muted');
+                        if (noReviewsMsg && noReviewsMsg.textContent.includes('No reviews yet')) {
+                            reviewsList.innerHTML = '';
+                        }
+                        
+                        // Add the new review to the top
+                        reviewsList.prepend(reviewItem);
+                        
+                        // Update review count in the average rating section
+                        const reviewCountEl = document.querySelector('.average-rating .ms-2');
+                        if (reviewCountEl) {
+                            const currentText = reviewCountEl.textContent;
+                            const match = currentText.match(/\((\d+)\s+reviews?\)/);
+                            if (match) {
+                                const currentCount = parseInt(match[1]);
+                                reviewCountEl.textContent = `(${currentCount + 1} reviews)`;
+                            }
+                        }
+                        
+                        // Reset the form
+                        reviewForm.reset();
+                        resetStars();
+                    }
+                } else {
+                    showNotification(data.message, true);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred. Please try again.', true);
+            })
+            .finally(() => {
+                hideLoading();
+            });
+        });
+    }
+    
+    // Star rating hover effect
+    const starLabels = document.querySelectorAll('.star-label');
+    if (starLabels) {
+        starLabels.forEach(label => {
+            label.addEventListener('mouseover', function() {
+                const rating = this.htmlFor.replace('star', '');
+                highlightStars(rating);
+            });
+            
+            label.addEventListener('mouseout', function() {
+                const checked = document.querySelector('input[name="rating"]:checked');
+                if (checked) {
+                    highlightStars(checked.value);
+                } else {
+                    resetStars();
+                }
+            });
+        });
+    }
+
+    function highlightStars(rating) {
+        const stars = document.querySelectorAll('.star-label i');
+        stars.forEach((star, index) => {
+            if (index >= 5 - rating) {
+                star.classList.remove('far');
+                star.classList.add('fas');
+            } else {
+                star.classList.remove('fas');
+                star.classList.add('far');
+            }
+        });
+    }
+
+    function resetStars() {
+        const stars = document.querySelectorAll('.star-label i');
+        stars.forEach(star => {
+            star.classList.remove('fas');
+            star.classList.add('far');
+        });
+    }
+
+    // Initialize countdowns when page loads
+    document.querySelectorAll('.countdown-timer').forEach(timer => {
+        initCountdown(timer);
+    });
+
+    // Add to cart functionality
+    const addToCartBtn = document.getElementById('addToCartBtn');
+    if (addToCartBtn) {
+        addToCartBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Get the selected variance ID directly from the active size element
+            const activeSize = document.querySelector('.size-option.active');
+            let varianceId;
+            
+            if (activeSize) {
+                varianceId = activeSize.getAttribute('data-variance-id');
+            } else {
+                varianceId = document.getElementById('selectedVarianceId').value;
+            }
+            
+            const quantity = document.getElementById('quantity-input').value;
+            
+            console.log("Adding to cart with variance ID:", varianceId);
+            console.log("Quantity:", quantity);
+            
+            if (!varianceId) {
+                showNotification('Please select a size first', true);
+                return;
+            }
+            
+            showLoading();
+            
+            fetch('/add-to-cart/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    product_id: '{{ product.product_id }}',
+                    variance_id: varianceId,
+                    quantity: quantity
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Add to cart response:', data);
+                if (data.success) {
+                    showNotification(data.message);
+                    // Update cart count in navbar if needed
+                    if (typeof updateCartBadge === 'function') {
+                        updateCartBadge(data.cart_count);
+                    }
+                } else {
+                    showNotification(data.message, true);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred. Please try again.', true);
+            })
+            .finally(() => {
+                hideLoading();
+            });
+        });
+    }
+
+    // Product image interaction
+    const thumbnails = document.querySelectorAll('.thumbnail');
+    const mainImage = document.querySelector('.main-image img');
+    
+    if (thumbnails.length > 0 && mainImage) {
+        thumbnails.forEach(thumbnail => {
+            thumbnail.addEventListener('click', function(e) {
+                e.preventDefault();
+                const src = this.src;
+                mainImage.src = src;
+                
+                // Remove active class from all thumbnails
+                thumbnails.forEach(t => t.classList.remove('active-thumbnail'));
+                // Add active class to clicked thumbnail
+                this.classList.add('active-thumbnail');
+            });
+        });
+    }
+
+    // Initialize with the default selected size (if any)
+    const defaultSelectedSize = document.querySelector('.size-option.active');
+    if (defaultSelectedSize) {
+        selectSize(defaultSelectedSize);
+    } else {
+        // If no active size is found, select the first available size
+        const firstAvailableSize = document.querySelector('.size-option:not(.disabled)');
+        if (firstAvailableSize) {
+            selectSize(firstAvailableSize);
+        }
+    }
+
+    // Make sure all size options are clickable
+    document.querySelectorAll('.size-option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            selectSize(this);
+        });
+    });
+
+    // Wishlist functionality
+    const wishlistBtn = document.getElementById('wishlistBtn');
+    
+    if (wishlistBtn) {
+        console.log('Wishlist button found, setting up click handler');
+        wishlistBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const productId = this.getAttribute('data-product-id');
+            const isInWishlist = this.classList.contains('in-wishlist');
+            
+            console.log('Wishlist button clicked:', 
+                        'Product ID:', productId, 
+                        'In wishlist:', isInWishlist);
+            
+            showLoading();
+            
+            const endpoint = isInWishlist ? '/remove-from-wishlist/' : '/add-to-wishlist/';
+            
+            console.log('Sending request to:', endpoint);
+            
+            fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    product_id: productId
+                })
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data.success) {
+                    showNotification(data.message);
+                    
+                    // Toggle the wishlist state
+                    if (isInWishlist) {
+                        wishlistBtn.classList.remove('in-wishlist');
+                        wishlistBtn.title = 'Add to Wishlist';
+                        wishlistBtn.querySelector('i').className = 'far fa-heart';
+                    } else {
+                        wishlistBtn.classList.add('in-wishlist');
+                        wishlistBtn.title = 'Remove from Wishlist';
+                        wishlistBtn.querySelector('i').className = 'fas fa-heart';
+                    }
+                } else {
+                    showNotification(data.message, true);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred. Please try again.', true);
+            })
+            .finally(() => {
+                hideLoading();
+            });
+        });
+    } else {
+        console.log('Wishlist button not found');
+    }
+
+    // Image zoom functionality
+    function initImageZoom() {
+        // Get the main image container and image
+        const mainImageContainer = document.querySelector('.main-image-container');
+        const mainImage = mainImageContainer.querySelector('.main-image img');
+        
+        if (!mainImage) return;
+        
+        // Create lens element if it doesn't exist
+        let lens = mainImageContainer.querySelector('.img-zoom-lens');
+        if (!lens) {
+            lens = document.createElement('div');
+            lens.className = 'img-zoom-lens';
+            mainImageContainer.querySelector('.main-image').appendChild(lens);
+        }
+        
+        // Create result container if it doesn't exist
+        let result = document.querySelector('.img-zoom-result');
+        if (!result) {
+            result = document.createElement('div');
+            result.className = 'img-zoom-result';
+            mainImageContainer.appendChild(result);
+        }
+        
+        // Variables for zoom functionality
+        let isZoomActive = false;
+        
+        // Function to calculate dimensions and positions
+        function calculateDimensions() {
+            // Get image natural dimensions and displayed dimensions
+            const imgRect = mainImage.getBoundingClientRect();
+            const imgWidth = imgRect.width;
+            const imgHeight = imgRect.height;
+            
+            // Calculate offsets relative to the image container
+            const containerRect = mainImageContainer.getBoundingClientRect();
+            
+            // Calculate zoom ratios
+            const cx = result.offsetWidth / lens.offsetWidth;
+            const cy = result.offsetHeight / lens.offsetHeight;
+            
+            // Set the background image for the result container
+            result.style.backgroundImage = `url('${mainImage.src}')`;
+            result.style.backgroundSize = `${imgWidth * cx}px ${imgHeight * cy}px`;
+            
+            return { imgWidth, imgHeight, containerRect, cx, cy };
+        }
+        
+        // Function to move the lens and update the result
+        function moveLens(e) {
+            if (!isZoomActive) return;
+            
+            e.preventDefault();
+            
+            const dimensions = calculateDimensions();
+            const { imgWidth, imgHeight, containerRect, cx, cy } = dimensions;
+            
+            // Get cursor position relative to the image
+            const rect = mainImage.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Calculate lens position (centered on cursor)
+            let lensLeft = x - (lens.offsetWidth / 2);
+            let lensTop = y - (lens.offsetHeight / 2);
+            
+            // Prevent lens from going outside image
+            if (lensLeft < 0) lensLeft = 0;
+            if (lensTop < 0) lensTop = 0;
+            if (lensLeft > imgWidth - lens.offsetWidth) lensLeft = imgWidth - lens.offsetWidth;
+            if (lensTop > imgHeight - lens.offsetHeight) lensTop = imgHeight - lens.offsetHeight;
+            
+            // Position the lens
+            lens.style.left = `${lensLeft}px`;
+            lens.style.top = `${lensTop}px`;
+            
+            // Calculate and set background position for result
+            result.style.backgroundPosition = `-${lensLeft * cx}px -${lensTop * cy}px`;
+        }
+        
+        // Function to activate zoom
+        function activateZoom(e) {
+            // Only enable on desktop
+            if (window.innerWidth <= 992) return;
+            
+            isZoomActive = true;
+            calculateDimensions();
+            lens.style.display = 'block';
+            result.style.display = 'block';
+            
+            // Initial lens position
+            moveLens(e);
+        }
+        
+        // Function to deactivate zoom
+        function deactivateZoom() {
+            isZoomActive = false;
+            lens.style.display = 'none';
+            result.style.display = 'none';
+        }
+        
+        // Set up event listeners
+        mainImage.addEventListener('mouseenter', activateZoom);
+        mainImage.addEventListener('mouseleave', deactivateZoom);
+        mainImage.addEventListener('mousemove', moveLens);
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (isZoomActive) {
+                calculateDimensions();
+            }
+        });
+    }
+    
+    // Initialize zoom when page loads
+    initImageZoom();
+    
+    // Also reinitialize zoom when thumbnails are clicked
+    document.querySelectorAll('.thumbnail').forEach(thumbnail => {
+        thumbnail.addEventListener('click', function() {
+            // Let the image load first
+            setTimeout(initImageZoom, 100);
+        });
+    });
+    
+    // Load all reviews when the page loads
+    loadAllReviews();
+});
+
+// Remove the duplicate jQuery code since we've integrated its functionality into the main script
+</script>
+{% endblock %}

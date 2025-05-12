@@ -1,0 +1,793 @@
+{% extends 'profiletemplate.html' %}
+{% csrf_token %}
+{% load static %}
+
+{% block styles %}
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Gruppo', sans-serif;
+        background-color: #0a5754;
+        color: white;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        flex: 1;
+    }
+
+    header {
+        display: flex;
+        justify-content: flex-end;
+        padding: 20px 0;
+    }
+
+    .nav {
+        font-family: 'Gruppo', sans-serif;
+        display: flex;
+        gap: 10px;
+    }
+
+    .nav a {
+        font-size: 25px;
+        color: white;
+        text-decoration: none;
+        position: relative;
+        padding: 5px 0;
+        opacity: 0;
+        animation: fadeIn 0.5s forwards;
+    }
+
+    .nav a:nth-child(1) {
+        animation-delay: 0.2s;
+    }
+
+    .nav a:nth-child(2) {
+        animation-delay: 0.4s;
+    }
+
+    .nav a:after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 1px;
+        bottom: 0;
+        left: 0;
+        background-color: white;
+        transition: width 0.3s ease;
+    }
+
+    .nav a:hover:after {
+        width: 100%;
+    }
+
+    /* Wallet Section */
+    .wallet-container {
+        margin: 40px auto;
+        position: relative;
+        max-width: 1200px;
+    }
+
+    .wallet-box {
+        background-color: #002c2a;
+        border: 2px solid #00a0a0;
+        border-radius: 5px;
+        padding: 30px;
+        position: relative;
+        overflow: hidden;
+        animation: glowPulse 3s infinite alternate;
+    }
+
+    @keyframes glowPulse {
+        0% {
+            box-shadow: 0 0 5px rgba(0, 160, 160, 0.5);
+        }
+        100% {
+            box-shadow: 0 0 20px rgba(0, 160, 160, 0.8);
+        }
+    }
+
+    .wallet-title {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 1.2rem;
+        letter-spacing: 2px;
+        color: #00a0a0;
+        animation: fadeIn 1s forwards;
+    }
+
+    .wallet-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 0;
+        border-top: 1px solid rgba(0, 160, 160, 0.3);
+        border-bottom: 1px solid rgba(0, 160, 160, 0.3);
+    }
+
+    .wallet-balance {
+        display: flex;
+        align-items: center;
+        font-size: 1.8rem;
+        animation: countUp 2s forwards;
+        position: relative;
+    }
+
+    .wallet-balance::before {
+        content: "";
+        position: absolute;
+        height: 100%;
+        width: 1px;
+        background-color: rgba(0, 160, 160, 0.3);
+        right: -30px;
+    }
+
+    .currency-symbol {
+        margin-right: 10px;
+        font-size: 1.4rem;
+    }
+
+    .wallet-actions {
+        display: flex;
+        gap: 20px;
+    }
+
+    .wallet-btn {
+        background-color: transparent;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        font-family: 'Gruppo', sans-serif;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        animation: fadeIn 1s forwards;
+        animation-delay: 0.8s;
+        opacity: 0;
+    }
+
+    .wallet-btn:first-child {
+        animation-delay: 0.6s;
+    }
+
+    .wallet-btn::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        background-color: rgba(0, 160, 160, 0.5);
+        transition: all 0.3s ease;
+    }
+
+    .wallet-btn:hover::after {
+        height: 2px;
+        background-color: #00a0a0;
+        box-shadow: 0 0 10px #00a0a0;
+    }
+
+    /* Account Options */
+    .account-options {
+        font-size:25px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 40px;
+    }
+
+    .account-option {
+        padding: 10px;
+        margin: 10px 0;
+        position: relative;
+        cursor: pointer;
+        opacity: 0;
+        animation: fadeIn 0.5s forwards;
+    }
+
+    .account-option:nth-child(1) {
+        animation-delay: 1s;
+    }
+
+    .account-option:nth-child(2) {
+        animation-delay: 1.2s;
+    }
+
+    .account-option:nth-child(3) {
+        animation-delay: 1.4s;
+    }
+
+    .account-option::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 1px;
+        background-color: rgba(255, 255, 255, 0.5);
+        transition: width 0.3s ease;
+    }
+
+    .account-option:hover::after {
+        width: 100%;
+    }
+
+    .logout-btn {
+        margin-top: 30px;
+        padding: 10px 20px;
+        background-color: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        font-family: 'Gruppo', sans-serif;
+        letter-spacing: 2px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        opacity: 0;
+        animation: fadeIn 0.5s forwards 1.6s;
+    }
+
+    .logout-btn:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-color: white;
+    }
+
+
+    /* Animations */
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes countUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Floating particles animation */
+    .particles {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        overflow: hidden;
+        pointer-events: none;
+    }
+
+    .particle {
+        position: absolute;
+        width: 5px;
+        height: 5px;
+        background-color: rgba(0, 160, 160, 0.5);
+        border-radius: 50%;
+        animation: float 15s infinite linear;
+    }
+
+    @keyframes float {
+        0% {
+            transform: translateY(0) translateX(0);
+            opacity: 0;
+        }
+        10% {
+            opacity: 1;
+        }
+        90% {
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(-700px) translateX(100px);
+            opacity: 0;
+        }
+    }
+
+    /* Money animation */
+    .money-animation {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        overflow: hidden;
+        pointer-events: none;
+        opacity: 0;
+    }
+
+    .money-particle {
+        position: absolute;
+        color: #00a0a0;
+        font-size: 12px;
+        animation: moneyFloat 2s forwards ease-out;
+    }
+
+    @keyframes moneyFloat {
+        0% {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(-100px);
+            opacity: 0;
+        }
+    }
+
+    /* Shimmer effect for wallet box */
+    .wallet-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(
+            to right, 
+            rgba(255, 255, 255, 0) 0%, 
+            rgba(255, 255, 255, 0.1) 50%, 
+            rgba(255, 255, 255, 0) 100%
+        );
+        transform: skewX(-25deg);
+        animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { left: -100%; }
+        100% { left: 200%; }
+    }
+
+
+    .modal {
+    z-index: 1050 !important;
+    }
+
+    .modal-content {
+        background-color: #002c2a;
+        border: 2px solid #00a0a0;
+        color: white;
+        font-family: 'Gruppo', sans-serif;
+        box-shadow: 0 0 15px rgba(0, 160, 160, 0.5);
+    }
+/* modal style */
+    .modal-header {
+        border-bottom: 1px solid rgba(0, 160, 160, 0.3);
+    }
+
+    .modal-footer {
+        border-top: 1px solid rgba(0, 160, 160, 0.3);
+    }
+
+    .modal-title {
+        color: #00a0a0;
+        letter-spacing: 2px;
+    }
+
+    .btn-close {
+        filter: invert(1) brightness(0.8);
+    }
+
+    .form-control {
+        background-color: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(0, 160, 160, 0.5);
+        color: white;
+    }
+
+    .form-control:focus {
+        background-color: rgba(255, 255, 255, 0.15);
+        border-color: #00a0a0;
+        color: white;
+        box-shadow: 0 0 0 0.25rem rgba(0, 160, 160, 0.25);
+    }
+
+    .btn-add-money {
+        background-color: rgba(0, 160, 160, 0.2);
+        border: 1px solid #00a0a0;
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+    .btn-add-money:hover {
+        background-color: rgba(0, 160, 160, 0.4);
+        box-shadow: 0 0 10px rgba(0, 160, 160, 0.5);
+    }
+
+    .invalid-feedback {
+        color: #ff9a9a;
+    }
+
+</style>
+{% endblock styles %}
+
+
+{% block content %}
+<div class="container-fluid">
+    <header class="justify-content-center">
+        <div class="nav">
+            <a href="{% url 'userprofile' %}">profile / </a>
+            <a href="{% url 'myaccount' %}">My Account</a>
+        </div>
+    </header>
+
+    <div class="wallet-container">
+        <div class="wallet-box">
+            <div class="particles"></div>
+            <div class="money-animation"></div>
+            <div class="wallet-title">Cyan cash</div>
+            <div class="wallet-content">
+                <div class="wallet-balance">
+                    <span class="currency-symbol">₹</span>
+                    <span class="balance-amount">{{wallet.balance}}</span>
+                </div>
+                <div class="wallet-actions">
+                    <button class="wallet-btn" id="add-money">Add money</button>
+                    <a href="{% url 'wallet_transactions' %}" style="text-decoration: none;" class="wallet-btn" id="transaction-details">Transaction Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="account-options">
+        <a href="{% url 'address' %}" class="text-decoration-none d-block text-white"><div class="account-option text-white">Manage Address</div></a>
+        <a href="{% url 'myorders' %}" class="text-decoration-none d-block text-white"><div class="account-option">my orders</div></a>
+        <a href="{% url 'mypassword' %}" class="text-decoration-none d-block text-white"><div class="account-option">change password</div></a>
+        <a href="{% url 'logout' %}"><button class="logout-btn">LOG OUT</button></a>
+    </div>
+</div>
+
+
+<!-- Add Money Modal -->
+
+{% endblock %}
+
+{% block extra_scripts %} 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+    function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM fully loaded, initializing wallet functionality');
+
+    // Create floating particles
+    const particles = document.querySelector('.particles');
+    if (particles) {
+        for (let i = 0; i < 15; i++) {
+            const particle = document.createElement('div');
+            particle.classList.add('particle');
+            particle.style.left = `${Math.random() * 100}%`;
+            particle.style.top = `${Math.random() * 100}%`;
+            particle.style.animationDuration = `${15 + Math.random() * 10}s`;
+            particle.style.animationDelay = `${Math.random() * 5}s`;
+            particles.appendChild(particle);
+        }
+    }
+
+    // ADD MONEY BUTTON HANDLER
+    const addMoneyBtn = document.getElementById('add-money');
+    if (addMoneyBtn) {
+        addMoneyBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Show SweetAlert popup
+            Swal.fire({
+                title: 'Add Money to Wallet',
+                html: `
+                    <div class="mb-3">
+                        {% csrf_token %}
+                        <label for="swal-amount" class="form-label text-white">Enter Amount (₹10 - ₹10,000)</label>
+                        <input type="number" id="swal-amount" class="swal2-input" placeholder="Enter amount" min="10" max="10000">
+                    </div>
+                `,
+                backdrop: `rgba(0, 40, 40, 0.7)`,
+                showCancelButton: true,
+                confirmButtonText: 'Proceed to Payment',
+                cancelButtonText: 'Cancel',
+                focusConfirm: false,
+                didOpen: () => {
+                    // Focus the input when SweetAlert opens
+                    const input = Swal.getPopup().querySelector('#swal-amount');
+                    input.focus();
+                    
+                    // Play money animation
+                    playMoneyAnimation();
+                },
+                preConfirm: () => {
+                    const amount = Swal.getPopup().querySelector('#swal-amount').value;
+                    const amountNum = parseInt(amount);
+                    
+                    // Validate amount
+                    if (!amount) {
+                        Swal.showValidationMessage('Please enter an amount');
+                        return false;
+                    }
+                    
+                    if (isNaN(amountNum) || amountNum < 10 || amountNum > 10000) {
+                        Swal.showValidationMessage('Amount must be between ₹10 and ₹10,000');
+                        return false;
+                    }
+                    
+                    return amountNum;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const amount = result.value;
+                    processPayment(amount);
+                }
+            });
+        });
+    }
+
+    // Money animation function
+    function playMoneyAnimation() {
+        const moneyAnimation = document.querySelector('.money-animation');
+        if (moneyAnimation) {
+            moneyAnimation.style.opacity = '1';
+            moneyAnimation.innerHTML = '';
+            
+            for (let i = 0; i < 15; i++) {
+                const moneyParticle = document.createElement('div');
+                moneyParticle.classList.add('money-particle');
+                moneyParticle.textContent = '₹';
+                moneyParticle.style.left = `${Math.random() * 100}%`;
+                moneyParticle.style.top = `${Math.random() * 50 + 25}%`;
+                moneyParticle.style.animationDelay = `${Math.random() * 0.5}s`;
+                moneyAnimation.appendChild(moneyParticle);
+            }
+            
+            setTimeout(() => {
+                moneyAnimation.style.opacity = '0';
+            }, 2500);
+        }
+    }
+
+    // PAYMENT PROCESSING
+    async function processPayment(amount) {
+        if (isNaN(amount)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Amount',
+                text: 'Please enter a valid amount',
+                background: '#002c2a',
+                color: 'white'
+            });
+            return;
+        }
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        if (!csrfToken) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Session Expired',
+                text: 'Please refresh the page and try again',
+                background: '#002c2a',
+                color: 'white'
+            });
+            return;
+        }
+        
+        try {
+            // Show loading state
+            Swal.fire({
+                title: 'Processing Payment',
+                text: 'Please wait...',
+                background: '#002c2a',
+                color: 'white',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                allowEnterKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Create Razorpay order
+            const response = await fetch("/userp/create-razorpay-order/", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ amount: amount * 100 }) // Convert to paise
+            });
+            
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+            
+            // Close loading dialog
+            Swal.close();
+            
+            // Initialize Razorpay
+            const rzp = new Razorpay({
+                key: data.key_id,
+                amount: data.amount,
+                currency: "INR",
+                name: "Cyan Cash",
+                description: "Add Money to Wallet",
+                order_id: data.order_id,
+                handler: async function(response) {
+                    await verifyPayment(response, data);
+                },
+                prefill: {
+                    name: data.user_name || "",
+                    email: data.email || "",
+                    contact: data.phone || ""
+                },
+                theme: { color: "#00a0a0" },
+                modal: { 
+                    ondismiss: function() {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Payment Cancelled',
+                            text: 'You cancelled the payment process.',
+                            background: '#002c2a',
+                            color: 'white'
+                        });
+                    } 
+                }
+            });
+            
+            rzp.on('payment.failed', function(response) {
+                console.error("Payment failed:", response.error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Payment Failed',
+                    text: response.error.description,
+                    background: '#002c2a',
+                    color: 'white'
+                });
+            });
+            
+            rzp.open();
+            
+        } catch (error) {
+            console.error('Payment error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Payment Error',
+                text: error.message,
+                background: '#002c2a',
+                color: 'white'
+            });
+        }
+    }
+
+    async function verifyPayment(response, orderData) {
+    // Use getCookie instead of querySelector
+    const csrfToken = getCookie('csrftoken');
+    
+    if (!csrfToken) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Session Expired',
+            text: 'Please check your wallet balance.',
+            background: '#002c2a',
+            color: 'white'
+        });
+        return;
+    }
+    
+    try {
+        // Show loading state
+        Swal.fire({
+            title: 'Verifying Payment',
+            text: 'Please wait...',
+            background: '#002c2a',
+            color: 'white',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            allowEnterKey: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // Verify the payment
+        const verifyResponse = await fetch("/userp/verify-payment/", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                amount: orderData.amount / 100
+            })
+        });
+        
+        // Get the full response text for debugging
+        const responseText = await verifyResponse.text();
+        console.log("Verification response:", responseText);
+        
+        if (!verifyResponse.ok) {
+            try {
+                const errorData = JSON.parse(responseText);
+                throw new Error(errorData.message || `Verification failed: ${verifyResponse.status}`);
+            } catch (jsonError) {
+                throw new Error(`HTTP error! status: ${verifyResponse.status}, response: ${responseText}`);
+            }
+        }
+        
+        // Parse the response as JSON
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (e) {
+            throw new Error("Invalid JSON response from server");
+        }
+        
+        if (!data.success) throw new Error(data.message || "Payment verification failed");
+        
+        // Update UI
+        const balanceElement = document.querySelector('.balance-amount');
+        if (balanceElement) {
+            const currentBalance = parseFloat(balanceElement.textContent.replace(/,/g, '')) || 0;
+            const newBalance = currentBalance + (orderData.amount / 100);
+            balanceElement.textContent = newBalance.toLocaleString();
+        }
+        
+        // Show success message
+        Swal.fire({
+            icon: 'success',
+            title: 'Payment Successful!',
+            text: `₹${orderData.amount / 100} has been added to your wallet.`,
+            background: '#002c2a',
+            color: 'white'
+        });
+        
+        // Play success animation
+        playMoneyAnimation();
+        
+    } catch (error) {
+        console.error('Verification error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Payment Verification Failed',
+            text: error.message,
+            background: '#002c2a',
+            color: 'white'
+        });
+    }
+}
+
+    // ERROR HANDLING
+    window.addEventListener('error', function(e) {
+        console.error('Global error:', e.error);
+        Swal.fire({
+            icon: 'error',
+            title: 'An Error Occurred',
+            text: e.error.message,
+            background: '#002c2a',
+            color: 'white'
+        });
+    });
+});
+</script>
+{% endblock%}

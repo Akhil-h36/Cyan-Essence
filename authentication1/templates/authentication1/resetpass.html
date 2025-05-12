@@ -1,0 +1,142 @@
+{% load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Reset Form</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Grey+Qo&family=Gruppo&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #1a3c3c;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: url('{% static "images/logback.webp" %}');
+            background-size: cover;
+            background-position: 30% 30%;
+        }
+        
+        .form-container {
+            width: 450px;
+            background-color: rgba(26, 40, 40, 0.75);
+            border-radius: 20px;
+            padding: 30px 20px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .form-title {
+            text-align: center;
+            color: #e0e0e0;
+            font-size: 22px;
+            margin-bottom: 30px;
+            font-weight: normal;
+            font-family: 'Grey Qo', cursive;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: #a0a0a0;
+            margin-bottom: 8px;
+            font-family: 'Gruppo', sans-serif;
+        }
+        
+        .form-group input {
+            width: 100%;
+            background-color: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(160, 160, 160, 0.5);
+            padding: 8px 4px;
+            color: #e0e0e0;
+            outline: none;
+            transition: border-color 0.3s;
+            font-family: 'Gruppo', sans-serif;
+        }
+        
+        .form-group input:focus {
+            border-color: #e0e0e0;
+        }
+        
+        .submit-btn {
+            display: block;
+            width: 120px;
+            margin: 35px auto 0;
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 0;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+            font-family: 'Gruppo', sans-serif;
+        }
+        
+        .submit-btn:hover {
+            background-color: #3a3a3a;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2 class="form-title">Reset password</h2>
+        
+        <!-- Add form tag with method and action -->
+        <form method="POST" action="{% url 'resetpass' %}">
+            {% csrf_token %}
+            
+            <!-- Error messages display -->
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <div class="form-group">
+                <label for="new-password">enter new password</label>
+                <input type="password" id="new-password" name="new-password" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirm-password">confirm password</label>
+                <input type="password" id="confirm-password" name="confirm-password" required>
+            </div>
+            
+            <button type="submit" class="submit-btn">submit</button>
+        </form>
+    </div>
+
+    <!-- Optional: Add some basic password validation -->
+    <script>
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const newPassword = document.getElementById('new-password');
+            const confirmPassword = document.getElementById('confirm-password');
+
+            if (newPassword.value !== confirmPassword.value) {
+                e.preventDefault();
+                alert('Passwords do not match');
+            }
+        });
+    </script>
+</body>
+</html>

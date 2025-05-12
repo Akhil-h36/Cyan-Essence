@@ -1,0 +1,232 @@
+{% extends 'layout.html' %}
+
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <div class="row">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'adminhome' %}" class="text-light">Admin</a>
+                </li>
+                <li class="breadcrumb-item active text-info" aria-current="page">
+                    Category Management
+                </li>
+            </ol>
+        </nav>
+
+        <!-- Messages Section -->
+        <div class="messages-container mb-3">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show text-primary" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close btn-primary" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div class="container">
+            <div class="row">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="text-light">Brand Management</h3>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                        data-bs-target="#addBrandModal">
+                        Add New Brand
+                    </button>
+                </div>
+        
+                <div class="table-responsive">
+                    <table class="table text-light">
+                        <thead>
+                            <tr>
+                                <th scope="col">Sl</th>
+                                <th scope="col">Brand Name</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="brandList">
+                            {% for brand in brands %}
+                            <tr>
+                                <th scope="row">{{ forloop.counter }}</th>
+                                <td>{{ brand.brand_name }}</td>
+                                <td>
+                                    <div class="d-flex justify-content-between gap-3">
+                                        <!-- Edit Button -->
+                                        <button type="button" class="btn btn-outline-light w-100"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editBrandModal{{ brand.brand_id }}">
+                                            Edit
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+        
+                    <!-- Pagination -->
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% for i in totalPages|add:"1"|make_list %}
+                            {% if forloop.counter > 0 %}
+                            <li class="page-item {% if currentPage == forloop.counter %}active{% endif %}">
+                                <a class="page-link" href="/admin/brands?page={{ forloop.counter }}">
+                                    {{ forloop.counter }}
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Category Modal -->
+<div class="modal fade" id="addBrandModal" tabindex="-1" aria-labelledby="addBrandModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header bg-dark">
+                <h5 class="modal-title" id="addBrandModalLabel">Add New Brand</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <form id="addBrandForm" method="POST" action="{% url 'adcategory' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="brandName" class="form-label">Brand Name</label>
+                        <input type="text" class="form-control custom-search-input" id="brandName" name="brand_name"
+                            required />
+                        <div id="brandNameFeedback" class="invalid-feedback">
+                            Please provide a valid brand name.
+                        </div>
+                    </div>
+                    <div id="modal-error-message" class="alert alert-danger" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Close
+                    </button>
+                    <button type="submit" class="btn btn-primary">Add Brand</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- Edit Category Modals -->
+<!-- Edit Brand Modals -->
+{% for brand in brands %}
+<div class="modal fade" id="editBrandModal{{ brand.brand_id }}" tabindex="-1"
+    aria-labelledby="editBrandModalLabel{{ brand.brand_id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header bg-dark text-light">
+                <h5 class="modal-title" id="editBrandModalLabel{{ brand.brand_id }}">Edit Brand</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <form id="editBrandForm{{ brand.brand_id }}" method="POST"
+                action="{% url 'edit_category' brand.brand_id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="brandName{{ brand.brand_id }}" class="form-label">Brand Name</label>
+                        <input type="text" class="form-control custom-search-input"
+                            id="brandName{{ brand.brand_id }}" name="brand_name" value="{{ brand.brand_name }}"
+                            required />
+                        <div class="invalid-feedback">
+                            Please provide a valid brand name.
+                        </div>
+                    </div>
+                    <div id="edit-modal-error-message-{{ brand.brand_id }}" class="alert alert-danger" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static '/js/categoryManagement.js' %}"></script>
+<script>
+    // Function to show modals with error messages if needed
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if there's a submitted action from a failed form
+        const urlParams = new URLSearchParams(window.location.search);
+        const action = urlParams.get('action');
+        const error = urlParams.get('error');
+        
+        if (action === 'add' && error) {
+            // Show add modal with error
+            const addModal = new bootstrap.Modal(document.getElementById('addBrandModal'));
+            addModal.show();
+            document.getElementById('modal-error-message').textContent = decodeURIComponent(error);
+            document.getElementById('modal-error-message').style.display = 'block';
+        } else if (action === 'edit' && error) {
+            const brandId = urlParams.get('brand_id');
+            if (brandId) {
+                // Show edit modal with error
+                const editModal = new bootstrap.Modal(document.getElementById(`editBrandModal${brandId}`));
+                editModal.show();
+                document.getElementById(`edit-modal-error-message-${brandId}`).textContent = decodeURIComponent(error);
+                document.getElementById(`edit-modal-error-message-${brandId}`).style.display = 'block';
+            }
+        }
+        
+        // Client-side validation for add form
+        document.getElementById('addBrandForm').addEventListener('submit', function(event) {
+            const brandNameInput = document.getElementById('brandName');
+            if (!brandNameInput.value.trim()) {
+                event.preventDefault();
+                brandNameInput.classList.add('is-invalid');
+                document.getElementById('modal-error-message').textContent = 'Brand name cannot be empty.';
+                document.getElementById('modal-error-message').style.display = 'block';
+            }
+        });
+        
+        // Client-side validation for all edit forms
+        document.querySelectorAll('[id^=editBrandForm]').forEach(form => {
+            form.addEventListener('submit', function(event) {
+                const brandId = form.id.replace('editBrandForm', '');
+                const brandNameInput = document.getElementById(`brandName${brandId}`);
+                
+                if (!brandNameInput.value.trim()) {
+                    event.preventDefault();
+                    brandNameInput.classList.add('is-invalid');
+                    document.getElementById(`edit-modal-error-message-${brandId}`).textContent = 'Brand name cannot be empty.';
+                    document.getElementById(`edit-modal-error-message-${brandId}`).style.display = 'block';
+                }
+            });
+        });
+        
+        // Clear validation state when input changes
+        document.querySelectorAll('.custom-search-input').forEach(input => {
+            input.addEventListener('input', function() {
+                this.classList.remove('is-invalid');
+                const modalId = this.id.includes('brandName') && !this.id.includes('brandName-') ? 
+                    'modal-error-message' : 
+                    `edit-modal-error-message-${this.id.replace('brandName', '')}`;
+                
+                const errorElement = document.getElementById(modalId);
+                if (errorElement) {
+                    errorElement.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

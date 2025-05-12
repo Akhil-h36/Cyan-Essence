@@ -1,0 +1,943 @@
+{% extends "sidebar.html" %}
+{%load static%}
+
+{% block styles %}
+<style>
+
+    /* Product Cards */
+    .product-section {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 30px 0;
+        animation: fadeIn 1.5s ease;
+    }
+
+    .product-card {
+        background-color: var(--secondary-color);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border: none;
+        transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        transform: translateY(0);
+    }
+
+    .product-card:hover {
+        transform: translateY(-15px);
+        box-shadow: 0 15px 35px rgba(0, 116, 116, 0.2);
+    }
+
+    .product-image-container {
+        height: 450px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .product-image-container::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, transparent 60%, rgba(0, 0, 0, 0.1));
+        opacity: 0;
+        transition: opacity 0.5s ease;
+    }
+
+    .product-card:hover .product-image-container::after {
+        opacity: 1;
+    }
+
+    .product-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .product-card:hover .product-image {
+        transform: scale(1.1);
+    }
+
+    .product-info {
+        padding: 20px;
+        text-align: center;
+        background-color: #fff;
+        position: relative;
+        z-index: 1;
+        transition: all 0.5s ease;
+    }
+
+    .product-card:hover .product-info {
+        background-color: rgba(0, 116, 116, 0.05);
+    }
+
+    .product-name {
+        font-family: 'Cormorant Garamond', cursive;
+        font-size: 1.5rem;
+        font-weight: 500;
+        margin-bottom: 10px;
+        color: var(--text-color);
+        text-transform: capitalize;
+        transition: color 0.3s ease;
+    }
+
+    .product-card:hover .product-name {
+        color: var(--primary-color);
+    }
+
+    .product-price-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.3s ease;
+    }
+
+    .product-card:hover .product-price-container {
+        transform: scale(1.1);
+    }
+
+    .price {
+        font-size: 1.8rem;
+        font-family: 'Cormorant Garamond', cursive;
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+
+    .icon {
+        font-size: 1.25rem;
+        color: var(--primary-color);
+        vertical-align: middle;
+        transition: transform 0.3s ease;
+    }
+
+    .product-card:hover .icon {
+        transform: scale(1.2);
+    }
+
+    .ranking-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        z-index: 2;
+    }
+    .product-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    height: 100%;
+}
+
+.product-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure the card maintains clickable feel */
+.product-link:hover, .product-link:focus {
+    color: inherit;
+    text-decoration: none;
+}
+/* Video Section Styles */
+.video-section {
+    position: relative;
+    height: 700px;
+    overflow: hidden;
+    margin: 50px 0;
+}
+
+.video-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.video-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+.video-overlay h2 {
+    font-family: 'Cormorant Garamond', cursive;
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+.video-overlay p {
+    font-size: 1.5rem;
+    max-width: 800px;
+    margin-bottom: 30px;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8);
+}
+
+.video-btn {
+    color: white;
+    background-color: transparent; /* Makes background transparent */
+    border: 1px solid white; /* Adds subtle border */
+    padding: 12px 30px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Cormorant Garamond', cursive;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    backdrop-filter: blur(2px); /* Optional: subtle blur effect on background */
+}
+
+.video-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1); /* Slight white tint on hover */
+    border-color: rgba(255, 255, 255, 0.7); /* Brighter border on hover */
+    transform: scale(1.05);
+}
+
+/* Scroll Animation Classes */
+.scroll-animate {
+    opacity: 0;
+    transition: all 0.8s ease;
+}
+
+.scroll-animate.animate {
+    opacity: 1;
+}
+
+.slide-up {
+    transform: translateY(50px);
+}
+
+.slide-up.animate {
+    transform: translateY(0);
+}
+
+.slide-left {
+    transform: translateX(-50px);
+}
+
+.slide-left.animate {
+    transform: translateX(0);
+}
+
+.slide-right {
+    transform: translateX(50px);
+}
+
+.slide-right.animate {
+    transform: translateX(0);
+}
+
+.scale-in {
+    transform: scale(0.8);
+}
+
+.scale-in.animate {
+    transform: scale(1);
+}
+
+/* Responsive Video Section */
+@media (max-width: 992px) {
+    .video-section {
+        height: 600px;
+    }
+    
+    .video-overlay h2 {
+        font-size: 3rem;
+    }
+    
+    .video-overlay p {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .video-section {
+        height: 500px;
+    }
+    
+    .video-overlay h2 {
+        font-size: 2.5rem;
+    }
+    
+    .video-overlay p {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .video-section {
+        height: 400px;
+    }
+    
+    .video-overlay h2 {
+        font-size: 2rem;
+    }
+    
+    .video-overlay p {
+        font-size: 1rem;
+    }
+    
+    .video-btn {
+        padding: 10px 25px;
+        font-size: 1rem;
+    }
+}
+</style>
+{% endblock styles %}
+
+
+
+{% block content %}
+    
+    <!-- Hero Section -->
+    <section class="hero">
+        <img src="{% static 'images/banner1.webp' %}" alt="Luxury Perfume">
+        <div class="hero-content">
+            <p id="elegance_p">Elegance in every drop, a scent that lingers beyond time</p>
+        </div>
+    </section>
+    
+    
+
+
+    <div class="container-fluid product-section py-5">
+        <h2 class="section-title" style="font-family: 'Cormorant Garamond';">The Essential</h2>
+
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+            
+            {% for product in top_products %}
+            <div class="col"> 
+                <div class="card h-100 d-flex product-card">
+                    <a href="{% url 'singleproduct' product.product_id %}" class="product-link">
+                        <div class="product-image-container">
+                            <div class="ranking-badge">#{{ product.rank }}</div>
+                            {% if product.image_url %}
+                            <img src="{{ product.image_url }}" 
+                                 class="card-img-top product-image" 
+                                 alt="{{ product.name }}"
+                                 loading="lazy">
+                            {% else %}
+                            <img src="{% static 'images/Dior_sauvage.webp' %}" 
+                                 class="card-img-top product-image" 
+                                 alt="{{ product.name }}"
+                                 loading="lazy">
+                            {% endif %}
+                        </div>
+                        <div class="card-body product-info">
+                            <h3 class="product-name">{{ product.name }}</h3>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+
+            <!-- Fallback if no bestsellers found -->
+            <!-- Product 1 -->
+            <div class="col"> 
+                <div class="card h-100 d-flex product-card">
+                    <div class="product-image-container">
+                        <img src="{% static 'images/Dior_sauvage.webp' %}" 
+                             class="card-img-top product-image" 
+                             alt="Dior Sauvage"
+                             loading="lazy">
+                    </div>
+                    <div class="card-body product-info">
+                        <h3 class="product-name">Dior Sauvage</h3>
+                        <div class="product-price-container">
+                            <i class="icon fa-solid fa-indian-rupee-sign"></i>
+                            <span class="price">8,499</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    
+            <!-- Product 2 -->
+            <div class="col">
+                <div class="card h-100 d-flex product-card">
+                    <div class="product-image-container">
+                        <img src="{% static 'images/coco.jpeg' %}" 
+                             class="card-img-top product-image" 
+                             alt="Burberry Her"
+                             loading="lazy">
+                    </div>
+                    <div class="card-body product-info">
+                        <h3 class="product-name">Burberry Her</h3>
+                        <div class="product-price-container">
+                            <i class="icon fa-solid fa-indian-rupee-sign"></i>
+                            <span class="price">7,899</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    
+            <!-- Product 3 -->
+            <div class="col">
+                <div class="card h-100 d-flex product-card">
+                    <div class="product-image-container">
+                        <img src="{% static 'images/dior_lady.jpeg' %}" 
+                             class="card-img-top product-image" 
+                             alt="Dior Lady"
+                             loading="lazy">
+                    </div>
+                    <div class="card-body product-info">
+                        <h3 class="product-name">Dior Lady</h3>
+                        <div class="product-price-container">
+                          <i class="icon fa-solid fa-indian-rupee-sign"></i>
+                          <span class="price">9,999</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+  
+
+
+  <!-- Replace the brands-container-fluid div with this -->
+  <div class="container-fluid py-4">
+      <h2 class="section-title"style="font-family: 'Cormorant Garamond';">Our Premium Brands</h2>
+      <div class="brands-container">
+          <div class="brands-scroller">
+              <!-- Brand 1 - Dior -->
+              <div class="brand-card">
+                  <a href="{% url 'myshop' %}?brand=Dior" class="brand-link">
+                      <div class="brand-image-container">
+                          <img src="{% static 'images/adior.jpeg' %}" 
+                              class="brand-image" 
+                              alt="Dior"
+                              loading="lazy">
+                      </div>
+                      <div class="brand-info">
+                          <h3 class="brand-name">Dior</h3>
+                      </div>
+                  </a>
+              </div>
+
+              <!-- Brand 2 - Chanel -->
+              <div class="brand-card">
+                  <a href="{% url 'myshop' %}?brand=Chanel" class="brand-link">
+                      <div class="brand-image-container">
+                          <img src="{% static 'images/achanel.jpeg' %}" 
+                              class="brand-image" 
+                              alt="Chanel"
+                              loading="lazy">
+                      </div>
+                      <div class="brand-info">
+                          <h3 class="brand-name">Chanel</h3>
+                      </div>
+                  </a>
+              </div>
+
+              <!-- Brand 3 - Tom Ford -->
+              <div class="brand-card">
+                  <a href="{% url 'myshop' %}?brand=Tom Ford" class="brand-link">
+                      <div class="brand-image-container">
+                          <img src="{% static 'images/atomford.jpeg' %}" 
+                              class="brand-image" 
+                              alt="Tom Ford"
+                              loading="lazy">
+                      </div>
+                      <div class="brand-info">
+                          <h3 class="brand-name">Tom Ford</h3>
+                      </div>
+                  </a>
+              </div>
+
+              <!-- Brand 4 - Versace -->
+              <div class="brand-card">
+                  <a href="{% url 'myshop' %}?brand=Versace" class="brand-link">
+                      <div class="brand-image-container">
+                          <img src="{% static 'images/aversace.jpeg' %}" 
+                              class="brand-image" 
+                              alt="Versace"
+                              loading="lazy">
+                      </div>
+                      <div class="brand-info">
+                          <h3 class="brand-name">Versace</h3>
+                      </div>
+                  </a>
+              </div>
+
+              <!-- Brand 5 - Gucci -->
+              <div class="brand-card">
+                  <a href="{% url 'myshop' %}?brand=Gucci" class="brand-link">
+                      <div class="brand-image-container">
+                          <img src="{% static 'images/agucci.jpeg' %}" 
+                              class="brand-image" 
+                              alt="Gucci"
+                              loading="lazy">
+                      </div>
+                      <div class="brand-info">
+                          <h3 class="brand-name">Gucci</h3>
+                      </div>
+                  </a>
+              </div>
+
+              <!-- Brand 6 - Armani -->
+              <div class="brand-card">
+                  <a href="{% url 'myshop' %}?brand=Armani" class="brand-link">
+                      <div class="brand-image-container">
+                          <img src="{% static 'images/aarmani A.jpeg' %}" 
+                              class="brand-image" 
+                              alt="Armani"
+                              loading="lazy">
+                      </div>
+                      <div class="brand-info">
+                          <h3 class="brand-name">Armani</h3>
+                      </div>
+                  </a>
+              </div>
+          </div>
+      </div>
+      <div class="scroller-controls">
+          <button class="scroll-left"><i class="fas fa-chevron-left"></i></button>
+          <button class="scroll-right"><i class="fas fa-chevron-right"></i></button>
+      </div>
+  </div>
+
+
+
+
+  <!-- Lifestyle Section -->
+  <div class="container-lifestyle py-5">
+      <div class="row g-0">
+          <!-- Carousel Section -->
+          <div class="col-12 col-md-8">
+              <div id="lifestyleCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
+                  <div class="carousel-inner">
+                      <!-- Slide 1 -->
+                      <div class="carousel-item active">
+                          <img src="{% static 'images/carosal_1.jpg' %}" class="d-block w-100" alt="Perfume and Nature">
+                          <div class="carousel-caption d-none d-md-block">
+                              <h5 class="animate__animated animate__fadeInDown">Elegant Scents</h5>
+                              <p class="animate__animated animate__fadeInUp animate__delay-1s">Experience luxury in every drop.</p>
+                          </div>
+                      </div>
+                      
+                      <!-- Slide 2 -->
+                      <div class="carousel-item">
+                          <img src="{% static 'images/carosal_2.jpg' %}" class="d-block w-100" alt="Perfume Display">
+                          <div class="carousel-caption d-none d-md-block">
+                              <h5 class="animate__animated animate__fadeInDown">Exclusive Collection</h5>
+                              <p class="animate__animated animate__fadeInUp animate__delay-1s">Unleash the power of timeless fragrances.</p>
+                          </div>
+                      </div>
+                      
+                      <!-- Slide 3 -->
+                      <div class="carousel-item">
+                          <img src="{% static 'images/carosal_3.jpg' %}" class="d-block w-100" alt="Luxury Scents">
+                          <div class="carousel-caption d-none d-md-block">
+                              <h5 class="animate__animated animate__fadeInDown">Luxury & Class</h5>
+                              <p class="animate__animated animate__fadeInUp animate__delay-1s">Crafted for those who seek elegance.</p>
+                          </div>
+                      </div>
+                  </div>
+                  
+                  <!-- Carousel Controls -->
+                  <button class="carousel-control-prev" type="button" data-bs-target="#lifestyleCarousel" data-bs-slide="prev">
+                      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                      <span class="visually-hidden">Previous</span>
+                  </button>
+                  <button class="carousel-control-next" type="button" data-bs-target="#lifestyleCarousel" data-bs-slide="next">
+                      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                      <span class="visually-hidden">Next</span>
+                  </button>
+              </div>
+          </div>
+          
+          <!-- Dedicated Mens Section -->
+          <div class="col-12 col-md-4">
+              <div class="dedicated-mens-section position-relative">
+                  <img src="{% static 'images/tom_ford.jpeg' %}" class="img-fluid w-100 h-100" alt="Luxury Perfume">
+                  <div class="position-absolute top-50 start-50 translate-middle text-center">
+                      <h3 class="text-white animate__animated animate__fadeIn animate__delay-1s">Tom Ford</h3>
+                      <p class="text-white animate__animated animate__fadeIn animate__delay-2s">Private Blend Collection</p>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+  
+  
+  <!-- Video Section -->
+    <div class="video-section scroll-animate slide-up">
+        <div class="video-container">
+            <!-- Replace with your actual video file -->
+            <video autoplay muted loop playsinline>
+                <source src="{% static 'videos/banner_video2.mp4' %}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div class="video-overlay">
+                <h2 class="scroll-animate slide-left">The Art of Fragrance</h2>
+                <a href="{% url 'myshop' %}"><button class="video-btn scroll-animate scale-in">Explore Collection</button></a>
+                
+            </div>
+        </div>
+    </div>
+  
+  <!-- Features Section -->
+  <h2 class="d-flex justify-content-center blogtitle animate__animated animate__fadeIn">Blog</h2>
+  <div class="container py-5">
+      <div class="row g-4">
+          <div class="col-12 col-md-4 animate__animated animate__fadeInLeft">
+              <div class="feature-card card h-100 text-center p-4 shadow-sm">
+                  <div class="card-body">
+                      <h3 class="card-title"style="font-family: 'Cormorant Garamond';">PERFUME</h3>
+                      <p class="card-text">A Perfume Chemist, also known as a Fragrance Chemist or Perfumer, is a specialist who formulates and develops scents by blending natural and synthetic ingredients. They work with essential oils, aroma compounds, and fixatives to create perfumes, cosmetics, and household fragrances.</p>
+                  </div>
+              </div>
+          </div>
+          <div class="col-12 col-md-4 animate__animated animate__fadeInUp">
+              <div class="feature-card card h-100 text-center p-4 shadow-sm">
+                  <div class="card-body">
+                      <h3 class="card-title"style="font-family: 'Cormorant Garamond';">Perfume Chemist</h3>
+                      <p class="card-text">A Perfume Chemist, also known as a Fragrance Chemist or Perfumer, is a specialist who formulates and develops scents by blending natural and synthetic ingredients. They work with essential oils, aroma compounds, and fixatives to create perfumes.</p>
+                  </div>
+              </div>
+          </div>
+          <div class="col-12 col-md-4 animate__animated animate__fadeInRight">
+              <div class="feature-card card h-100 text-center p-4 shadow-sm">
+                  <div class="card-body">
+                      <h3 class="card-title"style="font-family: 'Cormorant Garamond';">Essential Oil</h3>
+                      <p class="card-text">Essential oils are highly concentrated, aromatic liquids extracted from plants through distillation (steam/water) or cold pressing. They capture the plant's natural scent, flavor, and therapeutic properties.</p>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  
+{% endblock %}
+{% block extra_scripts %} 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Animate.css -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuIcon = document.querySelector('.menu-icon');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const closeSidebar = document.getElementById('closeSidebar');
+        
+        // Function to open sidebar
+        function openSidebar() {
+            sidebar.classList.add('active');
+            sidebarOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Function to close sidebar
+        function closeSidebarFunc() {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // Event listeners
+        menuIcon.addEventListener('click', openSidebar);
+        closeSidebar.addEventListener('click', closeSidebarFunc);
+        sidebarOverlay.addEventListener('click', closeSidebarFunc);
+
+        // Scroll animations
+        const animateElements = document.querySelectorAll('.animate__animated');
+        
+        const animateOnScroll = () => {
+            animateElements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+                
+                if (elementTop < windowHeight - 100) {
+                    const animationClass = Array.from(element.classList)
+                        .find(cls => cls.startsWith('animate__'));
+                    
+                    if (animationClass && !element.classList.contains('animate__faster')) {
+                        element.classList.add('animate__faster');
+                    }
+                }
+            });
+        };
+        
+        window.addEventListener('scroll', animateOnScroll);
+        animateOnScroll(); // Initial check
+    });
+</script>
+
+<script>
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuIcon = document.querySelector('.menu-icon');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const closeSidebar = document.getElementById('closeSidebar');
+        
+        // Function to open sidebar
+        function openSidebar() {
+            sidebar.classList.add('active');
+            sidebarOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Function to close sidebar
+        function closeSidebarFunc() {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // Event listeners
+        menuIcon.addEventListener('click', openSidebar);
+        closeSidebar.addEventListener('click', closeSidebarFunc);
+        sidebarOverlay.addEventListener('click', closeSidebarFunc);
+
+        // Scroll animations
+        const animateElements = document.querySelectorAll('.animate__animated');
+        
+        const animateOnScroll = () => {
+            animateElements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+                
+                if (elementTop < windowHeight - 100) {
+                    const animationClass = Array.from(element.classList)
+                        .find(cls => cls.startsWith('animate__'));
+                    
+                    if (animationClass && !element.classList.contains('animate__faster')) {
+                        element.classList.add('animate__faster');
+                    }
+                }
+            });
+        };
+        
+        window.addEventListener('scroll', animateOnScroll);
+        animateOnScroll(); // Initial check
+    });
+
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+     // Initialize the Cover Flow carousel
+     const brandsContainer = document.querySelector('.brands-container');
+     const brandsScroller = document.querySelector('.brands-scroller');
+     const brandCards = document.querySelectorAll('.brand-card');
+     const scrollLeftBtn = document.querySelector('.scroll-left');
+     const scrollRightBtn = document.querySelector('.scroll-right');
+     const totalCards = brandCards.length;
+     
+     // Remove the progress indicator container if it exists
+     const progressContainer = document.querySelector('.carousel-progress');
+     if (progressContainer) {
+         progressContainer.remove();
+     }
+     
+     // Set initial active card
+     let currentIndex = 0;
+     
+     // Function to position all cards based on current index
+     function updateCarousel() {
+         brandCards.forEach((card, index) => {
+             // Remove all position classes
+             card.className = 'brand-card';
+             
+             // Calculate relative position to current with wrapping
+             let position = index - currentIndex;
+             
+             // Handle wrapping for infinite rotation
+             if (position > Math.floor(totalCards / 2)) {
+                 position -= totalCards;
+             } else if (position < -Math.floor(totalCards / 2)) {
+                 position += totalCards;
+             }
+             
+             // Apply appropriate class based on position
+             if (position === 0) {
+                 card.classList.add('active');
+             } else if (position === -1) {
+                 card.classList.add('prev-1');
+             } else if (position === 1) {
+                 card.classList.add('next-1');
+             } else if (position === -2) {
+                 card.classList.add('prev-2');
+             } else if (position === 2) {
+                 card.classList.add('next-2');
+             } else if (position === -3) {
+                 card.classList.add('prev-3');
+             } else if (position === 3) {
+                 card.classList.add('next-3');
+             }
+             // Cards beyond +/-3 positions remain hidden
+         });
+     }
+     
+     // Initialize carousel
+     updateCarousel();
+     
+     // Handle click events on cards
+     brandCards.forEach((card, index) => {
+         card.addEventListener('click', function(e) {
+             // Only handle clicks on non-active cards and not on the link inside
+             if (index !== currentIndex && !e.target.closest('.brand-link')) {
+                 e.preventDefault(); // Prevent navigation if clicking on card but not link
+                 currentIndex = index;
+                 updateCarousel();
+             }
+         });
+     });
+     
+     // Handle navigation buttons with infinite rotation
+     scrollLeftBtn.addEventListener('click', () => {
+         currentIndex = (currentIndex - 1 + totalCards) % totalCards;
+         updateCarousel();
+     });
+     
+     scrollRightBtn.addEventListener('click', () => {
+         currentIndex = (currentIndex + 1) % totalCards;
+         updateCarousel();
+     });
+     
+     // Handle touch events for mobile
+     let touchStartX = 0;
+     let touchEndX = 0;
+     
+     brandsContainer.addEventListener('touchstart', (e) => {
+         touchStartX = e.changedTouches[0].screenX;
+     });
+     
+     brandsContainer.addEventListener('touchend', (e) => {
+         touchEndX = e.changedTouches[0].screenX;
+         handleSwipe();
+     });
+     
+     function handleSwipe() {
+         const swipeThreshold = 50;
+         if (touchEndX < touchStartX - swipeThreshold) {
+             // Swipe left (next)
+             currentIndex = (currentIndex + 1) % totalCards;
+             updateCarousel();
+         } else if (touchEndX > touchStartX + swipeThreshold) {
+             // Swipe right (previous)
+             currentIndex = (currentIndex - 1 + totalCards) % totalCards;
+             updateCarousel();
+         }
+     }
+     
+     // Add keyboard navigation
+     document.addEventListener('keydown', (e) => {
+         if (e.key === 'ArrowLeft') {
+             currentIndex = (currentIndex - 1 + totalCards) % totalCards;
+             updateCarousel();
+         } else if (e.key === 'ArrowRight') {
+             currentIndex = (currentIndex + 1) % totalCards;
+             updateCarousel();
+         }
+     });
+     
+     // Auto-rotation with infinite loop
+     let autoRotateInterval;
+     
+     function startAutoRotate() {
+         autoRotateInterval = setInterval(() => {
+             currentIndex = (currentIndex + 1) % totalCards;
+             updateCarousel();
+         }, 4000); // Change slide every 4 seconds
+     }
+     
+     function stopAutoRotate() {
+         clearInterval(autoRotateInterval);
+     }
+     
+     // Start auto-rotation
+     startAutoRotate();
+     
+     // Stop auto-rotation on user interaction
+     brandsContainer.addEventListener('mouseenter', stopAutoRotate);
+     scrollLeftBtn.addEventListener('mouseenter', stopAutoRotate);
+     scrollRightBtn.addEventListener('mouseenter', stopAutoRotate);
+     
+     // Resume auto-rotation after user interaction
+     brandsContainer.addEventListener('mouseleave', startAutoRotate);
+     
+     // Handle window resize events to ensure proper display
+     window.addEventListener('resize', updateCarousel);
+     
+     // Add a subtle parallax effect on mouse move
+     brandsContainer.addEventListener('mousemove', (e) => {
+         const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+         const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+         
+         // Apply subtle rotation to active card for parallax effect
+         const activeCard = document.querySelector('.brand-card.active');
+         if (activeCard) {
+             activeCard.style.transform = `translate(-50%, -50%) translateZ(200px) scale(1.1) rotateY(${xAxis / 2}deg) rotateX(${-yAxis / 2}deg)`;
+         }
+     });
+     
+     // Reset parallax effect when mouse leaves
+     brandsContainer.addEventListener('mouseleave', () => {
+         const activeCard = document.querySelector('.brand-card.active');
+         if (activeCard) {
+             activeCard.style.transform = '';
+             updateCarousel(); // Reset to default position
+         }
+     });
+ });
+ </script>
+ <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Scroll animation observer
+        const animateOnScroll = () => {
+            const elements = document.querySelectorAll('.scroll-animate');
+            
+            elements.forEach(element => {
+                const elementPosition = element.getBoundingClientRect().top;
+                const screenPosition = window.innerHeight / 1.2;
+                
+                if (elementPosition < screenPosition) {
+                    element.classList.add('animate');
+                }
+            });
+        };
+        
+        // Initial check
+        animateOnScroll();
+        
+        // Check on scroll
+        window.addEventListener('scroll', animateOnScroll);
+        
+        // Other existing JavaScript code...
+    });
+    </script>
+    
+{% endblock %}
+

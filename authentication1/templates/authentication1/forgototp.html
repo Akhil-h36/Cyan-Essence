@@ -1,0 +1,246 @@
+{%load static%}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP Verification</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Grey+Qo&family=Gruppo&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+    background: url('{% static "images/login_back3.webp" %}') no-repeat center center fixed;
+    background-size: cover;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Gruppo', sans-serif;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+    padding: 0;
+}
+        
+        .container {
+            position: relative;
+            width: 360px;
+            height: 500px;
+            background: url('path-to-perfume-bottle-image.jpg') no-repeat center center;
+            background-size: contain;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius:10px;
+        }
+        
+        .otp-form {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .logo {
+            font-family: 'Grey Qo';
+            font-size: 40px;
+            color: white;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .tagline {
+            font-size: 20px;
+            font-weight: bold;
+            color: rgb(255, 255, 255);
+            text-align: center;
+            margin-bottom: 35px;
+            font-style: italic;
+        }
+        
+        .otp-digits {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.otp-digit {
+    width: 50px;
+    height: 50px;
+    text-align: center;
+    color: white;
+    font-size: 20px;
+    border: 2px solid #007474;
+    border-radius: 5px;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.timer {
+    color: rgb(255, 255, 255);
+    font-size: 18px;
+    font-weight: bold;
+    margin: 10px 0;
+}
+        
+        .submit-btn {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 30px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            width: 100%;
+            font-family: 'Gruppo', sans-serif;
+        }
+        
+        .timer {
+            margin: 10px 0;
+            color: rgba(0, 0, 0, 0.6);
+            font-size: 20px;
+        }
+        
+        .resend-btn {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: 'Gruppo', sans-serif;
+        }
+        .resend-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .alert {
+            padding: 10px;
+            background-color: rgba(255, 0, 0, 0.5);
+            color: white;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            text-align: center;
+            width: 80%;
+            margin: 10px auto;
+        }
+        
+        .alert-success {
+            background-color: rgba(0, 128, 0, 0.5);
+        }
+        
+        .alert-error {
+            background-color: rgba(255, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+        <div class="otp-form">
+            <div class="logo">OTP</div>
+            <div class="tagline">enter your resete otp</div>
+
+         <form method="POST" action="{% url 'fogototp' %}"> 
+            {% csrf_token %}
+
+            <div class="otp-digits">
+                <input type="text" name="otp1" class="otp-digit" maxlength="1" oninput="moveToNext(this, 0)">
+                <input type="text" name="otp2" class="otp-digit" maxlength="1" oninput="moveToNext(this, 1)">
+                <input type="text" name="otp3" class="otp-digit" maxlength="1" oninput="moveToNext(this, 2)">
+                <input type="text" name="otp4" class="otp-digit" maxlength="1" oninput="moveToNext(this, 3)">
+            </div>
+                    
+                    <button class="submit-btn">submit</button>
+                    
+                    <div class="timer" id="timer">00:45</div>
+         </form>  
+            <form method="POST" action="{% url 'resendpassotp' %}">
+                {% csrf_token %}
+                <button type="submit" class="resend-btn" id="resend-btn" disabled>Resend OTP</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function moveToNext(field, index) {
+            // Auto-move to next field
+            if (field.value.length === field.maxLength) {
+                var nextField = document.getElementsByClassName('otp-digit')[index + 1];
+                if (nextField) {
+                    nextField.focus();
+                } else {
+                    // On last field, focus on submit button
+                    document.querySelector('.submit-btn').focus();
+                }
+            }
+        }
+        
+        // Timer for OTP expiration
+        function startTimer(duration, display) {
+            var timer = duration, minutes, seconds;
+            var resendBtn = document.getElementById('resend-btn');
+            
+            var interval = setInterval(function () {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+                
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+                
+                display.textContent = minutes + ":" + seconds;
+                
+                if (--timer < 0) {
+                    clearInterval(interval);
+                    resendBtn.disabled = false;
+                    display.textContent = "Expired";
+                }
+            }, 1000);
+        }
+        
+        // Start the timer when page loads
+        window.onload = function () {
+            var fortyFiveSeconds = 45,
+                display = document.querySelector('#timer');
+            startTimer(fortyFiveSeconds, display);
+            
+            // Add event listener for form submission
+            document.getElementById('resendForm').addEventListener('submit', function(event) {
+                var resendBtn = document.getElementById('resend-btn');
+                
+                if (resendBtn.disabled) {
+                    event.preventDefault();
+                    return false;
+                }
+                
+                // Disable the button during submission to prevent multiple clicks
+                resendBtn.disabled = true;
+                resendBtn.textContent = "Sending...";
+                
+                return true;
+            });
+        };
+    </script>
+
+
+</body>
+</html>

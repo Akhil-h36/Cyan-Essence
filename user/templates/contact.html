@@ -1,0 +1,928 @@
+{% extends 'sidebar.html' %}
+{% load static %}
+
+{% block styles %}
+<style>
+  :root {
+    --teal: #1b4a4a;
+    --light-teal: #1d5858;
+    --skyblueoff: #227870;
+    --light-skyblueoff: #45b59b;
+    --dark-teal: #006666;
+    --red: #c12e2a;
+    --light-red: #dc3545;
+    --dark-red: #a82a26;
+  }
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Gruppo', sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+    line-height: 1.6;
+  }
+  
+  header {
+    height: 260px;
+    background-image: url('/api/placeholder/400/320');
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.4));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .header-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+  }
+  
+  nav ul {
+    display: flex;
+    list-style: none;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+  }
+  
+  nav ul li {
+    margin-left: 20px;
+  }
+  
+  nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    transition: all 0.3s ease;
+  }
+  
+  nav ul li a:hover {
+    color: var(--light-skyblueoff);
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeIn 1s ease forwards;
+  }
+  
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .page-title {
+    text-align: center;
+    margin-bottom: 30px;
+    opacity: 0;
+    animation: slideDownFade 0.8s ease 0.3s forwards;
+  }
+  
+  @keyframes slideDownFade {
+    from {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .page-title h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3rem;
+    color: var(--teal);
+    margin-bottom: 10px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+  }
+  
+  .page-title p {
+    font-size: 1.2rem;
+    color: var(--skyblueoff);
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  
+  .contact-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-top: 40px;
+  }
+  
+  .contact-info {
+    background: linear-gradient(135deg, var(--light-teal), var(--light-skyblueoff));
+    border-radius: 15px;
+    padding: 30px;
+    color: white;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+    transform: translateX(-50px);
+    opacity: 0;
+    animation: slideInRight 0.8s ease 0.5s forwards;
+  }
+  
+  @keyframes slideInRight {
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  .contact-info::before {
+    content: '';
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 60%);
+    transform: rotate(45deg);
+    z-index: 0;
+    opacity: 0;
+    animation: shimmer 3s ease-in-out 1s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% { opacity: 0; transform: rotate(45deg) translateY(30px); }
+    30% { opacity: 0.4; }
+    70% { opacity: 0.1; }
+    100% { opacity: 0; transform: rotate(45deg) translateY(-30px); }
+  }
+  
+  .contact-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.2rem;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .contact-details {
+    position: relative;
+    z-index: 1;
+  }
+  
+  .contact-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  
+  .contact-item:nth-child(1) { animation: fadeItem 0.5s ease 0.7s forwards; }
+  .contact-item:nth-child(2) { animation: fadeItem 0.5s ease 0.9s forwards; }
+  .contact-item:nth-child(3) { animation: fadeItem 0.5s ease 1.1s forwards; }
+  .contact-item:nth-child(4) { animation: fadeItem 0.5s ease 1.3s forwards; }
+  
+  @keyframes fadeItem {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .contact-icon {
+    width: 50px;
+    height: 50px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 15px;
+    font-size: 1.2rem;
+  }
+  
+  .contact-text h4 {
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+  }
+  
+  .social-links {
+    display: flex;
+    margin-top: 30px;
+  }
+  
+  .social-link {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 15px;
+    font-size: 1.2rem;
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    transform: scale(0);
+  }
+  
+  .social-link:nth-child(1) { animation: socialPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1.5s forwards; }
+  .social-link:nth-child(2) { animation: socialPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1.6s forwards; }
+  .social-link:nth-child(3) { animation: socialPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1.7s forwards; }
+  .social-link:nth-child(4) { animation: socialPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1.8s forwards; }
+  
+  @keyframes socialPop {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+  
+  .social-link:hover {
+    background-color: white;
+    color: var(--teal);
+    transform: translateY(-5px);
+  }
+  
+  .wave {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 15px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z' opacity='.25' fill='%23008080'%3E%3C/path%3E%3Cpath d='M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z' opacity='.5' fill='%2387CEEB'%3E%3C/path%3E%3Cpath d='M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z' fill='%235fb5b5'%3E%3C/path%3E%3C/svg%3E") repeat-x;
+    animation: wave 20s linear infinite;
+  }
+  
+  @keyframes wave {
+    0% { background-position: 0; }
+    100% { background-position: 1200px; }
+  }
+  
+  .contact-form {
+    background-color: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    transform: translateX(50px);
+    opacity: 0;
+    animation: slideInLeft 0.8s ease 0.7s forwards;
+  }
+  
+  @keyframes slideInLeft {
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  .form-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    color: var(--teal);
+    margin-bottom: 25px;
+    position: relative;
+    padding-bottom: 10px;
+  }
+  
+  .form-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background: linear-gradient(to right, var(--teal), var(--light-skyblueoff));
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  
+  .form-group:nth-child(1) { animation: formFade 0.5s ease 1.0s forwards; }
+  .form-group:nth-child(2) { animation: formFade 0.5s ease 1.1s forwards; }
+  .form-group:nth-child(3) { animation: formFade 0.5s ease 1.2s forwards; }
+  .form-group:nth-child(4) { animation: formFade 0.5s ease 1.3s forwards; }
+  .form-group:nth-child(5) { animation: formFade 0.5s ease 1.4s forwards; }
+  
+  @keyframes formFade {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .form-label {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--dark-teal);
+    margin-bottom: 5px;
+  }
+  
+  .form-control {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: 'Gruppo', sans-serif;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+  }
+  
+  .form-control:focus {
+    border-color: var(--skyblueoff);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(34, 120, 112, 0.2);
+  }
+  
+  textarea.form-control {
+    min-height: 150px;
+    resize: vertical;
+  }
+  
+  .submit-btn {
+    display: inline-block;
+    padding: 12px 25px;
+    background: linear-gradient(to right, var(--teal), var(--skyblueoff));
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-family: 'Gruppo', sans-serif;
+    font-size: 1.1rem;
+    cursor: pointer;
+    text-decoration: none;
+    box-shadow: 0 5px 15px rgba(0,128,128,0.2);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeButton 0.5s ease 1.6s forwards;
+  }
+  
+  @keyframes fadeButton {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .submit-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,128,128,0.3);
+  }
+  
+  .submit-btn:active {
+    transform: translateY(-1px);
+  }
+  
+  .submit-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255,255,255,0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0.4s ease-out;
+  }
+  
+  .submit-btn:hover::after {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+  
+  .map-section {
+    margin-top: 60px;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeUpDelay 0.8s ease 1.8s forwards;
+  }
+  
+  @keyframes fadeUpDelay {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .map-title {
+    font-size: 1.8rem;
+    color: var(--teal);
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .map-container {
+    border-radius: 15px;
+    overflow: hidden;
+    height: 400px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    position: relative;
+  }
+  
+  .map-placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: #e0e0e0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .store-locations {
+    margin-top: 60px;
+  }
+  
+  .locations-title {
+    font-size: 1.8rem;
+    color: var(--teal);
+    margin-bottom: 30px;
+    text-align: center;
+    opacity: 0;
+    animation: fadeIn 0.8s ease 2s forwards;
+  }
+  
+  .locations-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+  }
+  
+  .location-card {
+    background-color: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  
+  .location-card:nth-child(1) { animation: locationFade 0.5s ease 2.1s forwards; }
+  .location-card:nth-child(2) { animation: locationFade 0.5s ease 2.2s forwards; }
+  .location-card:nth-child(3) { animation: locationFade 0.5s ease 2.3s forwards; }
+  
+  @keyframes locationFade {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .location-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(0,128,128,0.1);
+  }
+  
+  .location-img {
+    height: 180px;
+    background-color: #e0e0e0;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .location-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+  
+  .location-card:hover .location-img img {
+    transform: scale(1.1);
+  }
+  
+  .location-details {
+    padding: 20px;
+  }
+  
+  .location-name {
+    font-size: 1.3rem;
+    color: var(--teal);
+    margin-bottom: 10px;
+  }
+  
+  .location-address {
+    color: #555;
+    margin-bottom: 15px;
+  }
+  
+  .location-phone {
+    color: var(--skyblueoff);
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  .location-hours {
+    font-size: 0.9rem;
+    color: #777;
+  }
+  
+  .footer {
+    text-align: center;
+    margin-top: 80px;
+    color: #777;
+    font-size: 0.9rem;
+    opacity: 0;
+    animation: fadeIn 1s ease 2.5s forwards;
+  }
+  
+  .faq-section {
+    margin-top: 60px;
+    opacity: 0;
+    animation: fadeIn 1s ease 2s forwards;
+  }
+  
+  .faq-title {
+    font-size: 1.8rem;
+    color: var(--teal);
+    margin-bottom: 30px;
+    text-align: center;
+  }
+  
+  .faq-item {
+    background-color: white;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  
+  .faq-item:nth-child(1) { animation: faqFade 0.5s ease 2.1s forwards; }
+  .faq-item:nth-child(2) { animation: faqFade 0.5s ease 2.2s forwards; }
+  .faq-item:nth-child(3) { animation: faqFade 0.5s ease 2.3s forwards; }
+  .faq-item:nth-child(4) { animation: faqFade 0.5s ease 2.4s forwards; }
+  
+  @keyframes faqFade {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .faq-question {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--dark-teal);
+    transition: all 0.3s ease;
+  }
+  
+  .faq-question:hover {
+    background-color: rgba(29, 88, 88, 0.05);
+  }
+  
+  .faq-question::after {
+    content: '+';
+    font-size: 1.5rem;
+    transition: transform 0.3s ease;
+  }
+  
+  .faq-item.active .faq-question::after {
+    transform: rotate(45deg);
+  }
+  
+  .faq-answer {
+    padding: 0 20px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+  }
+  
+  .faq-item.active .faq-answer {
+    padding: 0 20px 20px;
+    max-height: 200px;
+  }
+  
+  @media (max-width: 992px) {
+    .locations-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .contact-container {
+      grid-template-columns: 1fr;
+    }
+    
+    .contact-info, .contact-form {
+      transform: translateX(0);
+    }
+    
+    .locations-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .page-title h1 {
+      font-size: 2.5rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<header>
+  <img src="{% static 'images/pro4.jpg' %}" alt="Contact Us" class="header-image" />
+  <div class="hero-overlay"></div>
+  <nav>
+    <ul>
+      <li><a href="#">HOME</a></li>
+      <li><a href="#">PRODUCTS</a></li>
+      <li><a href="#">ABOUT</a></li>
+      <li><a href="#">CONTACT</a></li>
+    </ul>
+  </nav>
+</header>
+
+<div class="container">
+  <div class="page-title">
+    <h1>Get in Touch</h1>
+    <p>We'd love to hear from you. Whether you have a question about our products, need assistance with an order, or just want to say hello, we're here to help.</p>
+  </div>
+  
+  <div class="contact-container">
+    <div class="contact-info">
+      <h2 class="contact-title">Contact Information</h2>
+      <div class="contact-details">
+        <div class="contact-item">
+          <div class="contact-icon">
+            <i class="fa-solid fa-location-dot"></i>
+          </div>
+          <div class="contact-text">
+            <h4>Address</h4>
+            <p>123 Fragrance Avenue, Essence Tower<br>New York, NY 10001</p>
+          </div>
+        </div>
+        
+        <div class="contact-item">
+          <div class="contact-icon">
+            <i class="fa-solid fa-phone"></i>
+          </div>
+          <div class="contact-text">
+            <h4>Phone</h4>
+            <p>1-800-PERFUME<br>+1 (212) 555-7890</p>
+          </div>
+        </div>
+        
+        <div class="contact-item">
+          <div class="contact-icon">
+            <i class="fa-solid fa-envelope"></i>
+          </div>
+          <div class="contact-text">
+            <h4>Email</h4>
+            <p>support@cyanessence.com<br>info@cyanessence.com</p>
+          </div>
+        </div>
+        
+        <div class="contact-item">
+          <div class="contact-icon">
+            <i class="fa-solid fa-clock"></i>
+          </div>
+          <div class="contact-text">
+            <h4>Working Hours</h4>
+            <p>Monday - Friday: 9:00 AM - 6:00 PM<br>Saturday: 10:00 AM - 4:00 PM</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="social-links">
+        <a href="#" class="social-link"><i class="fa-brands fa-facebook-f"></i></a>
+        <a href="#" class="social-link"><i class="fa-brands fa-instagram"></i></a>
+        <a href="#" class="social-link"><i class="fa-brands fa-twitter"></i></a>
+        <a href="#" class="social-link"><i class="fa-brands fa-pinterest"></i></a>
+      </div>
+      
+      <div class="wave"></div>
+    </div>
+    
+    <div class="contact-form">
+      <h3 class="form-title">Send Us a Message</h3>
+      <form action="{% url 'contact' %}" method="POST">
+        {% csrf_token %}
+        
+        <div class="form-group">
+          <label for="name" class="form-label">Your Name</label>
+          <input type="text" id="name" name="name" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="email" class="form-label">Email Address</label>
+          <input type="email" id="email" name="email" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="phone" class="form-label">Phone Number</label>
+          <input type="tel" id="phone" name="phone" class="form-control">
+        </div>
+        
+        <div class="form-group">
+          <label for="subject" class="form-label">Subject</label>
+          <select id="subject" name="subject" class="form-control">
+            <option value="general">General Inquiry</option>
+            <option value="support">Customer Support</option>
+            <option value="orders">Order Status</option>
+            <option value="wholesale">Wholesale Inquiries</option>
+            <option value="feedback">Product Feedback</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="message" class="form-label">Your Message</label>
+          <textarea id="message" name="message" class="form-control" required></textarea>
+        </div>
+        
+        <button type="submit" class="submit-btn">
+          Send Message
+        </button>
+      </form>
+    </div>
+  </div>
+  
+  <div class="map-section">
+    <h3 class="map-title">Visit Our Store</h3>
+    <div class="map-container">
+      <div class="map-placeholder">
+        <img src="/api/placeholder/400/320" alt="Store Map" style="width:100%; height:100%; object-fit:cover;">
+      </div>
+    </div>
+  </div>
+  
+  <div class="store-locations">
+    <h3 class="locations-title">Our Flagship Stores</h3>
+    <div class="locations-grid">
+      <div class="location-card">
+        <div class="location-img">
+          <img src="/api/placeholder/400/320" alt="New York Store">
+        </div>
+        <div class="location-details">
+          <h4 class="location-name">New York</h4>
+          <p class="location-address">123 Fragrance Avenue, New York, NY 10001</p>
+          <span class="location-phone">+1 (212) 555-7890</span>
+          <p class="location-hours">Mon-Sat: 10AM - 9PM, Sun: 11AM - 6PM</p>
+        </div>
+      </div>
+      
+      <div class="location-card">
+        <div class="location-img">
+          <img src="/api/placeholder/400/320" alt="Los Angeles Store">
+        </div>
+        <div class="location-details">
+          <h4 class="location-name">Los Angeles</h4>
+          <p class="location-address">456 Beverly Boulevard, Los Angeles, CA 90210</p>
+          <span class="location-phone">+1 (310) 555-1234</span>
+          <p class="location-hours">Mon-Sat: 10AM - 8PM, Sun: 12PM - 6PM</p>
+        </div>
+      </div>
+      
+      <div class="location-card">
+        <div class="location-img">
+            <img src="/api/placeholder/400/320" alt="Los Angeles Store">
+        </div>
+        <div class="location-details">
+            <h4 class="location-name">Miami</h4>
+            <p class="location-address">789 Ocean Drive, Miami Beach, FL 33139</p>
+            <span class="location-phone">+1 (305) 555-5678</span>
+            <p class="location-hours">Mon-Sat: 10AM - 10PM, Sun: 12PM - 8PM</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <div class="faq-section">
+      <h3 class="faq-title">Frequently Asked Questions</h3>
+      
+      <div class="faq-item">
+        <div class="faq-question">What is your return policy?</div>
+        <div class="faq-answer">
+          <p>We offer a 30-day return policy for unopened and unused products. Please contact our customer service to initiate a return and include your order number. Return shipping costs are the responsibility of the customer unless the return is due to our error.</p>
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="faq-question">How long does shipping take?</div>
+        <div class="faq-answer">
+          <p>Standard shipping typically takes 3-5 business days within the continental US. Expedited shipping options are available at checkout for faster delivery. International shipping times vary by destination.</p>
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="faq-question">Do you offer international shipping?</div>
+        <div class="faq-answer">
+          <p>Yes, we ship to most countries worldwide. International shipping rates and delivery times will be calculated at checkout. Please note that customers are responsible for any customs fees or import taxes.</p>
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="faq-question">Can I modify or cancel my order?</div>
+        <div class="faq-answer">
+          <p>Orders can be modified or canceled within 1 hour of placement. After that, our fulfillment process begins and changes may not be possible. Please contact us immediately if you need to make changes to your order.</p>
+        </div>
+      </div>
+    </div>
+  
+    <div class="footer">
+      <p>© 2023 Cyan Essence. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
+    </div>
+  </div>
+  {% endblock %}
+  
+  {% block extra_scripts %}
+  <script>
+    // FAQ Accordion functionality
+    document.querySelectorAll('.faq-question').forEach(question => {
+      question.addEventListener('click', () => {
+        const faqItem = question.parentElement;
+        faqItem.classList.toggle('active');
+        
+        // Close other open FAQs
+        document.querySelectorAll('.faq-item').forEach(item => {
+          if (item !== faqItem && item.classList.contains('active')) {
+            item.classList.remove('active');
+          }
+        });
+      });
+    });
+  
+    // Form submission animation
+    const contactForm = document.querySelector('.contact-form form');
+    if (contactForm) {
+      contactForm.addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('.submit-btn');
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+        submitBtn.style.pointerEvents = 'none';
+        
+        // Simulate form submission (remove in production)
+        setTimeout(() => {
+          submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Message Sent!';
+          setTimeout(() => {
+            submitBtn.innerHTML = 'Send Message';
+            submitBtn.style.pointerEvents = 'auto';
+          }, 2000);
+        }, 1500);
+      });
+    }
+  
+    // Animate map on scroll into view
+    const mapSection = document.querySelector('.map-section');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.animationPlayState = 'running';
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+  
+    if (mapSection) {
+      observer.observe(mapSection);
+    }
+  
+    // Add hover effect to location cards
+    document.querySelectorAll('.location-card').forEach(card => {
+      card.addEventListener('mouseenter', () => {
+        const img = card.querySelector('.location-img img');
+        if (img) {
+          img.style.transform = 'scale(1.1)';
+        }
+      });
+      
+      card.addEventListener('mouseleave', () => {
+        const img = card.querySelector('.location-img img');
+        if (img) {
+          img.style.transform = 'scale(1)';
+        }
+      });
+    });
+  </script>
+  {% endblock %}

@@ -1,0 +1,893 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfume Store</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Allura&family=Cormorant+Garamond&family=Great+Vibes&family=Grey+Qo&family=Gruppo&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/Home.css' %}">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+     <link rel="stylesheet" href="{% static 'css/singleproduct.css' %}">
+    <link rel="stylesheet" href="{% static 'css/myshop.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Cormorant Garamond', cursive;
+            color: #333;
+            background-color: #fff;
+            line-height: 1.6;
+        }
+
+        /* Navbar */
+        /* Enhanced Navbar with Luxury Animation */
+        .navbar {
+            transition: transform 0.5s cubic-bezier(0.645, 0.045, 0.355, 1), 
+                        opacity 0.5s cubic-bezier(0.645, 0.045, 0.355, 1),
+                        background-color 0.5s ease,
+                        box-shadow 0.5s ease;
+            will-change: transform, opacity;
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            z-index: 100;
+            background-color: white;
+        }
+
+/* Add subtle shine effect on scroll */
+.navbar:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                                    rgba(255,255,255,0) 0%, 
+                                    rgba(0,116,116,0.3) 50%, 
+                                    rgba(255,255,255,0) 100%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+.navbar.scrolled:after {
+    opacity: 1;
+}
+
+/* Add a luxury feel to the logo when scrolling */
+.navbar.scrolled .logo img {
+    transform: scale(0.95);
+    transition: transform 0.5s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+/* Style adjustments when navbar is fixed after scrolling */
+.navbar.scrolled {
+            padding: 10px 15px;
+            background-color: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .menu-icon {
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: #007474;
+        }
+
+        .logo {
+            width: 500px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            
+        }
+
+        @media (min-width: 768px) {
+            .logo {
+                width: 300px;
+                height: 60px;
+                
+                margin-right: 0;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .logo {
+                width: 400px;
+               
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .navbar {
+                padding: 10px 20px;
+            }
+            .logo {
+                width: 500px;
+               
+            }
+        }
+
+
+
+        .logo img {
+            height: 100%;
+            width: 100%;
+            object-fit: contain;
+        }
+
+        .nav-icons {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .nav-icons i {
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: #007474;
+        }
+
+        @media (min-width: 768px) {
+            .nav-icons i {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Sidebar */
+
+            .sidebar {
+            position: fixed;
+            left: -300px;
+            top: 0;
+            width: 300px;
+            height: 100vh;
+            background-color: rgba(0, 116, 116, 0.9);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: flex-end;
+            padding: 20px;
+        
+        }
+
+        .close-btn {
+            cursor: pointer;
+            font-size: 20px;
+            color: white;
+        }
+
+        .sidebar-content {
+            padding: 30px 0;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar-menu li a {
+            display: block;
+            padding: 15px 20px;
+            color: #ffffff;
+            text-decoration: none;
+            font-family: 'Grey Qo';
+            font-size: 28px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-menu li a:hover {
+            background-color: #f5f5f5;
+            color: #007474;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+         /* Footer styles */
+         .bottom_logo {
+            width: 200px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 768px) {
+            .bottom_logo {
+                width: 350px;
+                height: 60px;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .bottom_logo {
+                width: 500px;
+                height: 70px;
+            }
+        }
+
+        .bottom_logo img {
+            height: 100%;
+            width: 100%;
+            object-fit: contain;
+        }
+
+        .footer-section {
+            background-color: rgba(0, 116, 116, 0.9);
+            padding: 2rem 1rem;
+        }
+
+        .footer-section h4 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            text-transform: capitalize;
+        }
+
+        .footer-section a {
+            font-style: normal;
+            color: white; 
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        @media (min-width: 768px) {
+            .footer-section {
+                padding: 3rem 1.5rem;
+            }
+            .footer-section h4 {
+                font-size: 1.4rem;
+            }
+            .footer-section a {
+                font-size: 1rem;
+            }
+        }
+
+        .search-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .search-input {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 150px;
+            transition: all 0.3s ease;
+        }
+
+        @media (min-width: 768px) {
+            .search-input {
+                width: 200px;
+            }
+        }
+
+        .search-icon {
+            margin-left: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+
+        @media (min-width: 768px) {
+            .search-icon {
+                margin-left: 15px;
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Content area padding to account for fixed navbar */
+        .main-content {
+            padding-top: 70px;
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                padding-top: 80px;
+            }
+        }
+/* #######################caht bot############################# */
+.chatbot-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 350px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background: white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    z-index: 1000;
+    font-family: Arial, sans-serif;
+    display: none; /* Initially hidden */
+}
+
+.chatbot-container.active {
+    display: block;
+}
+
+.chatbot-header {
+    padding: 12px 15px;
+    background: #007474; /* Matching your teal color scheme */
+    color: white;
+    border-bottom: 1px solid #ddd;
+    font-weight: bold;
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.chatbot-messages {
+    height: 300px;
+    overflow-y: auto;
+    padding: 15px;
+    background: #f9f9f9;
+}
+
+.user-message {
+    margin-bottom: 10px;
+    text-align: right;
+    padding: 8px 12px;
+    background: #e3f2fd;
+    border-radius: 15px 15px 0 15px;
+    display: inline-block;
+    max-width: 80%;
+}
+
+.bot-message {
+    margin-bottom: 10px;
+    text-align: left;
+    padding: 8px 12px;
+    background: white;
+    border-radius: 15px 15px 15px 0;
+    border: 1px solid #eee;
+    display: inline-block;
+    max-width: 80%;
+}
+
+.bot-message a {
+    color: #007474;
+    text-decoration: underline;
+}
+
+.chatbot-input {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+    background: #f5f5f5;
+}
+
+#user-message {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    outline: none;
+}
+
+#send-button {
+    margin-left: 10px;
+    padding: 10px 15px;
+    background: #007474;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+#send-button:hover {
+    background: #005b5b;
+}
+
+.chatbot-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background: #007474;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    z-index: 999;
+}
+
+.chatbot-toggle i {
+    font-size: 24px;
+}
+
+.typing-indicator {
+    color: #666;
+    font-style: italic;
+    padding: 8px 12px;
+}
+
+.typing-dots span {
+    opacity: 0;
+    animation: typingAnimation 1.4s infinite;
+}
+
+@keyframes typingAnimation {
+    0% { opacity: 0; }
+    50% { opacity: 1; }
+    100% { opacity: 0; }
+}
+.mobile-left-icons, .mobile-right-icons {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    /* Keep the desktop profile icon visible only on desktop */
+    .desktop-profile-icon {
+        display: none;
+    }
+    
+    /* Show profile icon in navbar on larger screens */
+    @media (min-width: 768px) {
+        .desktop-profile-icon {
+            display: inline-block;
+        }
+    }
+    
+    /* Hide mobile-only menu items on larger screens */
+    .mobile-only-menu-item {
+        display: block;
+    }
+    
+    @media (min-width: 768px) {
+        .mobile-only-menu-item {
+            display: none;
+        }
+    }
+    
+    /* Responsive Logo */
+    .logo {
+        width: 220px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+    }
+    
+    @media (min-width: 768px) {
+        .logo {
+            width: 300px;
+            height: 60px;
+         
+        }
+    }
+    
+    @media (min-width: 992px) {
+        .logo {
+            width: 400px;
+           
+        }
+    }
+    
+    @media (min-width: 1200px) {
+        .logo {
+            width: 500px;
+           
+        }
+    }
+    
+    /* Navbar layout */
+    .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 15px;
+        width: 100%;
+        position: fixed;
+        top: 0;
+        z-index: 100;
+        background-color: white;
+    }
+    
+    /* Update search container for mobile */
+    .search-container {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .search-input {
+        padding: 5px 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        width: 120px;
+        transition: all 0.3s ease;
+    }
+    
+    @media (min-width: 768px) {
+        .search-input {
+            width: 200px;
+        }
+    }
+    
+    .search-icon {
+        font-size: 1.1rem;
+        cursor: pointer;
+    }
+</style>
+
+    {% block styles %}
+
+    {% endblock styles %}
+</head>
+<body>
+  <!-- Navbar -->
+  <div class="navbar">
+    <div class="mobile-left-icons">
+        <div class="menu-icon" id="menuIcon">
+            <i class="fas fa-bars"></i>
+        </div>
+        <div class="search-container">
+            <form action="{% url 'myshop' %}" method="get" class="search-form">
+                <input type="text" name="brand_search" placeholder="Search brands..." 
+                       value="{{ brand_search|default:'' }}" class="search-input" style="display: none;">
+                <i class="fas fa-search search-icon" style="color: #007474;"></i>
+            </form>
+        </div>
+    </div>
+
+    <a href="{% url 'home' %}"><div class="logo">
+      
+        <img src="{% static 'images/footer_logo.png' %}" alt="Confluence">
+    </div>
+    </a>
+
+    <div class="mobile-right-icons">
+        <a href="{% url 'wishlist' %}">
+            <i class="fas fa-heart" style="color: #007474;"></i>
+        </a>
+
+        <a href="{% url 'cart' %}" class="cart-icon" style="color: #007474;">
+            <i class="fas fa-shopping-bag"></i>
+        </a>
+
+        <!-- Profile icon removed from here for mobile - now in sidebar -->
+        <a href="{% url 'userprofile' %}" class="desktop-profile-icon" style="color: #194545;">
+            <i class="fas fa-user"></i>
+        </a>
+    </div>
+</div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="close-btn" id="closeSidebar">
+            <i class="fas fa-times"></i>
+        </div>
+    </div>
+    <div class="sidebar-content">
+        <ul class="sidebar-menu">
+            <li><a href="{% url 'home' %}">Home</a></li>
+            <li><a href="{% url 'myshop' %}">Shop</a></li>
+            <li><a href="{% url 'contact' %}">Contact Us</a></li>
+            <li class="mobile-only-menu-item"><a href="{% url 'userprofile' %}"></i> My Profile</a></li>
+        </ul>
+    </div>
+</div>
+    <div class="chatbot-toggle" id="chatbot-toggle">
+        <i class="fas fa-comment-alt"></i>
+    </div>
+    
+    <!-- Chatbot Container -->
+    <div class="chatbot-container" id="chatbot-container">
+        <div class="chatbot-header" id="chatbot-header">
+            <span>cyan chemist</span>
+            <span id="chatbot-close" style="cursor:pointer;">×</span>
+        </div>
+        <div class="chatbot-messages" id="chatbot-messages"></div>
+        <div class="chatbot-input">
+            <input type="text" id="user-message" placeholder="Ask for perfume recommendations...">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+
+    {% block content %}
+    {% endblock %}
+
+    <footer class="footer-section container-fluid py-4 mt-5">
+        <div class="container">
+            <div class="bottom_logo text-center mb-4">
+                <img src="{% static 'images/footer_logo.png' %}" alt="Confluence">
+            </div>
+            <div class="row g-4">
+                <div class="col-6 col-md-4">
+                    <h4 class="mb-3 text-light">may we help you</h4>
+                    <ul class="list-unstyled">
+                        <li class="mb-2 text-light"><a href="#">site map</a></li>
+                        <li class="mb-2"><a href="#">order us</a></li>
+                        <li class="mb-2"><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="col-6 col-md-4">
+                    <h4 class="mb-3 text-light">THE company</h4>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#">about cyan</a></li>
+                        <li class="mb-2"><a href="#">legal</a></li>
+                        <li class="mb-2"><a href="#">code of ethics</a></li>
+                        <li class="mb-2"><a href="#">careers</a></li>
+                    </ul>
+                </div>
+                <div class="col-12 col-md-4 mt-4 mt-md-0">
+                    <h4 class="mb-3 text-light">contact us</h4>
+                    <ul class="list-unstyled text-light">
+                        <li class="mb-2"><a href="#">cell phone:859443-34</a></li>
+                        <li class="mb-2"><a href="#">address: 28 green tower,street NEW YORK CITY,USA</a></li>
+                        <li class="mb-2"><a href="#">Email: akhil36g@gmail.com</a></li>
+                        <li class="mb-2"><a href="#">قائمة الرغبات</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row mt-4 pt-3 border-top">
+                <div class="col-12 text-center">
+                    <a href="{% url 'logout' %}"><i class="fas fa-user"></i></a>
+                    <p class="mb-0">جميع الحقوق محفوظة © 2025 | متجر العطور الفاخرة</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchIcon = document.querySelector('.search-icon');
+            const searchInput = document.querySelector('.search-input');
+            const searchForm = document.querySelector('.search-form');
+            
+            // Toggle search input visibility
+            searchIcon.addEventListener('click', function() {
+                if (searchInput.style.display === 'none' || searchInput.style.display === '') {
+                    searchInput.style.display = 'inline-block';
+                    searchInput.focus();
+                } else {
+                    // If input is visible and has value, submit the form
+                    if (searchInput.value.trim() !== '') {
+                        searchForm.submit();
+                    } else {
+                        searchInput.style.display = 'none';
+                    }
+                }
+            });
+            
+            // Handle pressing Enter in search input
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchForm.submit();
+                }
+            });
+            
+            // Close search when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!searchForm.contains(e.target) && e.target !== searchIcon) {
+                    if (searchInput.value.trim() === '') {
+                        searchInput.style.display = 'none';
+                    }
+                }
+            });
+        });
+    </script>
+    <!-- Sidebar Toggle Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuIcon = document.getElementById('menuIcon');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const closeSidebar = document.getElementById('closeSidebar');
+            
+            // Function to open sidebar
+            function openSidebar() {
+                sidebar.classList.add('active');
+                sidebarOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
+            }
+            
+            // Function to close sidebar
+            function closeSidebarFunc() {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+                document.body.style.overflow = ''; // Enable scrolling
+            }
+            
+            // Event listeners
+            menuIcon.addEventListener('click', openSidebar);
+            closeSidebar.addEventListener('click', closeSidebarFunc);
+            sidebarOverlay.addEventListener('click', closeSidebarFunc);
+        });
+        
+        // Update cart badge functionality
+        window.updateCartBadge = function(count) {
+            const cartBadge = document.getElementById('cart-count');
+            if (cartBadge) {
+                cartBadge.textContent = count;
+            }
+        }
+    </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const navbar = document.querySelector('.navbar');
+        let lastScrollTop = 0;
+        
+        window.addEventListener('scroll', function() {
+            let currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+            
+            // If we're more than 50px from the top
+            if (currentScroll > 50) {
+                navbar.classList.add('scrolled');
+                
+                // Scrolling down - hide navbar with elegant animation
+                if (currentScroll > lastScrollTop && currentScroll > 100) {
+                    navbar.style.transform = 'translateY(-100%)';
+                    navbar.style.opacity = '0';
+                } 
+                // Scrolling up - show navbar with animation
+                else {
+                    navbar.style.transform = 'translateY(0)';
+                    navbar.style.opacity = '1';
+                }
+            } else {
+                // Near the top - reset to normal state
+                navbar.classList.remove('scrolled');
+                navbar.style.transform = 'translateY(0)';
+                navbar.style.opacity = '1';
+            }
+            
+            lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
+        });
+    });
+</script>
+
+
+ <!-- Chatbot JavaScript -->
+ <script>
+   // Chatbot functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle chatbot visibility
+    const chatbotToggle = document.getElementById('chatbot-toggle');
+    const chatbotContainer = document.getElementById('chatbot-container');
+    const chatbotClose = document.getElementById('chatbot-close');
+    
+    if (chatbotToggle && chatbotContainer) {
+        chatbotToggle.addEventListener('click', function() {
+            chatbotContainer.classList.toggle('active');
+        });
+        
+        if (chatbotClose) {
+            chatbotClose.addEventListener('click', function() {
+                chatbotContainer.classList.remove('active');
+            });
+        }
+    }
+
+    // Initialize messages
+    const messagesContainer = document.getElementById('chatbot-messages');
+    const userInput = document.getElementById('user-message');
+    const sendButton = document.getElementById('send-button');
+    
+    if (messagesContainer && userInput && sendButton) {
+        // Add welcome message
+        addBotMessage("Hello! I'm your perfume assistant. I can help you find similar fragrances or answer questions about this product. Try asking: 'What perfumes are similar to this one?' or 'Recommend something with similar notes'");
+
+        // Send message on button click or Enter key
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+        
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+            
+            addUserMessage(message);
+            userInput.value = '';
+            
+            // Show typing indicator
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'typing-indicator';
+            typingIndicator.innerHTML = '<strong>Bot:</strong> <span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>';
+            messagesContainer.appendChild(typingIndicator);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // Send to backend
+            fetch('/api/chatbot/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: `message=${encodeURIComponent(message)}&product_id=${encodeURIComponent('{{ product.product_id }}')}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Remove typing indicator
+                typingIndicator.remove();
+                addBotMessage(data.response);
+            })
+            .catch(error => {
+                typingIndicator.remove();
+                addBotMessage("Sorry, I'm having trouble connecting. Please try again later.");
+            });
+        }
+        
+        function addUserMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'user-message';
+            messageDiv.textContent = text;
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        function addBotMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'bot-message';
+            messageDiv.innerHTML = text; // Allow HTML for links
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+    }
+});
+    </script>
+    {% block extra_scripts %} 
+    
+    {% endblock %}
+
+</body>
+</html>

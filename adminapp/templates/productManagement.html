@@ -1,0 +1,992 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block styles %}
+<style>
+  
+  .main_container{
+    width: 100%;
+  }
+  .image-upload-container {
+      background-color: #f8f9fa;
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 600px;
+      margin: 0 auto;
+  }
+  
+  .file-upload-label {
+      height: 200px;
+      width: 150px;
+      border: 2px dashed #6c757d;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+  }
+  
+  .file-upload-label:hover {
+      border-color: #007bff;
+      background-color: rgba(0, 123, 255, 0.05);
+  }
+  
+  .file-upload-label input[type="file"] {
+      display: none;
+  }
+  
+  .file-upload-label .upload-icon {
+      font-size: 3rem;
+      color: #6c757d;
+      margin-bottom: 0.5rem;
+  }
+  
+  .file-upload-label .upload-text {
+      color: #6c757d;
+      font-size: 0.875rem;
+  }
+  
+  #image-preview-container img {
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+  }
+  .cropper-container {
+    width: 100%;
+    height: 400px;
+    margin-bottom: 15px;
+    position: relative;
+  }
+  
+  .cropper-preview {
+    overflow: hidden;
+    height: 150px;
+    width: 100px;
+    border: 1px solid #6c757d;
+    border-radius: 5px;
+    margin-top: 15px;
+  }
+  
+  .crop-controls {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  
+  /* Hide original file inputs visually but keep them accessible */
+  .original-file-input {
+    display: none;
+  }
+  
+  /* Style for cropped image previews */
+  .cropped-preview {
+    max-width: 150px;
+    max-height: 200px;
+    border-radius: 5px;
+    border: 2px solid #28a745;
+    margin-bottom: 10px;
+  }
+  
+  /* Modal styles */
+  #cropperModal .modal-body {
+    padding: 20px;
+  }
+  
+  #cropperModal .modal-content {
+    background-color: #343a40;
+    color: white;
+  }
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+
+<div class="main_container container-fluid mt-3">
+  {% if messages %}
+<div class="container">
+    {% for message in messages %}
+        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+  <div class="row">
+    <!-- Main content -->
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+          <a href="/admin" class="text-light">Admin</a>
+        </li>
+        <li class="breadcrumb-item active text-info" aria-current="page">
+          Product Management
+        </li>
+      </ol>
+    </nav>
+    
+      <div class="row">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h3 class="text-light">Product Management</h3>
+          <!-- Add New Product Button -->
+          <button
+            type="button"
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#addProductModel"
+          >
+            Add New Product
+          </button>
+        </div>
+        <div class="container-fluid">
+          <table class="table text-light">
+            <thead>
+              <tr>
+                <th scope="col">Sl</th>
+                <th scope="col">Product Name</th>
+                <th scope="col">Category</th>
+                <th scope="col">Total Stock</th>
+                <th scope="col">Variance</th>
+                <th scope="col" class="action_button">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for product in products %}
+              <tr>
+                <th scope="row">{{ forloop.counter|add:products.start_index|add:-1 }}</th>
+                <td>{{ product.product_name }}</td>
+                <td>{{ product.gender }}</td>
+                <td>{{ product.total_stock }}</td>
+                <td>
+                    <a href="{% url 'product_variance' product.product_id %}" class="btn btn-sm btn-info">
+                        Manage Variance
+                    </a>
+                </td>
+
+
+
+                <td>
+
+                  <!-- view -->
+                  <div class="d-flex gap-2">
+
+                    <button type="button" 
+                            class="btn text-light w-100" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#viewProductModal{{ product.product_id }}">
+                      <i class="fas fa-eye"></i> View
+                    </button>
+                    
+
+
+                    <!--########### Edit button #############-->
+                    <form action="/admin/products/toggle-status/{{ product.product_id }}" method="get" style="display: inline" class="w-100">
+                      <!-- Edit button -->
+                      <button type="button" class="btn btn-outline-light w-100" data-bs-toggle="modal" data-bs-target="#editProductModal{{ product.product_id }}">
+                        Edit
+                      </button>
+                    </form>
+                    
+
+                    <!-- Toggle status button -->
+                    <form action="{% url 'toggle_product_status' product.product_id %}" method="POST" style="display: inline" class="w-100">
+                      {% csrf_token %}
+                      <button type="submit" class="btn w-100 {% if product.is_active %}btn-dark{% else %}btn-primary{% endif %}">
+                        {% if product.is_active %}active{% else %}inactive{% endif %}
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <!-- Pagination Controls -->
+        <!-- Pagination Controls -->
+            <div class="pagination my-4 d-flex justify-content-center">
+              <nav aria-label="Page navigation">
+                  <ul class="pagination">
+                      {% if products.has_previous %}
+                          <li class="page-item">
+                              <a class="page-link" href="?page={{ products.previous_page_number }}" aria-label="Previous">
+                                  <span aria-hidden="true">&laquo;</span>
+                              </a>
+                          </li>
+                      {% else %}
+                          <li class="page-item disabled">
+                              <span class="page-link">&laquo;</span>
+                          </li>
+                      {% endif %}
+                      
+                      {% for i in products.paginator.page_range %}
+                          {% if products.number == i %}
+                              <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                          {% else %}
+                              <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                          {% endif %}
+                      {% endfor %}
+                      
+                      {% if products.has_next %}
+                          <li class="page-item">
+                              <a class="page-link" href="?page={{ products.next_page_number }}" aria-label="Next">
+                                  <span aria-hidden="true">&raquo;</span>
+                              </a>
+                          </li>
+                      {% else %}
+                          <li class="page-item disabled">
+                              <span class="page-link">&raquo;</span>
+                          </li>
+                      {% endif %}
+                  </ul>
+              </nav>
+            </div>
+            <!-- End of Pagination Controls -->
+        <!-- End of Pagination Controls -->
+      </div>
+    </div>
+  </div>
+  <!-- #######################################Product View Modal ########################################################-->
+  {% for product in products %}
+  <div class="modal fade" id="viewProductModal{{ product.product_id }}" tabindex="-1" aria-labelledby="viewProductModalLabel{{ product.product_id }}" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content bg-dark text-light">
+        <div class="modal-header bg-dark">
+          <h5 class="modal-title" id="viewProductModalLabel{{ product.product_id }}">View Product: {{ product.product_name }}</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <!-- Product Details Section -->
+            <div class="col-md-6">
+              <h6>Product Information</h6>
+              <dl class="row">
+                <dt class="col-sm-4">Product Name:</dt>
+                <dd class="col-sm-8">{{ product.product_name }}</dd>
+
+                <dt class="col-sm-4">Description:</dt>
+                <dd class="col-sm-8">{{ product.description }}</dd>
+
+                <dt class="col-sm-4">Gender:</dt>
+                <dd class="col-sm-8">{{ product.gender.gender }}</dd>
+
+                <dt class="col-sm-4">Brand:</dt>
+                <dd class="col-sm-8">{{ product.brand.brand_name }}</dd>
+
+                <dt class="col-sm-4">Fragrance Type:</dt>
+                <dd class="col-sm-8">{{ product.fragrance.fragrance_type }}</dd>
+
+                <dt class="col-sm-4">Concentration:</dt>
+                <dd class="col-sm-8">{{ product.concentration.concentration }}</dd>
+
+                <dt class="col-sm-4">Occasion:</dt>
+                <dd class="col-sm-8">{{ product.occasion.occasion }}</dd>
+              </dl>
+            </div>
+
+            <!-- Product Images Section -->
+            <div class="col-md-6">
+              <h6>Product Images</h6>
+              <div class="row">
+                {% for image in product.images.all %}
+                <div class="col-md-4 mb-3">
+                  <img src="{{ image.image.url }}" alt="Product Image" class="img-fluid img-thumbnail">
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endfor %}
+
+</div>
+
+<!-- edit products models -->
+
+
+<!--##################################################### Edit Product Modals #############################################-->
+{% for product in products %}
+<div class="modal fade" id="editProductModal{{ product.product_id }}" tabindex="-1" aria-labelledby="editProductModalLabel{{ product.product_id }}" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content bg-dark text-light">
+      <div class="modal-header bg-dark">
+        <h5 class="modal-title" id="editProductModalLabel{{ product.product_id }}">Edit Product: {{ product.product_name }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="{% url 'editproduct' product.product_id %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="row">
+            <div class="mb-3">
+              <label for="productName{{ product.product_id }}" class="form-label">Product Name</label>
+              <input
+                type="text"
+                class="form-control custom-search-input"
+                id="productName{{ product.product_id }}"
+                name="name"
+                value="{{ product.product_name }}"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="productDescription{{ product.product_id }}" class="form-label">Description</label>
+              <textarea
+                class="form-control custom-search-input"
+                id="productDescription{{ product.product_id }}"
+                name="description"
+              >{{ product.description }}</textarea>
+            </div>
+            
+            <!-- Main Category Fields -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="productGender{{ product.product_id }}" class="form-label">Gender</label>
+                <select
+                  class="form-select"
+                  id="productGender{{ product.product_id }}"
+                  name="gender"
+                  required
+                >
+                  {% for gender in genders %}
+                  <option value="{{ gender.gender_id }}" {% if gender.gender_id == product.gender.gender_id %}selected{% endif %}>{{ gender.gender }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              
+            </div>
+            
+            <!-- Sub-Category Fields -->
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="productFragrance{{ product.product_id }}" class="form-label">Fragrance Type</label>
+                <select
+                  class="form-select"
+                  id="productFragrance{{ product.product_id }}"
+                  name="fragrance"
+                  required
+                >
+                  {% for fragrance in fragrances %}
+                  <option value="{{ fragrance.fragrance_id }}" {% if fragrance.fragrance_id == product.fragrance.fragrance_id %}selected{% endif %}>{{ fragrance.fragrance_type }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              
+              <div class="col-md-4 mb-3">
+                <label for="productConcentration{{ product.product_id }}" class="form-label">Concentration</label>
+                <select
+                  class="form-select"
+                  id="productConcentration{{ product.product_id }}"
+                  name="concentration"
+                  required
+                >
+                  {% for concentration in concentrations %}
+                  <option value="{{ concentration.concentration_id }}" {% if concentration.concentration_id == product.concentration.concentration_id %}selected{% endif %}>{{ concentration.concentration }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              
+              <div class="col-md-4 mb-3">
+                <label for="productOccasion{{ product.product_id }}" class="form-label">Occasion</label>
+                <select
+                  class="form-select"
+                  id="productOccasion{{ product.product_id }}"
+                  name="occasion"
+                  required
+                >
+                  {% for occasion in occasions %}
+                  <option value="{{ occasion.occasion_id }}" {% if occasion.occasion_id == product.occasion.occasion_id %}selected{% endif %}>{{ occasion.occasion }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label for="productBrand{{ product.product_id }}" class="form-label">Brand</label>
+              <select
+                class="form-select"
+                id="productBrand{{ product.product_id }}"
+                name="brand"
+                required
+              >
+                {% for brand in brands %}
+                <option value="{{ brand.brand_id }}" {% if brand.brand_id == product.brand.brand_id %}selected{% endif %}>{{ brand.brand_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <!-- Image Upload Fields -->
+          <!-- In the edit modal form -->
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Product Image 1</label>
+              {% with first_image=product.images.all|first %}
+                {% if first_image %}
+                  <div class="mb-2">
+                    <img src="{{ first_image.image.url }}" alt="Current image 1" class="img-thumbnail" style="max-height: 100px">
+                  </div>
+                {% endif %}
+              {% endwith %}
+              <input
+                type="file"
+                class="form-control custom-search-input image-input"
+                name="product_image_1"
+                accept="image/*"
+              />
+            </div>
+
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Product Image 2</label>
+              {% with images=product.images.all %}
+                {% if images|length > 1 %}
+                  <div class="mb-2">
+                    <img src="{{ images.1.image.url }}" alt="Current image 2" class="img-thumbnail" style="max-height: 100px">
+                  </div>
+                {% endif %}
+              {% endwith %}
+              <input
+                type="file"
+                class="form-control custom-search-input image-input"
+                name="product_image_2"
+                accept="image/*"
+              />
+            </div>
+
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Product Image 3</label>
+              {% with images=product.images.all %}
+                {% if images|length > 2 %}
+                  <div class="mb-2">
+                    <img src="{{ images.2.image.url }}" alt="Current image 3" class="img-thumbnail" style="max-height: 100px">
+                  </div>
+                {% endif %}
+              {% endwith %}
+              <input
+                type="file"
+                class="form-control custom-search-input image-input"
+                name="product_image_3"
+                accept="image/*"
+              />
+            </div>
+          </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+{% endfor %}
+<!-- ##################################################################################################################### -->
+
+<!-- Add Product Modal -->
+<div class="modal fade" id="addProductModel" tabindex="-1" aria-labelledby="addProductModelLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content bg-dark text-light">
+      <div class="modal-header bg-dark">
+        <h5 class="modal-title" id="addProductModelLabel">Add New Product</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="{% url 'adproducts' %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-body">
+
+        <div class="row">
+          <div class="mb-3">
+            <label for="productName" class="form-label">Product Name</label>
+            <input
+              type="text"
+              class="form-control custom-search-input"
+              id="productName"
+              name="name"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="productDescription" class="form-label">Description</label>
+            <textarea
+              class="form-control custom-search-input"
+              id="productDescription"
+              name="description"
+            ></textarea>
+          </div>
+          
+          <!-- Main Category Fields -->
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="productGender" class="form-label">Gender</label>
+              <select
+                class="form-select"
+                id="productGender"
+                name="gender"
+                required
+              >
+                <option selected disabled value="">Select Gender</option>
+                {% for gender in genders %}
+                <option value="{{ gender.gender_id }}">{{ gender.gender }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <!-- <div class="col-md-6 mb-3">
+              <label for="productSize" class="form-label">Size (ml)</label>
+              <select
+                class="form-select"
+                id="productSize"
+                name="size"
+                required
+              >
+                <option selected disabled value="">Select Size</option>
+                {% for size in sizes %}
+                <option value="{{ size.size_id }}">{{ size.size }} ml</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div> -->
+          
+          <!-- Sub-Category Fields -->
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label for="productFragrance" class="form-label">Fragrance Type</label>
+              <select
+                class="form-select"
+                id="productFragrance"
+                name="fragrance"
+                required
+              >
+                <option selected disabled value="">Select Fragrance</option>
+                {% for fragrance in fragrances %}
+                <option value="{{ fragrance.fragrance_id }}">{{ fragrance.fragrance_type }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <div class="col-md-4 mb-3">
+              <label for="productConcentration" class="form-label">Concentration</label>
+              <select
+                class="form-select"
+                id="productConcentration"
+                name="concentration"
+                required
+              >
+                <option selected disabled value="">Select Concentration</option>
+                {% for concentration in concentrations %}
+                <option value="{{ concentration.concentration_id }}">{{ concentration.concentration }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <div class="col-md-4 mb-3">
+              <label for="productOccasion" class="form-label">Occasion</label>
+              <select
+                class="form-select"
+                id="productOccasion"
+                name="occasion"
+                required
+              >
+                <option selected disabled value="">Select Occasion</option>
+                {% for occasion in occasions %}
+                <option value="{{ occasion.occasion_id }}">{{ occasion.occasion }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          
+          <div class="col-md-6 mb-3">
+            <label for="productBrand" class="form-label">Brand</label>
+            <select
+              class="form-select"
+              id="productBrand"
+              name="brand"
+              required
+            >
+              <option selected disabled value="">Select Brand</option>
+              {% for brand in brands %}
+              <option value="{{ brand.brand_id }}">{{ brand.brand_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <!-- <div class="col-md-6 mb-3">
+            <label for="productPrice" class="form-label">Product Price</label>
+            <input
+              type="number"
+              class="form-control custom-search-input"
+              id="productPrice"
+              name="price"
+              required
+            />
+          </div> -->
+          
+          <!-- Stock Input -->
+          <!-- <div class="col-md-6 mb-3">
+            <label for="productStock" class="form-label">Stock</label>
+            <input
+              type="number"
+              class="form-control custom-search-input"
+              id="productStock"
+              name="stock"
+              min="0"
+              max="100"
+              required
+            />
+          </div>  -->
+        </div>
+
+        <!--  Image Upload -->
+        <div class="container py-5">
+          <div class="image-upload-container">
+              <div id="image-preview-container" class="row justify-content-center mb-4">
+                  <!-- Image previews will be dynamically added here -->
+              </div>
+              
+              <div class="row justify-content-center mb-4">
+                      <div class="col-auto">
+                          <label for="image-upload-1" class="file-upload-label">
+                              <input type="file" id="image-upload-1" name="product_image_1" accept="image/jpeg,image/png" required>
+                              <div class="upload-icon">+</div>
+                              <div class="upload-text">Main Image</div>
+                          </label>
+                      </div>
+                  
+                      <div class="col-auto">
+                          <label for="image-upload-2" class="file-upload-label">
+                              <input type="file" id="image-upload-2" name="product_image_2" accept="image/jpeg,image/png">
+                              <div class="upload-icon">+</div>
+                              <div class="upload-text">Support Image 1</div>
+                          </label>
+                      </div>
+                  
+                      <div class="col-auto">
+                          <label for="image-upload-3" class="file-upload-label">
+                              <input type="file" id="image-upload-3" name="product_image_3" accept="image/jpeg,image/png">
+                              <div class="upload-icon">+</div>
+                              <div class="upload-text">Support Image 2</div>
+                          </label>
+                      </div>
+              </div>
+              
+                  <div class="text-center">
+                      <p id="upload-message" class="text-muted mb-2">
+                          Please upload at least 1 product image (max 3)
+                      </p>
+                      <p class="text-muted small">
+                          Recommended size: 600x900px (6:9 ratio)
+                      </p>
+                  </div>
+              
+              <div id="error-message" class="alert alert-danger text-center mt-3" style="display: none;">
+                  <!-- Error messages will be displayed here -->
+              </div>
+          </div>
+      </div>
+
+        </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Add Product</button>
+            </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="cropperModal" tabindex="-1" aria-labelledby="cropperModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark text-light">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cropperModalLabel">Crop Image</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="cropper-container">
+          <img id="cropperImage" src="" alt="Image to crop">
+        </div>
+        <div class="row">
+          <div class="col-md-9">
+            <div class="crop-controls">
+              <button type="button" class="btn btn-outline-light btn-sm" id="rotate-left">
+                <i class="fas fa-rotate-left"></i> Rotate Left
+              </button>
+              <button type="button" class="btn btn-outline-light btn-sm" id="rotate-right">
+                <i class="fas fa-rotate-right"></i> Rotate Right
+              </button>
+              <button type="button" class="btn btn-outline-light btn-sm" id="flip-horizontal">
+                <i class="fas fa-arrows-alt-h"></i> Flip Horizontal
+              </button>
+              <button type="button" class="btn btn-outline-light btn-sm" id="flip-vertical">
+                <i class="fas fa-arrows-alt-v"></i> Flip Vertical
+              </button>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="cropper-preview"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="crop-button">Crop & Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ################################################################################################### -->
+
+<!-- Product View Modal -->
+   
+
+{% endblock %}
+
+{% block extra_scripts %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script>
+      document.querySelectorAll('input[type="file"]').forEach(input => {
+          input.addEventListener('change', function(event) {
+              const file = event.target.files[0];
+              const previewContainer = document.getElementById('image-preview-container');
+              const errorMessage = document.getElementById('error-message');
+
+              if (file) {
+                  // Check file type
+                  if (!['image/jpeg', 'image/png'].includes(file.type)) {
+                      errorMessage.textContent = 'Only JPEG and PNG files are allowed.';
+                      errorMessage.style.display = 'block';
+                      event.target.value = ''; // Clear the input
+                      return;
+                  }
+
+                  // Check file size (e.g., max 5MB)
+                  if (file.size > 5 * 1024 * 1024) {
+                      errorMessage.textContent = 'File size must be less than 5MB.';
+                      errorMessage.style.display = 'block';
+                      event.target.value = ''; // Clear the input
+                      return;
+                  }
+
+                  // Create image preview
+                  const reader = new FileReader();
+                  reader.onload = function(e) {
+                      const img = document.createElement('img');
+                      img.src = e.target.result;
+                      img.classList.add('img-fluid', 'col-4', 'mx-2');
+                      
+                      // Clear previous previews if this is the main image upload
+                      if (event.target.id === 'image-upload-1') {
+                          previewContainer.innerHTML = '';
+                      }
+                      
+                      previewContainer.appendChild(img);
+                      errorMessage.style.display = 'none';
+                  }
+                  reader.readAsDataURL(file);
+              }
+          });
+        });
+    </script>
+
+    <script src="{% static '/js/addProduct.js' %}"></script>
+
+    <script>
+      // Global variables
+      let cropper;
+      let currentFileInput;
+      let croppedImageData = {
+        'product_image_1': null,
+        'product_image_2': null,
+        'product_image_3': null
+      };
+      
+      // Function to initialize the cropper
+      function initCropper(image) {
+        if (cropper) {
+          cropper.destroy();
+        }
+        
+        cropper = new Cropper(image, {
+          aspectRatio: 6 / 9, // Recommended ratio (600x900px)
+          viewMode: 1,
+          preview: '.cropper-preview',
+          responsive: true,
+          dragMode: 'move',
+          guides: true,
+          center: true,
+          minContainerWidth: 300,
+          minContainerHeight: 300
+        });
+      }
+      
+      // Event listener for file uploads
+      document.querySelectorAll('#image-upload-1, #image-upload-2, #image-upload-3').forEach(input => {
+        input.classList.add('original-file-input');
+        
+        // Create a custom button for each file input
+        let label = input.parentElement;
+        
+        // Clear any existing event listeners
+        input.removeEventListener('change', handleFileInputChange);
+        
+        // Add new event listener
+        input.addEventListener('change', handleFileInputChange);
+      });
+      
+      function handleFileInputChange(event) {
+        const file = event.target.files[0];
+        currentFileInput = event.target;
+        
+        if (file) {
+          // Check file type
+          if (!['image/jpeg', 'image/png'].includes(file.type)) {
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = 'Only JPEG and PNG files are allowed.';
+            errorMessage.style.display = 'block';
+            event.target.value = ''; // Clear the input
+            return;
+          }
+          
+          // Check file size (max 5MB)
+          if (file.size > 5 * 1024 * 1024) {
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = 'File size must be less than 5MB.';
+            errorMessage.style.display = 'block';
+            event.target.value = ''; // Clear the input
+            return;
+          }
+          
+          // Open the cropper modal
+          const cropperModal = new bootstrap.Modal(document.getElementById('cropperModal'));
+          const image = document.getElementById('cropperImage');
+          
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            image.src = e.target.result;
+            cropperModal.show();
+            
+            // Initialize cropper after modal is shown
+            document.getElementById('cropperModal').addEventListener('shown.bs.modal', function() {
+              initCropper(image);
+            }, { once: true });
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+      
+      // Crop button event handler
+      document.getElementById('crop-button').addEventListener('click', function() {
+        if (!cropper) return;
+        
+        // Get cropped canvas
+        const canvas = cropper.getCroppedCanvas({
+          width: 600,
+          height: 900,
+          minWidth: 300,
+          minHeight: 450,
+          maxWidth: 1200,
+          maxHeight: 1800,
+          fillColor: '#fff'
+        });
+        
+        if (canvas) {
+          // Convert canvas to blob
+          canvas.toBlob(function(blob) {
+            // Create a File object from Blob
+            const croppedFile = new File([blob], `cropped_${currentFileInput.name}.jpg`, {
+              type: 'image/jpeg',
+              lastModified: new Date().getTime()
+            });
+            
+            // Save the cropped image data
+            croppedImageData[currentFileInput.name] = croppedFile;
+            
+            // Preview the cropped image
+            const inputId = currentFileInput.id;
+            const previewContainer = document.getElementById('image-preview-container');
+            
+            // Create or update preview image
+            let previewId = `preview-${inputId}`;
+            let previewImg = document.getElementById(previewId);
+            
+            if (!previewImg) {
+              previewImg = document.createElement('img');
+              previewImg.id = previewId;
+              previewImg.classList.add('cropped-preview', 'col-md-4', 'mx-2');
+              previewContainer.appendChild(previewImg);
+            }
+            
+            // Set the preview image source
+            previewImg.src = canvas.toDataURL('image/jpeg');
+            
+            // Create a new DataTransfer object and add our cropped file
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(croppedFile);
+            
+            // Update the file input's files property
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'file';
+            hiddenInput.name = currentFileInput.name;
+            hiddenInput.style.display = 'none';
+            hiddenInput.files = dataTransfer.files;
+            
+            // Replace the original input with our new one
+            currentFileInput.parentNode.appendChild(hiddenInput);
+            
+            // Hide the cropperModal
+            const cropperModal = bootstrap.Modal.getInstance(document.getElementById('cropperModal'));
+            cropperModal.hide();
+            
+            // Display success message
+            document.getElementById('upload-message').textContent = 'Image cropped and ready for upload!';
+            document.getElementById('upload-message').classList.remove('text-muted');
+            document.getElementById('upload-message').classList.add('text-success');
+          }, 'image/jpeg', 0.9);
+        }
+      });
+      
+      // Rotation and flipping controls
+      document.getElementById('rotate-left').addEventListener('click', function() {
+        cropper.rotate(-90);
+      });
+      
+      document.getElementById('rotate-right').addEventListener('click', function() {
+        cropper.rotate(90);
+      });
+      
+      document.getElementById('flip-horizontal').addEventListener('click', function() {
+        cropper.scaleX(cropper.getData().scaleX === 1 ? -1 : 1);
+      });
+      
+      document.getElementById('flip-vertical').addEventListener('click', function() {
+        cropper.scaleY(cropper.getData().scaleY === 1 ? -1 : 1);
+      });
+      
+      // Handle form submission
+      document.querySelector('form[action="{% url 'adproducts' %}"]').addEventListener('submit', function(e) {
+        // If we have cropped images, they've already been added to hidden inputs
+        // The form will submit normally with these files
+      });
+      
+      // Update the file upload labels to indicate the new cropping feature
+      document.querySelectorAll('.file-upload-label .upload-text').forEach(el => {
+        el.innerHTML += '<br><small>(Will be cropped)</small>';
+      });
+    </script>
+{% endblock %}
+
+

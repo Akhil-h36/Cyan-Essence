@@ -1,0 +1,882 @@
+{% extends 'sidebar.html' %}
+{% load static %}
+
+{% block styles %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Allura&family=Cormorant+Garamond&family=Great+Vibes&family=Grey+Qo&family=Gruppo&display=swap');
+    
+    :root {
+        --primary-color: #007474;
+        --secondary-color: #134E4A;
+        --light-bg: #f8f8f8;
+        --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        background-color: var(--light-bg);
+        color: #333;
+        line-height: 1.6;
+    }
+    
+    header {
+        height: 300px;
+        background-size: cover;
+        background-position: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.4));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .header-image {
+        width: 100%;
+        height: 300px;
+        object-fit: cover;
+        position: absolute;
+    }
+    
+    .page-title {
+        font-family: 'Cormorant Garamond', cursive;
+        color: var(--primary-color);
+        text-align: center;
+        font-size: 48px;
+        font-weight: 500;
+        margin: 30px 0;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+    
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        animation: fadeIn 0.8s ease-in-out;
+    }
+    
+    .card-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 30px;
+        margin: 50px 0;
+    }
+    
+    /* Updated Product Card Styling to match myshop.html */
+    .product-card {
+        background-color: #ffffff;
+        margin-bottom: 30px;
+        height: 400px;
+        border-radius: 0px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s ease;
+        overflow: hidden;
+        position: relative;
+        opacity: 0;
+        animation: fadeInUp 0.6s ease forwards;
+    }
+    
+
+    
+    .product-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .product-image {
+        max-width: 100%;
+        max-height: 100%;
+        align-items: center;
+        display: flex;
+        justify-content: center;
+        background-color: #f8f9fa;
+        padding: 0px;
+        bottom: 0px;
+    }
+    
+    .product-image img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        transition: transform 0.3s ease;
+    }
+    
+    .product-card:hover .product-image img {
+        transform: scale(1.05);
+    }
+    
+    .product-info {
+        height: 100px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 10px 15px;
+        margin-bottom: 0px;
+        bottom: 0;
+        background-color: #f1f3f5;
+        position: absolute;
+        width: 100%;
+    }
+    
+    .product-name {
+        margin-bottom: 5px;
+        font-size: 1.3rem;
+        color: #007474;
+        overflow: hidden;
+        max-width: 100%;
+        text-align: center;
+        font-weight: bold;
+    }
+    
+    .product-type {
+        color: #777;
+        font-size: 12px;
+        margin-bottom: 8px;
+        text-align: center;
+    }
+    
+    .product-price {
+        font-size: 1.0rem;
+        margin-top: 5px;
+        font-weight: bold;
+        color: #3d5c5c;
+        margin-bottom: 8px;
+        text-align: center;
+    }
+    
+    .stock-status {
+        color: #2ecc71;
+        font-size: 14px;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+    
+    .card-actions {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .action-btn {
+        background: none;
+        border: none;
+        color: #6c757d;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+    
+    .action-btn:hover {
+        color: #007474;
+    }
+    
+    .cart-btn:hover svg {
+        color: #007474;
+    }
+    
+    .remove-btn:hover svg {
+        color: #007474;
+    }
+    
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255,255,255,0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    
+    .loader {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #007474;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    .hidden {
+        opacity: 0;
+        visibility: hidden;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Notification styling from myshop.html */
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #2a9d8f;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 4px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        z-index: 1000;
+        transition: all 0.3s ease;
+        transform: translateX(150%);
+        opacity: 0;
+    }
+    
+    .notification.show {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    
+    .notification.error {
+        background-color: #e74c3c;
+    }
+    
+    /* Size Selection Modal Styles */
+    .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1050;
+        display: none;
+    }
+    
+    .modal-backdrop.show {
+        display: block;
+    }
+    
+    .size-modal {
+        font-family:'Gruppo';
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.9);
+        background-color: white;
+        width: 90%;
+        max-width: 550px;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        z-index: 1060;
+        padding: 25px;
+        opacity: 0;
+        display: none;
+        transition: all 0.3s ease;
+    }
+    
+    .size-modal.show {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+        display: block;
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .modal-title {
+        font-size: 1.25rem;
+        color: var(--primary-color);
+        margin: 0;
+    }
+    
+    .close-modal {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #6c757d;
+    }
+    
+    .size-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .size-btn {
+        padding: 8px 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .size-btn.active {
+        background-color: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+    
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding-top: 15px;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .cancel-btn {
+        padding: 8px 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: none;
+        cursor: pointer;
+    }
+    
+    .add-to-cart-btn {
+        padding: 8px 20px;
+        border: none;
+        border-radius: 4px;
+        background-color: var(--primary-color);
+        color: white;
+        cursor: pointer;
+    }
+    
+    .empty-wishlist {
+        text-align: center;
+        padding: 50px 0;
+    }
+    
+    .empty-wishlist p {
+        font-size: 1.2rem;
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+    
+    .shop-now-btn {
+        padding: 10px 20px;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        text-decoration: none;
+        display: inline-block;
+        transition: background-color 0.3s ease;
+    }
+    
+    .shop-now-btn:hover {
+        background-color: var(--secondary-color);
+    }
+    
+    @media (max-width: 768px) {
+        .card-container {
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .page-title {
+            font-size: 36px;
+            margin: 20px 0;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .card-container {
+            grid-template-columns: 1fr;
+        }
+    }
+    .product-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.product-card-link:hover {
+    text-decoration: none;
+}
+/* Pagination Styles */
+.pagination {
+        display: flex;
+        justify-content: center;
+        list-style: none;
+        margin: 30px 0;
+        padding: 0;
+    }
+    
+    .page-item {
+        margin: 0 5px;
+    }
+    
+    .page-link {
+        display: block;
+        padding: 8px 12px;
+        color: var(--primary-color);
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .page-link:hover {
+        background-color: #e9ecef;
+    }
+    
+    .page-item.active .page-link {
+        background-color: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+    
+    .page-item.disabled .page-link {
+        color: #6c757d;
+        pointer-events: none;
+        cursor: default;
+        background-color: #fff;
+        border-color: #dee2e6;
+    }
+    
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loader"></div>
+</div>
+
+<header>
+    <img src="{% static 'images/wishlist.webp' %}" alt="Wishlist Banner" class="header-image" />
+    <div class="hero-overlay"></div>
+    <nav>
+        <ul>
+            <li><a href="{% url 'home' %}">HOME</a></li>
+            <li><a href="{% url 'myshop' %}">PRODUCTS</a></li>
+        </ul>
+    </nav>
+</header>
+
+<div class="container">
+    <h1 class="page-title">Wishlist</h1>
+    
+    {% if wishlist_items %}
+    <div class="card-container">
+        {% for item in wishlist_items %}
+        <div class="product-card" style="animation-delay: {{ forloop.counter|divisibleby:3 }}s;">
+            <a href="{% url 'singleproduct' item.product.product_id %}" class="product-card-link">
+                <div class="product-image">
+                    {% if item.product.images.first %}
+                    <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.product_name }}">
+                    {% else %}
+                    <img src="{% static 'images/placeholder-perfume.jpg' %}" alt="{{ item.product.product_name }}">
+                    {% endif %}
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name" style="font-family:'Gruppo';">{{ item.product.product_name }}</h3>
+                    <p class="product-price">₹ {{ item.min_price|floatformat:2 }}</p>
+                    <p class="stock-status">{% if item.in_stock %}IN STOCK{% else %}OUT OF STOCK{% endif %}</p>
+                    <div class="card-actions">
+                        <button class="action-btn cart-btn" title="Add to Cart" data-product-id="{{ item.product.product_id }}">
+                            <i class="fas fa-shopping-bag"></i>
+                        </button>
+                        <button class="action-btn remove-btn" title="Remove from Wishlist" data-product-id="{{ item.product.product_id }}">
+                            <i class="far fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination Section -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination-container">
+        <nav aria-label="Wishlist pagination">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link" aria-hidden="true">&laquo;</span>
+                </li>
+                {% endif %}
+                
+                {% for i in page_obj.paginator.page_range %}
+                    {% if page_obj.number == i %}
+                    <li class="page-item active" aria-current="page">
+                        <span class="page-link">{{ i }}</span>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link" aria-hidden="true">&raquo;</span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+    <!-- End Pagination Section -->
+
+    {% else %}
+    <div class="empty-wishlist">
+        <p>Your wishlist is empty!</p>
+        <a href="{% url 'myshop' %}" class="shop-now-btn">Shop Now</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Size Selection Modal -->
+<div class="modal-backdrop" id="modalBackdrop"></div>
+<div class="size-modal" id="sizeModal">
+    <div class="modal-header">
+        <h5 class="modal-title">Confirm The Size</h5>
+        <button type="button" class="close-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+        <div class="product-details">
+            <h6 id="modalProductName"></h6>
+        </div>
+        <div class="size-options" id="sizeOptions">
+            <!-- Size options will be loaded dynamically -->
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="cancel-btn">Cancel</button>
+        <button type="button" class="add-to-cart-btn" id="confirmAddToCart">Add to Cart</button>
+    </div>
+</div>
+
+<div id="notification" class="notification"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Utility function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    const csrftoken = getCookie('csrftoken');
+    
+    // Loading animation
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }, 1000);
+    });
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animation for product cards when scrolling
+        const productCards = document.querySelectorAll('.product-card');
+        
+        function checkVisibility() {
+            productCards.forEach(card => {
+                const rect = card.getBoundingClientRect();
+                const isVisible = rect.top < window.innerHeight && rect.bottom >= 0;
+                
+                if (isVisible) {
+                    card.style.opacity = '1';
+                }
+            });
+        }
+        
+        // Initial check
+        checkVisibility();
+        
+        // Check on scroll
+        window.addEventListener('scroll', checkVisibility);
+        
+        // Initialize notification system
+        function showNotification(message, isError = false) {
+            let notification = document.getElementById('notification');
+            if (!notification) {
+                notification = document.createElement('div');
+                notification.id = 'notification';
+                notification.className = 'notification';
+                document.body.appendChild(notification);
+            }
+            
+            notification.textContent = message;
+            notification.className = 'notification' + (isError ? ' error' : '');
+            
+            setTimeout(() => notification.classList.add('show'), 100);
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Modal variables
+        const modalBackdrop = document.getElementById('modalBackdrop');
+        const sizeModal = document.getElementById('sizeModal');
+        const closeModalBtn = document.querySelector('.close-modal');
+        const cancelBtn = document.querySelector('.cancel-btn');
+        const confirmAddToCartBtn = document.getElementById('confirmAddToCart');
+        const sizeOptions = document.getElementById('sizeOptions');
+        const modalProductName = document.getElementById('modalProductName');
+        
+        // Current product being processed
+        let currentProductId = null;
+        let selectedVarianceId = null;
+        
+        // Function to open modal and load sizes
+        function openSizeModal(productId, productName) {
+            currentProductId = productId;
+            selectedVarianceId = null;
+            
+            // Set product name in modal
+            modalProductName.textContent = productName;
+            
+            // Fetch product size options
+            fetch(`/api/product-variances/${productId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    // Clear existing size options
+                    sizeOptions.innerHTML = '';
+                    
+                    // Add size options
+                    data.variances.forEach(variance => {
+                        const sizeBtn = document.createElement('button');
+                        sizeBtn.className = 'size-btn';
+                        sizeBtn.textContent = `${variance.size}ml - ₹${variance.price}`;
+                        sizeBtn.dataset.varianceId = variance.id;
+                        
+                        sizeBtn.addEventListener('click', function() {
+                            // Remove active class from all buttons
+                            document.querySelectorAll('.size-btn').forEach(btn => {
+                                btn.classList.remove('active');
+                            });
+                            
+                            // Add active class to this button
+                            this.classList.add('active');
+                            
+                            // Set selected variance ID
+                            selectedVarianceId = variance.id;
+                        });
+                        
+                        sizeOptions.appendChild(sizeBtn);
+                    });
+                    
+                    // Show modal
+                    modalBackdrop.classList.add('show');
+                    sizeModal.classList.add('show');
+                })
+                .catch(error => {
+                    console.error('Error fetching product variances:', error);
+                    showNotification('Error loading product sizes. Please try again.', true);
+                });
+        }
+        
+        // Function to close modal
+        function closeModal() {
+            modalBackdrop.classList.remove('show');
+            sizeModal.classList.remove('show');
+            currentProductId = null;
+            selectedVarianceId = null;
+        }
+        
+        // Attach close events to modal
+        closeModalBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+        modalBackdrop.addEventListener('click', closeModal);
+        
+        // Add to cart from modal
+        confirmAddToCartBtn.addEventListener('click', function() {
+            if (!selectedVarianceId) {
+                showNotification('Please select a size first', true);
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            
+            // Send add to cart request
+            fetch('/add-to-cart/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    product_id: currentProductId,
+                    variance_id: selectedVarianceId,
+                    quantity: 1
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message);
+                    
+                    // Update cart badge count if exists
+                    const cartBadge = document.getElementById('cart-count');
+                    if (cartBadge && data.cart_count) {
+                        cartBadge.textContent = data.cart_count;
+                    }
+                    
+                    // Close modal
+                    closeModal();
+                } else {
+                    showNotification(data.message, true);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred. Please try again.', true);
+            })
+            .finally(() => {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            });
+        });
+        
+        // Add event listeners for cart buttons
+        const cartButtons = document.querySelectorAll('.cart-btn');
+        cartButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const productId = this.dataset.productId;
+                const productName = this.closest('.product-info').querySelector('.product-name').textContent;
+                
+                // Open modal with size options
+                openSizeModal(productId, productName);
+            });
+        });
+        
+        // Add event listeners for remove buttons
+        const removeButtons = document.querySelectorAll('.remove-btn');
+        removeButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const productId = this.dataset.productId;
+                const card = this.closest('.product-card');
+                
+                // Show loading
+                document.getElementById('loadingOverlay').classList.remove('hidden');
+                
+                // Send remove from wishlist request
+                fetch('/remove-from-wishlist/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({
+                        product_id: productId
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Animate card removal
+                        card.style.opacity = '0';
+                        setTimeout(() => {
+                            card.remove();
+                            
+                            // Check if wishlist is now empty
+                            if (document.querySelectorAll('.product-card').length === 0) {
+                                const cardContainer = document.querySelector('.card-container');
+                                cardContainer.innerHTML = `
+                                    <div class="empty-wishlist">
+                                        <p>Your wishlist is empty!</p>
+                                        <a href="{% url 'myshop' %}" class="shop-now-btn">Shop Now</a>
+                                    </div>
+                                `;
+                            }
+                        }, 300);
+                        
+                        showNotification(data.message);
+                    } else {
+                        showNotification(data.message, true);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('An error occurred. Please try again.', true);
+                })
+                .finally(() => {
+                    document.getElementById('loadingOverlay').classList.add('hidden');
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

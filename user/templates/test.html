@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice - {{ order.formatted_id }}</title>
+    <style>
+        /* Base styles */
+        @page {
+            size: a4 portrait;
+            margin: 1cm;
+        }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 12pt;
+            color: #333;
+            line-height: 1.4;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f7f7;
+        }
+        .invoice-box {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 8px;
+            border-top: 5px solid #007474;
+        }
+        
+        /* Header */
+        .header {
+            width: 100%;
+            border-bottom: 2px solid #007474;
+            padding-bottom: 25px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .company-name {
+            font-size: 32pt;
+            font-weight: bold;
+            color: #007474;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+        .company-details {
+            font-size: 10pt;
+            color: #666;
+            margin-top: 8px;
+        }
+        .invoice-title-section {
+            text-align: right;
+            margin-top: -100px;
+        }
+        .invoice-title {
+            font-size: 32pt;
+            font-weight: bold;
+            color: #007474;
+            text-align: right;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+        .invoice-details {
+            text-align: right;
+            margin-top: 10px;
+        }
+        
+        /* Info Containers */
+        .info-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .customer-info, .order-info {
+            background-color: #f8ffff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007474;
+            border-radius: 4px;
+            width: 45%;
+        }
+        h3 {
+            margin-top: 0;
+            color: #007474;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 12px;
+            font-size: 18pt;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        /* Items Table */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .items-table th {
+            background-color: #007474;
+            color: white;
+            padding: 14px;
+            text-align: left;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 11pt;
+        }
+        .items-table tr:nth-child(even) {
+            background-color: #f0fafa;
+        }
+        .items-table td {
+            padding: 14px;
+            border-bottom: 1px solid #e0f0f0;
+        }
+        .product-name {
+            font-weight: 600;
+            color: #007474;
+        }
+        .product-variant {
+            color: #666;
+            font-size: 10pt;
+            margin-top: 6px;
+        }
+        
+        /* Totals Section */
+        .totals-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 40px;
+        }
+        .totals-table {
+            width: 50%;
+            border-collapse: collapse;
+            background-color: #f8ffff;
+            border-radius: 6px;
+        }
+        .totals-table td {
+            padding: 12px 20px;
+        }
+        .totals-table td:first-child {
+            text-align: right;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .totals-table td:last-child {
+            text-align: right;
+            font-weight: 600;
+        }
+        .subtotal-row td {
+            border-bottom: 1px solid #e0f0f0;
+            padding-top: 15px;
+        }
+        .discount-row td {
+            color: #cc2929;
+            border-bottom: 1px solid #e0f0f0;
+        }
+        .tax-row td, .shipping-row td {
+            color: #333;
+            border-bottom: 1px solid #e0f0f0;
+        }
+        .grand-total td {
+            background-color: #007474;
+            color: white;
+            font-weight: 700;
+            font-size: 14pt;
+            padding-top: 15px;
+            padding-bottom: 15px;
+            letter-spacing: 1px;
+        }
+        
+        /* Payment Info */
+        .payment-info {
+            background-color: #f8ffff;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 40px;
+            border-left: 4px solid #007474;
+            font-size: 11pt;
+        }
+        .payment-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+        .status-paid {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-failed {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: 60px;
+            text-align: center;
+            color: #666;
+            font-size: 10pt;
+            border-top: 1px solid #e0f0f0;
+            padding-top: 25px;
+        }
+        .thank-you {
+            font-size: 20pt;
+            color: #007474;
+            margin-bottom: 15px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-box">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <div class="company-name">Cyan Essence</div>
+                <div class="company-details">
+                    <div>{{ company_address }}</div>
+                    <div>Phone: {{ company_phone }}</div>
+                    <div>Email: {{ company_email }}</div>
+                </div>
+            </div>
+            <div class="invoice-title-section">
+                <div class="invoice-title">INVOICE</div>
+                <div class="invoice-details">
+                    <div><strong>Invoice #:</strong> {{ order.formatted_id }}</div>
+                    <div><strong>Date:</strong> {{ order.order_date|date:"F d, Y" }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Customer and Order Info -->
+        <div class="info-container">
+            <div class="customer-info">
+                <h3>Billed To</h3>
+                <div><strong>{{ shipping_address.full_name }}</strong></div>
+                <div>{{ shipping_address.address_line1 }}</div>
+                {% if shipping_address.address_line2 %}
+                <div>{{ shipping_address.address_line2 }}</div>
+                {% endif %}
+                <div>{{ shipping_address.city }}, {{ shipping_address.state }} {{ shipping_address.postal_code }}</div>
+                <div>Phone: {{ shipping_address.phone_number }}</div>
+            </div>
+            
+            <div class="order-info">
+                <h3>Order Details</h3>
+                <div><strong>Status:</strong> {{ order.order_status }}</div>
+                <div><strong>Payment Method:</strong> {{ order.payment_method }}</div>
+                <div><strong>Payment Status:</strong> 
+                    <span class="payment-status 
+                        {% if order.payment_status == 'PAID' %}status-paid
+                        {% elif order.payment_status == 'Pending' %}status-pending
+                        {% elif order.payment_status == 'failed' %}status-failed{% endif %}">
+                        {{ order.payment_status }}
+                    </span>
+                </div>
+                {% if order.tracking_number %}
+                <div><strong>Tracking #:</strong> {{ order.tracking_number }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Items Table -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th width="5%">#</th>
+                    <th width="45%">Product</th>
+                    <th width="10%">Qty</th>
+                    <th width="20%">Unit Price</th>
+                    <th width="20%">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order_items %}
+                {% if not item.is_cancelled %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        <div class="product-name">{{ item.product_variation.product.product_name }}</div>
+                        <div class="product-variant">{{ item.product_variation.size.size }} ml</div>
+                    </td>
+                    <td>{{ item.quantity }}</td>
+                    <td>${{ item.price }}</td>
+                    <td>${{ item.total_price }}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Totals Section -->
+        <div class="totals-section">
+            <table class="totals-table">
+                <tr class="subtotal-row">
+                    <td>Subtotal:</td>
+                    <td>${{ order.total_amount }}</td>
+                </tr>
+                {% if order.cart.applied_discount and order.is_coupon_applied %}
+                <tr class="discount-row">
+                    <td>Discount (Coupon):</td>
+                    <td>-${{ order.cart.applied_discount }}</td>
+                </tr>
+                {% endif %}
+                {% if order.cart.stored_vat_amount %}
+                <tr class="tax-row">
+                    <td>Tax (VAT):</td>
+                    <td>${{ order.cart.stored_vat_amount }}</td>
+                </tr>
+                {% endif %}
+                {% if order.shipping_cost %}
+                <tr class="shipping-row">
+                    <td>Shipping:</td>
+                    <td>${{ order.shipping_cost }}</td>
+                </tr>
+                {% endif %}
+                <tr class="grand-total">
+                    <td>Grand Total:</td>
+                    <td>${{ order.cart.final_total }}</td>
+                </tr>
+            </table>
+        </div>
+        
+        <!-- Payment Information -->
+        <div class="payment-info">
+            <h3>Payment Information</h3>
+            <div><strong>Method:</strong> {{ order.payment_method }}</div>
+            {% if order.payment_method == 'Razorpay' and order.razorpay_order_id %}
+            <div><strong>Transaction ID:</strong> {{ order.razorpay_order_id }}</div>
+            {% endif %}
+            <div><strong>Status:</strong> {{ order.payment_status }}</div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="thank-you">Thank you for your purchase!</div>
+            <div>If you have any questions about this invoice, please contact us at:</div>
+            <div>{{ company_email }} | {{ company_phone }}</div>
+            <div style="margin-top: 20px;">&copy; {{ current_year }} {{ company_name }}. All rights reserved.</div>
+        </div>
+    </div>
+</body>
+</html>

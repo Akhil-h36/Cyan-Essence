@@ -1,0 +1,677 @@
+{% extends 'profiletemplate.html' %}
+{{ order.id|json_script:"order-data" }}
+{% load static %}
+{% load json_filters %}
+
+{% block styles %}
+<style>
+/* Add these styles to your CSS file */
+
+.order-summary {
+    margin-top: 2rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    background-color: #f9f9f9;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #eee;
+}
+
+.summary-row:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.coupon-applied, .offer-applied, .product-discount {
+    color: #28a745;
+}
+
+.discount-value {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.coupon-code {
+    background-color: #41e1be;
+    padding: 2px 5px;
+    border-radius: 3px;
+    margin-left: 5px;
+    font-size: 0.9em;
+}
+
+.savings-row {
+    background-color: #36d59ea9;
+    padding: 0.5rem;
+    margin: 0.5rem -0.5rem;
+    border-radius: 4px;
+}
+
+.savings-value {
+    color: #007bff;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.total-row {
+    font-weight: bold;
+    font-size: 1.1em;
+    border-top: 2px solid #ddd;
+    padding-top: 0.75rem;
+    margin-top: 0.75rem;
+}
+</style>
+{% endblock styles %}
+
+{% block content %}
+{% csrf_token %}
+
+<div class="page-transition"></div>
+    
+<header class="justify-content-center">
+    <div class="nav">
+        <a href="{% url 'userprofile' %}">profile / </a>
+        <a href="{% url 'myaccount' %}">My Account</a>
+    </div>
+</header>
+
+<div class="container-fluid d-flex">
+    <div class="profile-sidebar">
+        <a href="{% url 'address' %}" class="text-decoration-none d-block text-white"><div class="profile-sidebar-option">manage address</div></a>
+        <a href="{% url 'myorders' %}" class="text-decoration-none d-block text-white"><div class="profile-sidebar-option active">my orders</div></a>
+        <a href="{% url 'mypassword' %}" class="text-decoration-none d-block text-white"><div class="profile-sidebar-option">change password</div></a>
+        <button class="logout-btn">LOG OUT</button>
+    </div>
+
+
+
+    <div class="main-content">
+        <div class="order-details-container">
+            {% if order.is_cancelled %}
+            <div class="cancelled-overlay">
+                <div class="cancelled-text">Cancelled</div>
+            </div>
+            {% endif %}
+            
+            <div class="order-header">
+                <div class="order-id">{{ order.formatted_id }}</div>
+                <div class="order-status status-{{ order.order_status|lower }}">{{ order.order_status }}</div>
+            </div>
+            
+            <div class="order-meta">
+                <div class="meta-item">
+                    <div class="meta-label">Order Date</div>
+                    <div class="meta-value">{{ order.order_date|date:"F d, Y" }}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Payment Method</div>
+                    <div class="meta-value">{{ order.payment_method }}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Total Amount</div>
+                    <div class="meta-value">₹{{ order.total_amount }}</div>
+                </div>
+            </div>
+            
+            <div class="order-action-buttons">
+                <a href="{% url 'myorders' %}" class="action-button back-button">
+                    <i class="fas fa-arrow-left mr-2"></i> Back to Orders
+                </a>
+                
+                {% if has_tracking %}
+                <a href="{% url 'track_order' order.id %}" class="action-button track-button">
+                    <i class="fas fa-truck mr-2"></i> Track Order
+                </a>
+                {% endif %}
+                
+                <!-- Add retry payment button for failed payments -->
+                {% if order.payment_status == 'failed' or order.payment_status == 'Retry' %}
+                <button id="retryPaymentBtn" class="action-button payment-button" data-order-id="{{ order.id }}">
+                    <i class="fas fa-credit-card mr-2"></i> Retry Payment
+                </button>
+                {% endif %}
+                
+                {% if order.order_status == 'Pending' or order.order_status == 'Processing' %}
+                {% if not order.is_cancelled %}
+                <button id="cancelOrderBtn" class="action-button cancel-button" data-order-id="{{ order.id }}">
+                    <i class="fas fa-times-circle mr-2"></i> Cancel Order
+                </button>
+                {% endif %}
+                {% endif %}
+            
+                {% if order.order_status == 'Delivered' and not order.return_status %}
+                <button id="requestReturnBtn" class="action-button return-button" data-order-id="{{ order.id }}">
+                    <i class="fas fa-undo mr-2"></i> Request Return
+                </button>
+                {% endif %}
+            
+                <a href="{% url 'download_invoice' order.id %}" class="action-button invoice-button">
+                    <i class="fas fa-file-pdf mr-2"></i> Download Invoice
+                </a>
+            </div>
+            
+           <!-- Replace the current address section with this -->
+
+           <h3 class="section-title">Shipping Information</h3>
+           <div class="info-section">
+               <div class="info-grid">
+                   {% if order.shipping_address %}
+                       <!-- Use shipping_address object if it still exists -->
+                       <div class="info-item">
+                           <div class="info-label">Name</div>
+                           <div class="info-value">{{ shipping_address.full_name }}</div>
+                       </div>
+                       <div class="info-item">
+                           <div class="info-label">Phone</div>
+                           <div class="info-value">{{ shipping_address.phone_number }}</div>
+                       </div>
+                       <div class="info-item">
+                           <div class="info-label">Address</div>
+                           <div class="info-value">
+                               {{ shipping_address.address_line1 }}
+                               {% if shipping_address.address_line2 %}
+                               <br>{{ shipping_address.address_line2 }}
+                               {% endif %}
+                           </div>
+                       </div>
+                       <div class="info-item">
+                           <div class="info-label">City, State, ZIP</div>
+                           <div class="info-value">{{ shipping_address.city }}, {{ shipping_address.state }} {{ shipping_address.postal_code }}</div>
+                       </div>
+                   {% else %}
+                       <!-- Parse JSON delivery_address if shipping_address object doesn't exist -->
+                       {% with delivery_address=order.delivery_address|parse_json %}
+                           <div class="info-item">
+                               <div class="info-label">Name</div>
+                               <div class="info-value">{{ delivery_address.full_name }}</div>
+                           </div>
+                           <div class="info-item">
+                               <div class="info-label">Phone</div>
+                               <div class="info-value">{{ delivery_address.phone_number }}</div>
+                           </div>
+                           <div class="info-item">
+                               <div class="info-label">Address</div>
+                               <div class="info-value">
+                                   {{ delivery_address.address_line1 }}
+                                   {% if delivery_address.address_line2 %}
+                                   <br>{{ delivery_address.address_line2 }}
+                                   {% endif %}
+                               </div>
+                           </div>
+                           <div class="info-item">
+                               <div class="info-label">City, State, ZIP</div>
+                               <div class="info-value">{{ delivery_address.city }}, {{ delivery_address.state }} {{ delivery_address.postal_code }}</div>
+                           </div>
+                       {% endwith %}
+                   {% endif %}
+               </div>
+           </div>
+            
+            <h3 class="section-title">Order Items</h3>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order_items %}
+                    <tr class="{% if item.is_cancelled %}item-cancelled{% endif %}">
+                        <td>
+                            <div class="product-info">
+                                {% with product_image=item.product_variation.product.images.first %}
+                                    {% if product_image %}
+                                        <img src="{{ product_image.image.url }}" alt="{{ item.product_variation.product.product_name }}" class="product-image floating-element">
+                                    {% else %}
+                                        
+                                        <img src="{% static 'images/no-image.png' %}" alt="{{ item.product_variation.product.product_name }}" class="product-image floating-element">
+                                    {% endif %}
+                                {% endwith %}
+                                <div>
+                                    <div class="product-name">{{ item.product_variation.product.product_name }}</div>
+                                    <div class="product-variant">{{ item.product_variation.size.size }} ml</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ item.quantity }}</td>
+                        <td>₹{{ item.price }}</td>
+                        <td>₹{{ item.total_price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+
+            
+            <div class="order-summary">
+                <!-- Original price (subtotal) -->
+                <div class="summary-row">
+                    <div class="summary-label">Original Price</div>
+                    <div class="summary-value">₹{{ original_price }}</div>
+                </div>
+                
+                <!-- Product discounts (if any products have discounts) -->
+                {% if product_discount_amount > 0 %}
+                <div class="summary-row product-discount">
+                    <div class="summary-label"><i class="fas fa-percent mr-1"></i> Product Discounts</div>
+                    <div class="summary-value discount-value">-₹{{ product_discount_amount }}</div>
+                </div>
+                {% endif %}
+                
+                <!-- Subtotal after product discounts -->
+                <div class="summary-row">
+                    <div class="summary-label">Subtotal</div>
+                    <div class="summary-value">₹{{ subtotal }}</div>
+                </div>
+                
+                <!-- Coupon discount -->
+                {% if order.is_coupon_applied %}
+                <div class="summary-row coupon-applied">
+                    <div class="summary-label">
+                        <i class="fas fa-tag mr-1"></i> Coupon Applied
+                        {% if coupon_code %}
+                        <span class="coupon-code">({{ coupon_code }})</span>
+                        {% endif %}
+                    </div>
+                    <div class="summary-value discount-value">-₹{{ discount_amount }}</div>
+                </div>
+                {% endif %}
+                
+                <!-- Offer discount -->
+                {% if order.is_offer_applied and not order.is_coupon_applied %}
+                <div class="summary-row offer-applied">
+                    <div class="summary-label"><i class="fas fa-gift mr-1"></i> Offer Applied</div>
+                    <div class="summary-value discount-value">-₹{{ discount_amount }}</div>
+                </div>
+                {% endif %}
+                
+                <!-- Tax amount -->
+                <div class="summary-row">
+                    <div class="summary-label">Tax (GST)</div>
+                    <div class="summary-value">₹{{ tax_amount }}</div>
+                </div>
+                
+                <!-- Show total savings -->
+                <div class="summary-row savings-row">
+                    <div class="summary-label"><i class="fas fa-piggy-bank mr-1"></i> You Saved</div>
+                    <div class="summary-value savings-value">₹{{ total_savings }}</div>
+                </div>
+                
+                <!-- Final total - UPDATED -->
+                <div class="summary-row total-row">
+                    <div class="summary-label">Total</div>
+                    <div class="summary-value">₹{{ grand_total }}</div>
+                </div>
+            </div>
+
+
+            
+            
+            {% if order.is_cancelled %}
+            <div class="mt-4">
+                <h4 class="text-danger">Cancellation Details</h4>
+                <p><strong>Cancelled on:</strong> {{ order.canceled_date|date:"F d, Y" }}</p>
+                {% if order.cancel_description %}
+                <p><strong>Reason:</strong> {{ order.cancel_description }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Order Modal -->
+<div id="cancelOrderModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Cancel Order</h2>
+            <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to cancel this order?</p>
+            <p><strong>Order ID:</strong> {{ order.formatted_id }}</p>
+            
+            <div class="form-group">
+                <label for="cancelOrderReason" class="form-label">Reason for cancellation (optional)</label>
+                <textarea id="cancelOrderReason" class="form-control" rows="3" placeholder="Please tell us why you're canceling this order..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="confirmCancelOrder" class="confirm-btn" data-order-id="{{ order.id }}">Confirm Cancel</button>
+            <button class="cancel-modal-btn close-modal">Go Back</button>
+        </div>
+    </div>
+</div>
+<div id="returnRequestModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Request Return</h2>
+            <button class="close-modal" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="color: aliceblue;">Please provide the reason for returning this order:</p>
+            <div class="form-group">
+                <textarea id="returnReason" class="form-control" rows="5" placeholder="Enter your reason here..." required></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="confirmReturnRequest" class="confirm-btn">Submit Request</button>
+            <button class="cancel-modal-btn close-modal">Cancel</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get all necessary elements
+    const returnButton = document.getElementById('requestReturnBtn');
+    const retryPaymentBtn = document.getElementById('retryPaymentBtn');
+    const returnModal = document.getElementById('returnRequestModal');
+    const confirmReturnButton = document.getElementById('confirmReturnRequest');
+    const closeButtons = document.querySelectorAll('.close-modal, .cancel-modal-btn');
+    
+    // Get order ID from the return button if it exists
+    const orderId = returnButton ? returnButton.getAttribute('data-order-id') : null;
+    
+    // Retry Payment functionality
+    if (retryPaymentBtn) {
+        retryPaymentBtn.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            // Show loading state
+            retryPaymentBtn.disabled = true;
+            retryPaymentBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
+            
+            fetch(`/userp/orders/${orderId}/retry-payment/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Initialize Razorpay payment
+                    const options = {
+                        key: data.payment_data.key_id,
+                        amount: data.payment_data.amount,
+                        currency: data.payment_data.currency,
+                        name: "Your Store Name",
+                        description: "Order Payment",
+                        order_id: data.payment_data.order_id,
+                        handler: function(response) {
+                            // Handle successful payment
+                            window.location.href = `/order-confirmation/${orderId}/`;
+                        },
+                        prefill: {
+                            name: data.payment_data.name,
+                            email: data.payment_data.email,
+                            contact: data.payment_data.phone
+                        },
+                        theme: {
+                            color: "#00a0a0"
+                        }
+                    };
+                    
+                    const rzp = new Razorpay(options);
+                    rzp.open();
+                } else {
+                    alert(data.message || "Failed to initialize payment");
+                    retryPaymentBtn.disabled = false;
+                    retryPaymentBtn.innerHTML = '<i class="fas fa-credit-card mr-2"></i> Retry Payment';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while processing your request');
+                retryPaymentBtn.disabled = false;
+                retryPaymentBtn.innerHTML = '<i class="fas fa-credit-card mr-2"></i> Retry Payment';
+            });
+        });
+    }
+
+    // Return Request functionality
+    if (returnButton) {
+        // Open return modal
+        returnButton.addEventListener('click', function() {
+            if (returnModal) {
+                returnModal.style.display = 'block';
+            }
+        });
+        
+        // Close modal buttons
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                if (returnModal) returnModal.style.display = 'none';
+            });
+        });
+        
+        // Handle return request submission
+        if (confirmReturnButton && orderId) {
+            confirmReturnButton.addEventListener('click', function() {
+                const returnReason = document.getElementById('returnReason').value;
+                if (!returnReason.trim()) {
+                    alert('Please provide a reason for the return');
+                    return;
+                }
+                
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                fetch(`/userp/orders/${orderId}/request-return/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ reason: returnReason })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    alert(data.message || "Return request submitted successfully");
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        if (returnModal) returnModal.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error submitting return request:', error);
+                    alert('An error occurred while submitting your return request');
+                    if (returnModal) returnModal.style.display = 'none';
+                });
+            });
+        }
+    }
+});
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if Razorpay script is loaded
+        function loadRazorpayScript(callback) {
+            if (typeof Razorpay !== 'undefined') {
+                callback();
+                return;
+            }
+            
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = callback;
+            script.onerror = function() {
+                alert('Failed to load Razorpay payment gateway. Please try again later.');
+            };
+            document.head.appendChild(script);
+        }
+        
+        // Get modal elements for existing functionality
+        const returnModal = document.getElementById('returnRequestModal');
+        const confirmReturnButton = document.getElementById('confirmReturnRequest');
+        const closeButtons = document.querySelectorAll('.close-modal, .cancel-modal-btn');
+        
+        // Open return modal if button exists
+        const returnButton = document.getElementById('requestReturnBtn');
+        if (returnButton) {
+            returnButton.addEventListener('click', function() {
+                console.log("Return button clicked");
+                if (returnModal) {
+                    returnModal.style.display = 'block';
+                }
+            });
+        }
+        
+        // Close modal buttons
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                if (returnModal) returnModal.style.display = 'none';
+            });
+        });
+        
+        // Handle return request submission if button exists
+        if (confirmReturnButton) {
+            const orderId = returnButton ? returnButton.getAttribute('data-order-id') : null;
+            
+            if (orderId) {
+                confirmReturnButton.addEventListener('click', function() {
+                    console.log("Confirm return clicked with order ID:", orderId);
+                    
+                    const returnReason = document.getElementById('returnReason').value;
+                    if (!returnReason.trim()) {
+                        alert('Please provide a reason for the return');
+                        return;
+                    }
+                    
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    
+                    fetch(`/userp/orders/${orderId}/request-return/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: JSON.stringify({ reason: returnReason })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        alert(data.message || "Return request submitted successfully");
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            if (returnModal) returnModal.style.display = 'none';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error submitting return request:', error);
+                        alert('An error occurred while submitting your return request');
+                        if (returnModal) returnModal.style.display = 'none';
+                    });
+                });
+            }
+        }
+        
+        // Retry Payment Button Functionality
+        const retryPaymentBtn = document.getElementById('retryPaymentBtn');
+        if (retryPaymentBtn) {
+            retryPaymentBtn.addEventListener('click', function() {
+                const orderId = this.getAttribute('data-order-id');
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                // Show loading state
+                retryPaymentBtn.disabled = true;
+                retryPaymentBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
+                
+                // Load Razorpay script first
+                loadRazorpayScript(function() {
+                    // Then proceed with payment API call
+                    fetch(`/userp/orders/${orderId}/retry-payment/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            // Initialize Razorpay payment
+                            const options = {
+                                key: data.payment_data.key_id,
+                                amount: data.payment_data.amount,
+                                currency: data.payment_data.currency,
+                                name: "Fragrance Haven", // Your store name
+                                description: "Order Payment",
+                                order_id: data.payment_data.order_id,
+                                handler: function(response) {
+                                    // Handle successful payment
+                                    window.location.href = `/order-confirmation/${orderId}/`;
+                                },
+                                prefill: {
+                                    name: data.payment_data.name,
+                                    email: data.payment_data.email,
+                                    contact: data.payment_data.phone
+                                },
+                                theme: {
+                                    color: "#00a0a0"
+                                },
+                                modal: {
+                                    ondismiss: function() {
+                                        // Reset button when payment modal is closed
+                                        retryPaymentBtn.disabled = false;
+                                        retryPaymentBtn.innerHTML = '<i class="fas fa-credit-card mr-2"></i> Retry Payment';
+                                    }
+                                }
+                            };
+                            
+                            const rzp = new Razorpay(options);
+                            rzp.on('payment.failed', function(response) {
+                                alert('Payment failed. Please try again.');
+                                retryPaymentBtn.disabled = false;
+                                retryPaymentBtn.innerHTML = '<i class="fas fa-credit-card mr-2"></i> Retry Payment';
+                            });
+                            
+                            rzp.open();
+                        } else {
+                            alert(data.message || "Failed to initialize payment");
+                            retryPaymentBtn.disabled = false;
+                            retryPaymentBtn.innerHTML = '<i class="fas fa-credit-card mr-2"></i> Retry Payment';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while processing your request');
+                        retryPaymentBtn.disabled = false;
+                        retryPaymentBtn.innerHTML = '<i class="fas fa-credit-card mr-2"></i> Retry Payment';
+                    });
+                });
+            });
+        }
+    });
+    </script>
+{% endblock %}

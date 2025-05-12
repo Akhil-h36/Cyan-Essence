@@ -1,0 +1,692 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block content %}
+  <div class="container-fluid mt-3 ">
+    <!-- Breadcrumb navigation -->
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+          <a href="/adminapp/adminlog/" class="text-light">Admin</a>
+        </li>
+        <li class="breadcrumb-item active text-info" aria-current="page">
+          Offer Management
+        </li>
+      </ol>
+    </nav>
+    
+    <!-- Offer Management section -->
+    <div class="row">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h3 class="text-light">Manage Offers</h3>
+          <button
+            type="button"
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#addOfferModal"
+          >
+            Add New Offer
+          </button>
+        </div>
+        
+        <!-- Check if there are offers to display -->
+        {% if offers.count == 0 %}
+          <div class="alert alert-info text-center" role="alert">No offers found.</div>
+        {% else %}
+          <!-- Offer Table -->
+          <div class="table-responsive">
+            <table class="table table-dark table-hover text-center">
+              <thead class="table-dark">
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Offer Name</th>
+                  <th scope="col">Offer Type</th>
+                  <th scope="col">Applicable To</th>
+                  <th scope="col">Discount</th>
+                  <th scope="col">Valid From</th>
+                  <th scope="col">Valid Until</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Loop through offers data -->
+                {% for offer in offers %}
+                  <tr data-offer-id="{{ offer.id }}">
+                    <th scope="row">{{ forloop.counter|add:offers.start_index|add:-1 }}</th>
+                    <td>{{ offer.offer_name }}</td>
+                    <td>{{ offer.get_offer_type_display }}</td>
+                    <td>
+                      {% if offer.offer_type == 'product' %}
+                        {{ offer.product.product_name }}
+                      {% elif offer.offer_type == 'brand' %}
+                        {{ offer.brand.brand_name }}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if offer.discount_type == 'percentage' %}
+                        {{ offer.discount_value }}%
+                      {% else %}
+                        ₹{{ offer.discount_value }}
+                      {% endif %}
+                    </td>
+                    <td>{{ offer.valid_from|date:"d M Y" }}</td>
+                    <td>{{ offer.valid_to|date:"d M Y" }}</td>
+                    <td>
+                      <span 
+                        id="statusDisplay{{ offer.id }}" 
+                        class="badge w-100 py-2 {% if offer.is_active %}bg-success{% else %}bg-danger{% endif %}" 
+                        style="cursor: pointer;" 
+                        onclick="toggleOfferStatus('{{ offer.id }}')">
+                        {% if offer.is_active %}active{% else %}inactive{% endif %}
+                      </span>
+                    </td>
+                    <td class="d-flex gap-2">
+                      <button class="btn btn-outline-light w-100" data-bs-toggle="modal" data-bs-target="#editOfferModal{{ offer.id }}">Edit</button>
+                      <button class="btn btn-outline-danger w-100" onclick="deleteOffer('{{ offer.id }}')">Delete</button>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endif %}
+        
+        <!-- Pagination Controls -->
+        {% if is_paginated %}
+          <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+              {% if page_obj.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a>
+                </li>
+              {% endif %}
+              
+              {% for i in paginator.page_range %}
+                <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                  <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                </li>
+              {% endfor %}
+              
+              {% if page_obj.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+<!-- Bootstrap Modal for Adding Offer -->
+<div
+  class="modal fade"
+  id="addOfferModal"
+  tabindex="-1"
+  aria-labelledby="addOfferModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark text-light">
+      <div class="modal-header bg-dark text-light">
+        <h5 class="modal-title" id="addOfferModalLabel">Add New Offer</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <!-- Add Offer Form -->
+        <form>
+          <div class="mb-3">
+            <label for="offerType" class="form-label">Offer Type</label>
+            <select class="form-select" id="offerType" required>
+              <option value="" selected>Select Offer Type</option>
+              <option value="product">Product Offer</option>
+              <option value="brand">Brand Offer</option>
+            </select>
+          </div>
+
+          <div id="productCategorySection" class="mb-3">
+            <!-- This section will be dynamically updated based on the offer type -->
+            <label for="productOrCategory" class="form-label"
+              >Select Product/Brand</label
+            >
+            <select class="form-select" id="productOrCategory" required>
+              <option value="" selected>Select Product or Brand</option>
+              <!-- Products or Brands options will go here -->
+            </select>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="discountType" class="form-label">Discount Type</label>
+              <select class="form-select" id="discountType" required>
+                <option value="" selected>Select Discount Type</option>
+                <option value="percentage">Percentage</option>
+                <option value="fixed">Fixed Amount</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="discountValue" class="form-label"
+                >Discount Value</label
+              >
+              <input type="number" class="form-control custom-search-input" id="discountValue" 
+              min="0" {% if offer.discount_type == 'percentage' %}max="100"{% endif %} 
+              step="0.01" required>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="maxDiscountAmount" class="form-label"
+                >Max Discount Amount (Optional)</label
+              >
+              <input
+                type="number"
+                class="form-control custom-search-input"
+                id="maxDiscountAmount"
+                placeholder="Enter Max Discount Amount"
+              />
+            </div>
+            <div class="col-md-6">
+              <label for="minCartValue" class="form-label"
+                >Minimum Cart Value (Optional)</label
+              >
+              <input
+                type="number"
+                class="form-control custom-search-input"
+                id="minCartValue"
+                placeholder="Enter Minimum Cart Value"
+              />
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="validFrom" class="form-label">Valid From</label>
+              <input type="date" class="form-control custom-search-input" id="validFrom" required />
+            </div>
+            <div class="col-md-6">
+              <label for="validUntil" class="form-label">Valid Until</label>
+              <input
+                type="date"
+                class="form-control custom-search-input"
+                id="validUntil"
+                required
+              />
+            </div>
+          </div>
+          <button type="submit" onclick="addOffer(event)" class="btn btn-primary">Add Offer</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Offer Modals (one for each offer) -->
+{% for offer in offers %}
+  <div class="modal fade" id="editOfferModal{{ offer.id }}" tabindex="-1" aria-labelledby="editOfferModalLabel{{ offer.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content bg-dark text-light">
+        <div class="modal-header bg-dark text-light">
+          <h5 class="modal-title" id="editOfferModalLabel{{ offer.id }}">Edit {{ offer.offer_name }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form class="edit-offer-form" data-offer-id="{{ offer.id }}">
+            <div class="mb-3">
+              <label for="offerType{{ offer.id }}" class="form-label">Offer Type</label>
+              <input type="text" class="form-control custom-search-input" id="offerType{{ offer.id }}" value="{{ offer.get_offer_type_display }}" readonly>
+            </div>
+
+            {% if offer.offer_type == 'brand' and offer.brand %}
+          <div class="mb-3">
+            <label for="brandName{{ offer.id }}" class="form-label">Brand Name</label>
+            <input type="text" class="form-control custom-search-input" id="brandName{{ offer.id }}" value="{{ offer.brand.brand_name }}" readonly>
+          </div>
+        {% elif offer.offer_type == 'product' and offer.product %}
+          <div class="mb-3">
+            <label for="productName{{ offer.id }}" class="form-label">Product Name</label>
+            <input type="text" class="form-control custom-search-input" id="productName{{ offer.id }}" value="{{ offer.product.product_name }}" readonly>
+          </div>
+        {% endif %}
+
+        <div class="mb-3">
+          <label for="discountType{{ offer.id }}" class="form-label">Discount Type</label>
+          <select class="form-select" id="discountType{{ offer.id }}">
+            <option value="percentage" {% if offer.discount_type == 'percentage' %}selected{% endif %}>Percentage</option>
+            <option value="fixed" {% if offer.discount_type == 'fixed' %}selected{% endif %}>Fixed Amount</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="discountValue{{ offer.id }}" class="form-label">Discount Value</label>
+          <input type="number" class="form-control custom-search-input" id="discountValue{{ offer.id }}" value="{{ offer.discount_value }}">
+        </div>
+        <div class="mb-3">
+          <label for="maxDiscount{{ offer.id }}" class="form-label">Max Discount Amount</label>
+          <input type="number" class="form-control custom-search-input" id="maxDiscount{{ offer.id }}" value="{{ offer.max_discount_amount|default_if_none:'' }}">
+        </div>
+        <div class="mb-3">
+          <label for="validFrom{{ offer.id }}" class="form-label">Valid From</label>
+          <input type="date" class="form-control custom-search-input" id="validFrom{{ offer.id }}" value="{{ offer.valid_from|date:'Y-m-d' }}">
+        </div>
+        <div class="mb-3">
+          <label for="validUntil{{ offer.id }}" class="form-label">Valid Until</label>
+          <input type="date" class="form-control custom-search-input" id="validUntil{{ offer.id }}" value="{{ offer.valid_to|date:'Y-m-d' }}">
+        </div>
+        <div class="mb-3">
+          <label for="minCartValue{{ offer.id }}" class="form-label">Minimum Cart Value</label>
+          <input type="number" class="form-control custom-search-input" id="minCartValue{{ offer.id }}" value="{{ offer.min_cart_value|default_if_none:'0' }}">
+        </div>
+        <button type="submit" class="btn btn-primary">Update Offer</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+
+{% block extra_scripts %}
+ <!-- <script src="{% static '/js/offerManagement.js' %}"></script> -->
+  <script>
+    // Fetch products or brands based on offer type
+function fetchEntitiesByType(type) {
+    if (!type) return;
+    
+    fetch(`/adminapp/admin/offers/get-entities?type=${type}`)
+        .then(response => response.json())
+        .then(data => {
+            const selectElement = document.getElementById('productOrCategory');
+            selectElement.innerHTML = '<option value="" selected>Select ' + (type === 'product' ? 'Product' : 'Brand') + '</option>';
+            
+            data.entities.forEach(entity => {
+                const option = document.createElement('option');
+                option.value = entity.id;
+                option.textContent = entity.name;
+                selectElement.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching entities:', error);
+            showToast('Error fetching ' + (type === 'product' ? 'products' : 'brands'), 'danger');
+        });
+}
+
+// Add new offer with comprehensive validation
+function addOffer(event) {
+    event.preventDefault();
+    
+    const offerType = document.getElementById('offerType').value;
+    const entityId = document.getElementById('productOrCategory').value;
+    const discountType = document.getElementById('discountType').value;
+    const discountValueInput = document.getElementById('discountValue');
+    const discountValue = parseFloat(discountValueInput.value);
+    const maxDiscountAmount = document.getElementById('maxDiscountAmount').value ? parseFloat(document.getElementById('maxDiscountAmount').value) : null;
+    const minCartValue = document.getElementById('minCartValue').value ? parseFloat(document.getElementById('minCartValue').value) : 0;
+    const validFrom = document.getElementById('validFrom').value;
+    const validTo = document.getElementById('validUntil').value;
+    
+    // Frontend validation
+    if (!offerType) {
+        showToast('Please select offer type', 'danger');
+        document.getElementById('offerType').focus();
+        return;
+    }
+    
+    if (!entityId) {
+        showToast(`Please select ${offerType === 'product' ? 'a product' : 'a brand'}`, 'danger');
+        document.getElementById('productOrCategory').focus();
+        return;
+    }
+    
+    if (!discountType) {
+        showToast('Please select discount type', 'danger');
+        document.getElementById('discountType').focus();
+        return;
+    }
+    
+    if (isNaN(discountValue) || discountValue <= 0) {
+        showToast('Please enter a valid positive discount value', 'danger');
+        discountValueInput.focus();
+        return;
+    }
+    
+    if (discountType === 'percentage' && discountValue > 100) {
+        showToast('Percentage discount cannot exceed 100%', 'danger');
+        discountValueInput.focus();
+        return;
+    }
+    
+    if (!validFrom || !validTo) {
+        showToast('Please select both start and end dates', 'danger');
+        return;
+    }
+    
+    // Date validation - compare as strings in YYYY-MM-DD format
+    if (validTo < validFrom) {
+        showToast('End date must be after start date', 'danger');
+        document.getElementById('validUntil').focus();
+        return;
+    }
+    
+    // Check if end date is in the past (compare with today in YYYY-MM-DD format)
+    const today = new Date().toISOString().split('T')[0];
+    if (validTo < today) {
+        showToast('End date cannot be in the past', 'danger');
+        document.getElementById('validUntil').focus();
+        return;
+    }
+    
+    // Create offer object with UTC dates
+    const offerData = {
+        offer_name: `${offerType === 'product' ? 'Product' : 'Brand'} Offer - ${new Date().toISOString().split('T')[0]}`,
+        offer_type: offerType,
+        discount_type: discountType,
+        discount_value: discountValue,
+        valid_from: `${validFrom}T00:00:00Z`,  // UTC time
+        valid_to: `${validTo}T23:59:59Z`,     // UTC time
+        description: `${discountType === 'percentage' ? discountValue + '% off' : '₹' + discountValue + ' off'}`,
+        is_active: true,
+        max_discount_amount: maxDiscountAmount,
+        min_cart_value: minCartValue
+    };
+    
+    // Add product or brand ID
+    if (offerType === 'product') {
+        offerData.product_id = entityId;
+    } else {
+        offerData.brand_id = entityId;
+    }
+    
+    // Send AJAX request
+    fetch('/adminapp/admin/offers/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(offerData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Offer added successfully', 'success');
+            // Close modal and reload using vanilla JS
+            const modal = document.getElementById('addOfferModal');
+            const bootstrapModal = bootstrap.Modal.getInstance(modal);
+            bootstrapModal.hide();
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showToast(data.message || 'Error adding offer', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding offer:', error);
+        showToast('Error adding offer', 'danger');
+    });
+}
+
+// Update existing offer with comprehensive validation
+function updateOffer(offerId) {
+    const discountType = document.getElementById(`discountType${offerId}`).value;
+    const discountValueInput = document.getElementById(`discountValue${offerId}`);
+    const discountValue = parseFloat(discountValueInput.value);
+    const maxDiscount = document.getElementById(`maxDiscount${offerId}`).value ? parseFloat(document.getElementById(`maxDiscount${offerId}`).value) : null;
+    const validFrom = document.getElementById(`validFrom${offerId}`).value;
+    const validUntil = document.getElementById(`validUntil${offerId}`).value;
+    const minCartValue = document.getElementById(`minCartValue${offerId}`).value ? parseFloat(document.getElementById(`minCartValue${offerId}`).value) : 0;
+    
+    // Frontend validation
+    if (!discountType) {
+        showToast('Please select discount type', 'danger');
+        document.getElementById(`discountType${offerId}`).focus();
+        return;
+    }
+    
+    if (isNaN(discountValue) || discountValue <= 0) {
+        showToast('Please enter a valid positive discount value', 'danger');
+        discountValueInput.focus();
+        return;
+    }
+    
+    if (discountType === 'percentage' && discountValue > 100) {
+        showToast('Percentage discount cannot exceed 100%', 'danger');
+        discountValueInput.focus();
+        return;
+    }
+    
+    if (!validFrom || !validUntil) {
+        showToast('Please select both start and end dates', 'danger');
+        return;
+    }
+    
+    // Date validation
+    if (validUntil <= validFrom) {
+        showToast('End date must be after start date', 'danger');
+        document.getElementById(`validUntil${offerId}`).focus();
+        return;
+    }
+    
+    // Check if end date is in the past (compare with today in YYYY-MM-DD format)
+    const today = new Date().toISOString().split('T')[0];
+    if (validUntil < today) {
+        showToast('End date cannot be in the past', 'danger');
+        document.getElementById(`validUntil${offerId}`).focus();
+        return;
+    }
+    
+    // Create offer object with UTC dates
+    const offerData = {
+        offer_name: document.querySelector(`#editOfferModal${offerId} .modal-title`).textContent.replace('Edit ', ''),
+        discount_type: discountType,
+        discount_value: discountValue,
+        valid_from: `${validFrom}T00:00:00Z`,  // UTC time
+        valid_to: `${validUntil}T23:59:59Z`,   // UTC time
+        description: `${discountType === 'percentage' ? discountValue + '% off' : '₹' + discountValue + ' off'}`,
+        max_discount_amount: maxDiscount,
+        min_cart_value: minCartValue
+    };
+    
+    // Send AJAX request
+    fetch(`/adminapp/admin/offers/update/${offerId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(offerData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Offer updated successfully', 'success');
+            // Close modal and reload using vanilla JS
+            const modal = document.getElementById(`editOfferModal${offerId}`);
+            const bootstrapModal = bootstrap.Modal.getInstance(modal);
+            bootstrapModal.hide();
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showToast(data.message || 'Error updating offer', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating offer:', error);
+        showToast('Error updating offer', 'danger');
+    });
+}
+
+// Toggle offer status (active/inactive)
+function toggleOfferStatus(offerId) {
+    fetch(`/adminapp/admin/offers/toggle-status/${offerId}`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const statusDisplay = document.getElementById(`statusDisplay${offerId}`);
+            statusDisplay.textContent = data.status;
+            statusDisplay.className = `badge w-100 py-2 ${data.status === 'active' ? 'bg-success' : 'bg-danger'}`;
+            showToast(`Offer ${data.status === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
+        } else {
+            showToast(data.message || 'Error toggling offer status', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error toggling offer status:', error);
+        showToast('Error toggling offer status', 'danger');
+    });
+}
+
+// Delete offer
+function deleteOffer(offerId) {
+    if (confirm('Are you sure you want to delete this offer? This action cannot be undone.')) {
+        fetch(`/adminapp/admin/offers/delete/${offerId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Offer deleted successfully', 'success');
+                // Remove the row from the table
+                const row = document.querySelector(`tr[data-offer-id="${offerId}"]`);
+                if (row) {
+                    row.remove();
+                }
+                // If no offers left, reload page to show "No offers found" message
+                if (document.querySelectorAll('tbody tr').length === 0) {
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                }
+            } else {
+                showToast(data.message || 'Error deleting offer', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting offer:', error);
+            showToast('Error deleting offer', 'danger');
+        });
+    }
+}
+
+// Helper function to show toast notifications
+function showToast(message, type) {
+    // Check if toast container exists, if not create it
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+    }
+    
+    // Create toast element
+    const toastId = 'toast-' + Date.now();
+    const toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    `;
+    
+    // Add toast to container
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+    
+    // Initialize and show toast
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+    toast.show();
+    
+    // Remove toast after it's hidden
+    toastElement.addEventListener('hidden.bs.toast', function() {
+        toastElement.remove();
+    });
+}
+
+// Helper function to get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Initialize date inputs and event listeners when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default dates for add form (today and 7 days later)
+    const today = new Date();
+    const nextWeek = new Date(today);
+    nextWeek.setDate(today.getDate() + 7);
+    
+    // Format dates for input elements (YYYY-MM-DD)
+    const formatDate = (date) => {
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    };
+    
+    // Set default dates for add form
+    if (document.getElementById('validFrom')) {
+        document.getElementById('validFrom').value = formatDate(today);
+        document.getElementById('validFrom').min = formatDate(today); // Prevent past dates
+    }
+    if (document.getElementById('validUntil')) {
+        document.getElementById('validUntil').value = formatDate(nextWeek);
+        document.getElementById('validUntil').min = formatDate(today); // Prevent past dates
+    }
+    
+    // Handle offer type change in add form
+    const offerTypeSelect = document.getElementById('offerType');
+    if (offerTypeSelect) {
+        offerTypeSelect.addEventListener('change', function() {
+            fetchEntitiesByType(this.value);
+        });
+    }
+    
+    // Initialize edit offer forms
+    const editForms = document.querySelectorAll('.edit-offer-form');
+    editForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const offerId = this.dataset.offerId;
+            updateOffer(offerId);
+        });
+    });
+    
+    // Set minimum dates for edit forms (today)
+    editForms.forEach(form => {
+        const offerId = form.dataset.offerId;
+        const validUntilInput = document.getElementById(`validUntil${offerId}`);
+        if (validUntilInput) {
+            validUntilInput.min = formatDate(new Date());
+        }
+    });
+});
+  </script>
+{% endblock %}
