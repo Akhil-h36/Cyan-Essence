@@ -179,6 +179,11 @@
                 <button type="submit" class="resend-btn" id="resend-btn" disabled>Resend OTP</button>
             </form>
         </div>
+        <div class="debug-info" style="display: none;">
+            Session OTP: {{ request.session.otp }}<br>
+            Session Email: {{ request.session.email }}<br>
+            Session User ID: {{ request.session.signup_user_id }}
+        </div>
     </div>
 
     <script>
