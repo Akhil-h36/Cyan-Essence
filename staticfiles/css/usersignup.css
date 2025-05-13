@@ -1,7 +1,7 @@
 /* Custom styling on top of Bootstrap */
 body {
     font-family: 'Gruppo', sans-serif;
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.868);
     min-height: 100vh;
     margin: 0;
     padding: 0;
@@ -32,6 +32,7 @@ body {
 
 /* Login Form */
 .login-form {
+    color: white;
     position: relative;
     z-index: 2;
 }
@@ -44,6 +45,7 @@ h1 {
 }
 
 .form-label {
+    color: white;
     font-size: 14px;
     opacity: 0.7;
     margin-bottom: 0; /* Remove bottom margin completely */
@@ -88,26 +90,6 @@ h1 {
     background-color: #333333;
     color: white;
 }
-
-
-.dob {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.dob .form-select {
-    background: rgba(0, 0, 0, 0.5);
-   
-    border: 1px solid rgba(30, 18, 18, 0.3);
-    padding: 5px;
-    width: 80px;
-    border-radius: 5px;
-    text-align: center;
-}
-
 
 
 /* Adjust form elements for smaller screens */

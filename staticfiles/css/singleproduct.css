@@ -79,7 +79,7 @@
   .product-description {
     font-family: 'Gruppo';
     margin-bottom: 30px;
-    font-size: 20px;
+    font-size: 10px;
     color: #666;
   }
   
@@ -127,24 +127,11 @@
     color: #666;
   }
   
-  .buy-now-btn {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 12px 30px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: background-color 0.3s;
-  }
-  
-  .buy-now-btn:hover {
-    background-color: #156b63;
-  }
+.
   
   /* Product Gallery */
   .product-gallery {
+    position: relative;
     display: flex;
     align-items: center;
     background-color: #fff;
@@ -187,7 +174,9 @@
     max-height: 100%;
     object-fit: contain;
   }
-  
+/* Magnifying Lens Zoom - Updated Styles */
+
+
   /* Tabs Section */
   .product-details {
     background-color: #fff;

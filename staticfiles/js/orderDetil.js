@@ -134,13 +134,13 @@ async function downloadInvoice(orderId) {
     // Company Header
     doc.setFontSize(28);
     doc.setTextColor(44, 62, 80);
-    doc.text("PEAKPIX", 105, 25, { align: "center" });
+    doc.text("CyanEssence", 105, 25, { align: "center" });
     
     doc.setFontSize(12);
     doc.setTextColor(100);
     doc.text("Premium Audio Equipment", 105, 35, { align: "center" });
     doc.text("123 Audio Street, Sound City, 12345", 105, 40, { align: "center" });
-    doc.text("Phone: +1 234-567-8900 | Email: sales@peakpix.com", 105, 45, { align: "center" });
+    doc.text("Phone: +1 234-567-8900 | Email: sales@cyanessence.com", 105, 45, { align: "center" });
     
     // Invoice Title
     doc.setFontSize(20);
@@ -246,10 +246,10 @@ async function downloadInvoice(orderId) {
     doc.setFontSize(8);
     doc.setTextColor(128);
     doc.text('This is a computer-generated invoice and does not require a signature.', 105, pageHeight - 25, { align: 'center' });
-    doc.text('Thank you for shopping with PEAKPIX!', 105, pageHeight - 20, { align: 'center' });
+    doc.text('Thank you for shopping with cyanessence!', 105, pageHeight - 20, { align: 'center' });
 
     // Save the PDF
-    doc.save(`PEAKPIX_Invoice_${orderId}.pdf`);
+    doc.save(`Cyanessence_Invoice_${orderId}.pdf`);
 
   } catch (error) {
     console.error('Error details:', error);
