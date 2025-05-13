@@ -37,6 +37,7 @@ cyan/media/
 echo "staticfiles/" >> .gitignore
 
 
+
 # Test/coverage
 .coverage
 .cache
