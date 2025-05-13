@@ -205,8 +205,7 @@ def usersignup(request):
             request.session['otp'] = otp
             request.session['email'] = email
             request.session['signup_user_id'] = signup_obj.id
-            # Explicitly save the session to ensure data is persisted
-            request.session.save()
+            request.session.save()  # Explicitly save session
             
             print(f"Generated OTP for {email}: {otp}")
             logger.debug(f"Session data stored - OTP: {otp}, Email: {email}, User ID: {signup_obj.id}")
@@ -234,7 +233,15 @@ def usersignup(request):
             # Use reverse for better URL resolution
             try:
                 from django.urls import reverse
-                return redirect(reverse('userotp'))
+                redirect_url = reverse('userotp')
+                logger.debug(f"Redirecting to: {redirect_url}")
+                return redirect(redirect_url)
+            
+            except Exception as e:
+                logger.error(f"URL resolution error: {e}")
+                return redirect('userotp')
+
+
             except:
                 # Fallback to regular redirect if reverse fails
                 return redirect('userotp')
@@ -342,10 +349,10 @@ def enteremail(request):
         print(otp)
         print(f"Generated OTP for {email}: {otp}")
 
-        request.session['reset_otp'] = otp  # Keep this consistent
+        request.session['reset_otp'] = otp
         request.session['reset_email'] = email
         request.session['reset_user_id'] = user.id
-        request.session.save()
+        request.session.save()  # Explicitly save session
 
         print(f"Generated OTP for {email}: {otp}")
         # Send OTP via email
@@ -356,13 +363,9 @@ def enteremail(request):
         messages.success(request, "OTP sent to your email. Please verify.")
 
         # Redirect to OTP entry page
-        return redirect('fogototp')
+        return redirect('forgototp')
 
     return render(request, 'authentication1/resetpassword.html')
-
-
-
-
 
 # ################################################################
 
