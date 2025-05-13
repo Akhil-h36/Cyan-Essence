@@ -184,14 +184,10 @@ def usersignup(request):
 
             if referring_user:
                 try:
-                  
                     referring_wallet = Wallet.objects.get(user=referring_user)
-                    
-                   
                     REFERRAL_BONUS = Decimal('1000.00')
                     referring_wallet.balance += REFERRAL_BONUS
                     referring_wallet.save()
-                    
                     
                     WalletTransaction.objects.create(
                         wallet=referring_wallet,
@@ -199,23 +195,20 @@ def usersignup(request):
                         transaction_amount=REFERRAL_BONUS,
                         description=f"Referral bonus from {signup_obj.email}"
                     )
-                    
-                    # You could also add a notification here
-                    
                 except Exception as wallet_error:
-                    
                     logger.error(f"Wallet referral error: {wallet_error}")
-
-
 
             # Generate OTP
             otp = f"{random.randint(0, 9999):04d}"
-            print(otp)
+            
             # Store OTP in session
             request.session['otp'] = otp
             request.session['email'] = email
-            request.session['signup_user_id'] = signup_obj.id  
+            request.session['signup_user_id'] = signup_obj.id
+            request.session.save()  # Explicitly save session
+            
             print(f"Generated OTP for {email}: {otp}")
+            logger.debug(f"Session data stored - OTP: {otp}, Email: {email}, User ID: {signup_obj.id}")
            
             subject = "Your OTP for Signup Verification"
             message = f"Hello {fname},\n\nYour OTP for account verification is: {otp}\n\nDo not share it with anyone."
@@ -237,7 +230,21 @@ def usersignup(request):
                 return redirect('signup')
 
             messages.success(request, "Account created successfully. OTP sent to your email.")
-            return redirect('userotp')
+            # Use reverse for better URL resolution
+            try:
+                from django.urls import reverse
+                redirect_url = reverse('userotp')
+                logger.debug(f"Redirecting to: {redirect_url}")
+                return redirect(redirect_url)
+            
+            except Exception as e:
+                logger.error(f"URL resolution error: {e}")
+                return redirect('userotp')
+
+
+            except:
+                # Fallback to regular redirect if reverse fails
+                return redirect('userotp')
 
         except Exception as e:
             # Log the error
@@ -250,6 +257,15 @@ def usersignup(request):
 
 
 def userotp(request):
+    # Debug session data
+    logger.debug(f"OTP page accessed. Session contains: OTP: {request.session.get('otp')}, "
+                f"Email: {request.session.get('email')}, User ID: {request.session.get('signup_user_id')}")
+    
+    # Check if necessary session data exists
+    if not (request.session.get('otp') and request.session.get('email') and request.session.get('signup_user_id')):
+        messages.error(request, "Session data is missing. Please sign up again.")
+        return redirect('signup')
+    
     if request.method == "POST":
         entered_otp = (
             request.POST.get('otp1', '') +
@@ -261,11 +277,9 @@ def userotp(request):
         stored_otp = request.session.get('otp')
         email = request.session.get('email')
         user_id = request.session.get('signup_user_id')
-
-        if not stored_otp:
-            messages.error(request, "Session expired. Please sign up again.")
-            return redirect('signup')
-
+        
+        logger.debug(f"OTP validation: Entered={entered_otp}, Stored={stored_otp}")
+        
         if entered_otp == str(stored_otp):
             try:
                 # Get and activate the user
@@ -274,11 +288,10 @@ def userotp(request):
                 user.save()
                 
                 # Clear session data
-                del request.session['otp']
-                if 'email' in request.session:
-                    del request.session['email']
-                if 'signup_user_id' in request.session:
-                    del request.session['signup_user_id']
+                request.session.pop('otp', None)
+                request.session.pop('email', None)
+                request.session.pop('signup_user_id', None)
+                request.session.save()
                 
                 messages.success(request, "Account activated successfully. You can now log in.")
                 return redirect('login')
@@ -288,8 +301,9 @@ def userotp(request):
         else:
             messages.error(request, "Invalid OTP. Please try again.")
 
-    return render(request, 'authentication1/userotp.html')
-
+    # Pass email to the template for better user experience
+    user_email = request.session.get('email', '')
+    return render(request, 'authentication1/userotp.html', {'email': user_email})
 
 
 def resend_otp(request):
@@ -319,7 +333,7 @@ def resend_otp(request):
 
 def enteremail(request):
     if request.method == "POST":
-        email = request.POST.get('email')
+        email = request.POST.get('email', '').strip()
 
         # Check if the email exists in usertable
         users = usertable.objects.filter(email=email)
@@ -331,11 +345,15 @@ def enteremail(request):
             return redirect('resetemail')
 
         # Generate OTP
-        otp = random.randint(1000, 9999)
+        otp = f"{random.randint(1000, 9999):04d}"
         print(otp)
         print(f"Generated OTP for {email}: {otp}")
-        request.session['otp'] = otp
-        request.session['email'] = email
+
+        request.session['reset_otp'] = otp
+        request.session['reset_email'] = email
+        request.session['reset_user_id'] = user.id
+        request.session.save()  # Explicitly save session
+
         print(f"Generated OTP for {email}: {otp}")
         # Send OTP via email
         subject = "Password Reset OTP"
@@ -345,19 +363,14 @@ def enteremail(request):
         messages.success(request, "OTP sent to your email. Please verify.")
 
         # Redirect to OTP entry page
-        return redirect('fogototp')
+        return redirect('forgototp')
 
     return render(request, 'authentication1/resetpassword.html')
-
-
-
-
 
 # ################################################################
 
 def forgototp(request):
     if request.method == "POST":
-        # Collect the OTP digits
         entered_otp = (
             request.POST.get('otp1', '') +
             request.POST.get('otp2', '') +
@@ -365,10 +378,8 @@ def forgototp(request):
             request.POST.get('otp4', '')
         )
         
-        stored_otp = request.session.get('otp')
-        email = request.session.get('email')
-        
-        
+        stored_otp = request.session.get('reset_otp')  # Changed to reset_otp
+        email = request.session.get('reset_email')     # Changed to reset_email
 
         # Debug print statements
         print(f"Entered OTP: {entered_otp}")
@@ -379,7 +390,6 @@ def forgototp(request):
             messages.error(request, "Session expired. Please enter your email again.")
             return redirect('resetemail')  
 
-        # Convert both to strings and ensure they match exactly
         if str(entered_otp) == str(stored_otp):
             messages.success(request, "OTP verified successfully. You can reset your password.")
             return redirect('resetpass') 
@@ -388,25 +398,18 @@ def forgototp(request):
 
     return render(request, 'authentication1/forgototp.html')
 
+
 def resendpassotp(request):
-    """
-    Resend OTP for password reset functionality.
-    Similar to resend_otp but for the password reset flow.
-    """
-    email = request.session.get('email')
+    email = request.session.get('reset_email')  # Changed to reset_email
 
     if not email:
         messages.error(request, "Session expired. Please enter your email again.")
         return redirect('resetemail')
 
     try:
-        # Generate new OTP
         new_otp = f"{random.randint(0, 9999):04d}"
-        request.session['otp'] = new_otp
-        print(new_otp)
-        print(f"Generated new OTP for password reset: {new_otp}")
-
-        # Send OTP via email
+        request.session['reset_otp'] = new_otp  # Changed to reset_otp
+        
         subject = "New Password Reset OTP"
         message = f"Hello,\n\nYour new OTP for password reset is: {new_otp}\n\nDo not share it with anyone."
         send_mail(subject, message, 'your_email@gmail.com', [email])
@@ -414,7 +417,6 @@ def resendpassotp(request):
         messages.success(request, "A new OTP has been sent to your email.")
         return redirect('fogototp')
     except Exception as e:
-        # Log the error
         logger.error(f"Error resending password reset OTP: {e}")
         messages.error(request, "Failed to send OTP. Please try again.")
         return redirect('fogototp')

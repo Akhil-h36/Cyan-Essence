@@ -1,0 +1,105 @@
+
+a {
+  text-decoration: none;
+}
+
+.btn-custom {
+  background-color: #0C4BB1 !important; 
+  border-color: #0C4BB1 !important; 
+  color: #fff !important; 
+}
+
+.btn-custom:hover {
+  background-color: #0A3F91 !important; 
+  border-color: #0A3F91 !important; 
+}
+
+/* Filter Slider */
+#price-slider .noUi-connect {
+  background: black; /* Adjust the color of the connecting line */
+}
+
+/* Remove default box-shadow and inner shadow */
+.noUi-handle {
+  box-shadow: none; /* Removes default shadow */
+}
+
+/* Adjust the thickness of the slider track */
+.noUi-target,
+.noUi-base,
+.noUi-connect {
+  height: 8px; /* Adjust the thickness as needed */
+}
+
+/* Adjust the base track height (unfilled portion) */
+.noUi-base {
+  background: #ddd; /* Optional: change the background color */
+}
+
+/* Adjust the filled portion of the track */
+.noUi-connect {
+  background: black; /* Adjust the color of the filled portion */
+}
+
+/* Customize the handle appearance */
+.noUi-horizontal .noUi-handle {
+  background-color: black; /* Black color for the handle */
+  border-radius: 50%; /* Circular handle */
+  width: 20px; /* Adjust size as needed */
+  height: 20px; /* Adjust size as needed */
+  border: none; /* Removes any border */
+}
+
+
+/* Remove any additional shadows on the handle */
+.noUi-handle:before,
+.noUi-handle:after {
+  display: none; /* Hide the default before and after pseudo-elements */
+}
+
+
+.card-link {
+  text-decoration: none; /* Remove underline */
+  color: inherit; /* Inherit text color from parent */
+}
+
+/* Style the card image and body */
+.card-link img {
+  display: block; /* Ensure the image occupies the full width */
+}
+
+/* Optional: add some styling for the card body */
+.card-body {
+  padding: 16px;
+  border-bottom: 1px solid #e0e0e0; /* Add a border to separate content from footer */
+}
+
+/* Optional: Add styling for the card footer */
+.card-footer {
+  padding: 16px;
+}
+
+.modal-content {
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.modal-body {
+  padding: 2rem;
+}
+
+.form-label {
+  font-weight: 500;
+}

@@ -1,0 +1,185 @@
+/* Custom styling on top of Bootstrap */
+body {
+    font-family: 'Gruppo', sans-serif;
+    color: rgba(255, 255, 255, 0.8);
+    min-height: 100vh;
+    /* position: relative; */
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+/* Background image */
+.bg-image {
+    
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('C:/Users/akhil/OneDrive/Desktop/project/cyan/authentication1/static/images/login_back.webp') center/cover no-repeat;
+    z-index: -2;
+}
+
+.bg-image::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* background: linear-gradient(135deg, rgba(148, 185, 167, 0.8) 0%, rgba(26, 58, 58, 0.9) 100%); */
+    /* z-index: -1; */
+}
+
+/* Perfume Bottle Styling */
+.perfume-bottle {
+    background-color: rgba(27, 45, 45, 0.8);
+    border-radius: 25px;
+    box-shadow: 0 25px 45px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    padding: 2rem;
+    overflow: hidden;
+}
+
+.perfume-bottle::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100px;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
+    border-radius: 25px 25px 0 0;
+    z-index: 0;
+}
+
+.perfume-bottle::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('{% static "images/login_back.webp" %}') center/cover no-repeat;
+    opacity: 0.1;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Login Form */
+.login-form {
+    position: relative;
+    z-index: 2;
+}
+
+h1 {
+    font-family: 'Grey Qo', cursive;
+    font-size: 42px;
+    color: white;
+    font-weight: normal;
+}
+
+.form-label {
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+.form-control {
+    background-color: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 0;
+    padding: 0.5rem 0;
+    color: white;
+    font-family: 'Gruppo', sans-serif;
+    font-size: 16px;
+}
+
+.form-control:focus {
+    background-color: transparent;
+    box-shadow: none;
+    border-color: rgba(255, 255, 255, 0.8);
+    color: white;
+}
+
+.login-btn {
+    padding: 0.75rem;
+    background-color: #272727;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-family: 'Gruppo', sans-serif;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.login-btn:hover {
+    background-color: #333333;
+    color: white;
+}
+
+.forgot-link, .create-link {
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s;
+}
+
+.forgot-link:hover, .create-link:hover {
+    color: white;
+}
+
+.divider {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+}
+.google-login {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+.google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #1e2424;
+    transition: background-color 0.3s;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    font-family: 'Gruppo', sans-serif;
+}
+
+.google-btn img {
+    width: 18px;
+    height: 18px;
+}
+
+.google-btn:hover {
+    background-color: #252e2e;
+    color: white;
+}
+.google_image_container img {
+    max-width: 20px; /* Adjust image size */
+    height: auto;
+}
+
+
+/* Adjust some form elements for smaller screens */
+@media (max-width: 576px) {
+    .perfume-bottle {
+        padding: 1.5rem;
+    }
+    
+    h1 {
+        font-size: 36px;
+    }
+}

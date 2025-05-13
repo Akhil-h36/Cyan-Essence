@@ -1,0 +1,309 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Gruppo', cursive;
+    background-color: #0a5754;
+    color: white;
+    height: 100vh;
+    
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+}
+
+.welcome {
+    font-family: 'Grey Qo', cursive;
+    font-size: 2.5rem;
+    animation: fadeIn 1.5s ease-in-out, float 5s ease-in-out infinite;
+}
+
+.nav {
+    font-family: 'Gruppo', sans-serif;
+    display: flex;
+    gap: 20px;
+}
+
+.nav a {
+    font-size: 25px;
+    color: white;
+    text-decoration: none;
+    position: relative;
+    padding: 5px 0;
+    opacity: 0;
+    animation: slideDown 0.5s forwards;
+}
+
+.nav a:nth-child(1) {
+    animation-delay: 0.2s;
+}
+
+.nav a:nth-child(2) {
+    animation-delay: 0.4s;
+}
+
+.nav a:after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 1px;
+    bottom: 0;
+    left: 0;
+    background-color: white;
+    transition: width 0.3s ease;
+}
+
+.nav a:hover:after {
+    width: 100%;
+}
+
+.profile-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 70vh;
+    perspective: 1000px;
+}
+
+.profile-card {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 15px;
+    padding: 30px;
+    width: 500px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    position: relative;
+    transform-style: preserve-3d;
+    animation: cardEntrance 1.2s ease-out forwards;
+}
+
+.profile-card::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #00ffcc, transparent, #00ffcc, transparent);
+    z-index: -1;
+    border-radius: 17px;
+    background-size: 400%;
+    animation: borderLight 10s linear infinite;
+    opacity: 0;
+    transition: opacity 1s ease;
+}
+
+.profile-card:hover::before {
+    opacity: 0.5;
+}
+
+.form-title {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.8);
+    animation: pulseText 2s infinite;
+    opacity: 0;
+    animation-delay: 1.3s;
+    animation-fill-mode: forwards;
+}
+
+.input-group {
+    margin-bottom: 15px;
+    opacity: 0;
+    transform: translateX(-20px);
+}
+
+.input-group:nth-child(2) {
+    animation: slideInFromLeft 0.5s ease forwards;
+    animation-delay: 1.5s;
+}
+
+.input-group:nth-child(3) {
+    animation: slideInFromLeft 0.5s ease forwards;
+    animation-delay: 1.7s;
+}
+
+.input-group:nth-child(4) {
+    animation: slideInFromLeft 0.5s ease forwards;
+    animation-delay: 1.9s;
+}
+
+.input-group:nth-child(5) {
+    animation: slideInFromLeft 0.5s ease forwards;
+    animation-delay: 2.1s;
+}
+
+.input-field {
+    width: 100%;
+    padding: 12px 15px;
+    border: none;
+    border-radius: 30px;
+    background-color: rgba(0, 0, 0, 0.3);
+    color: white;
+    font-family: 'Gruppo';
+    font-size: 1.4rem;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.input-field:focus {
+    outline: none;
+    background-color: rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+    transform: translateY(-3px);
+}
+
+.update-btn {
+    background-color: #2a8a88;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    font-family: 'Gruppo', sans-serif;
+    font-size: 1rem;
+    border-radius: 30px;
+    cursor: pointer;
+    display: block;
+    margin: 30px auto 0;
+    transition: all 0.3s ease;
+    opacity: 0;
+    animation: blinkIn 0.7s ease forwards;
+    animation-delay: 2.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.update-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: 0.5s;
+}
+
+.update-btn:hover::before {
+    left: 100%;
+}
+
+.update-btn:hover {
+    background-color: #3aa3a0;
+    box-shadow: 0 0 15px rgba(58, 163, 160, 0.5);
+    transform: translateY(-5px);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes cardEntrance {
+    0% {
+        opacity: 0;
+        transform: rotateY(-30deg) translateY(50px) scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: rotateY(0deg) translateY(0) scale(1);
+    }
+}
+
+@keyframes borderLight {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes pulseText {
+    0% { opacity: 0.8; }
+    50% { opacity: 1; }
+    100% { opacity: 0.8; }
+}
+
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes blinkIn {
+    0% { opacity: 0; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Ambient background animation */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 50%, transparent 0%, rgba(0, 0, 0, 0.3) 100%);
+    pointer-events: none;
+    animation: ambientPulse 15s ease infinite;
+}
+
+@keyframes ambientPulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 0.5; }
+}
+.readonly-field {
+    pointer-events: none;
+    background-color: rgba(0, 0, 0, 0.2) !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.edit-mode .input-field {
+    pointer-events: auto;
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    color: white !important;
+}
+
+.save-btn {
+    display: none;
+}
+
+.edit-mode .save-btn {
+    display: block;
+}
+
+.edit-mode .cancel-btn {
+    display: block;
+}

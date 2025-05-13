@@ -34,6 +34,7 @@ cyan/media/
 !.vscode/extensions.json 
 .history
 
+echo "staticfiles/" >> .gitignore
 
 
 
