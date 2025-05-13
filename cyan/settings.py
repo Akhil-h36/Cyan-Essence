@@ -237,3 +237,9 @@ CSRF_COOKIE_SECURE = True
 SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Use database-backed sessions
+SESSION_COOKIE_SECURE = True  # For HTTPS sites
+SESSION_COOKIE_SAMESITE = 'Lax'  # Security setting
+SESSION_COOKIE_AGE = 1800  # 30 minutes in seconds

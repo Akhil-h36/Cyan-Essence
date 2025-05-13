@@ -210,6 +210,7 @@ def usersignup(request):
 
             # Generate OTP
             otp = f"{random.randint(0, 9999):04d}"
+            logger.debug(f"Session data stored - OTP: {request.session.get('otp')}, Email: {request.session.get('email')}, User ID: {request.session.get('signup_user_id')}")
             print(otp)
             # Store OTP in session
             request.session['otp'] = otp
@@ -219,7 +220,7 @@ def usersignup(request):
            
             subject = "Your OTP for Signup Verification"
             message = f"Hello {fname},\n\nYour OTP for account verification is: {otp}\n\nDo not share it with anyone."
-            
+            logger.debug(f"Session data stored - OTP: {request.session.get('otp')}, Email: {request.session.get('email')}, User ID: {request.session.get('signup_user_id')}")
             try:
                 send_mail(
                     subject, 
@@ -261,7 +262,8 @@ def userotp(request):
         stored_otp = request.session.get('otp')
         email = request.session.get('email')
         user_id = request.session.get('signup_user_id')
-
+        logger.debug(f"Session data stored - OTP: {request.session.get('otp')}, Email: {request.session.get('email')}, User ID: {request.session.get('signup_user_id')}")
+        
         if not stored_otp:
             messages.error(request, "Session expired. Please sign up again.")
             return redirect('signup')
