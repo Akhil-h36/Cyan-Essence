@@ -184,14 +184,10 @@ def usersignup(request):
 
             if referring_user:
                 try:
-                  
                     referring_wallet = Wallet.objects.get(user=referring_user)
-                    
-                   
                     REFERRAL_BONUS = Decimal('1000.00')
                     referring_wallet.balance += REFERRAL_BONUS
                     referring_wallet.save()
-                    
                     
                     WalletTransaction.objects.create(
                         wallet=referring_wallet,
@@ -199,28 +195,25 @@ def usersignup(request):
                         transaction_amount=REFERRAL_BONUS,
                         description=f"Referral bonus from {signup_obj.email}"
                     )
-                    
-                    # You could also add a notification here
-                    
                 except Exception as wallet_error:
-                    
                     logger.error(f"Wallet referral error: {wallet_error}")
-
-
 
             # Generate OTP
             otp = f"{random.randint(0, 9999):04d}"
-            logger.debug(f"Session data stored - OTP: {request.session.get('otp')}, Email: {request.session.get('email')}, User ID: {request.session.get('signup_user_id')}")
-            print(otp)
+            
             # Store OTP in session
             request.session['otp'] = otp
             request.session['email'] = email
-            request.session['signup_user_id'] = signup_obj.id  
+            request.session['signup_user_id'] = signup_obj.id
+            # Explicitly save the session to ensure data is persisted
+            request.session.save()
+            
             print(f"Generated OTP for {email}: {otp}")
+            logger.debug(f"Session data stored - OTP: {otp}, Email: {email}, User ID: {signup_obj.id}")
            
             subject = "Your OTP for Signup Verification"
             message = f"Hello {fname},\n\nYour OTP for account verification is: {otp}\n\nDo not share it with anyone."
-            logger.debug(f"Session data stored - OTP: {request.session.get('otp')}, Email: {request.session.get('email')}, User ID: {request.session.get('signup_user_id')}")
+            
             try:
                 send_mail(
                     subject, 
@@ -238,7 +231,13 @@ def usersignup(request):
                 return redirect('signup')
 
             messages.success(request, "Account created successfully. OTP sent to your email.")
-            return redirect('userotp')
+            # Use reverse for better URL resolution
+            try:
+                from django.urls import reverse
+                return redirect(reverse('userotp'))
+            except:
+                # Fallback to regular redirect if reverse fails
+                return redirect('userotp')
 
         except Exception as e:
             # Log the error
@@ -251,6 +250,15 @@ def usersignup(request):
 
 
 def userotp(request):
+    # Debug session data
+    logger.debug(f"OTP page accessed. Session contains: OTP: {request.session.get('otp')}, "
+                f"Email: {request.session.get('email')}, User ID: {request.session.get('signup_user_id')}")
+    
+    # Check if necessary session data exists
+    if not (request.session.get('otp') and request.session.get('email') and request.session.get('signup_user_id')):
+        messages.error(request, "Session data is missing. Please sign up again.")
+        return redirect('signup')
+    
     if request.method == "POST":
         entered_otp = (
             request.POST.get('otp1', '') +
@@ -262,12 +270,9 @@ def userotp(request):
         stored_otp = request.session.get('otp')
         email = request.session.get('email')
         user_id = request.session.get('signup_user_id')
-        logger.debug(f"Session data stored - OTP: {request.session.get('otp')}, Email: {request.session.get('email')}, User ID: {request.session.get('signup_user_id')}")
         
-        if not stored_otp:
-            messages.error(request, "Session expired. Please sign up again.")
-            return redirect('signup')
-
+        logger.debug(f"OTP validation: Entered={entered_otp}, Stored={stored_otp}")
+        
         if entered_otp == str(stored_otp):
             try:
                 # Get and activate the user
@@ -276,11 +281,10 @@ def userotp(request):
                 user.save()
                 
                 # Clear session data
-                del request.session['otp']
-                if 'email' in request.session:
-                    del request.session['email']
-                if 'signup_user_id' in request.session:
-                    del request.session['signup_user_id']
+                request.session.pop('otp', None)
+                request.session.pop('email', None)
+                request.session.pop('signup_user_id', None)
+                request.session.save()
                 
                 messages.success(request, "Account activated successfully. You can now log in.")
                 return redirect('login')
@@ -290,8 +294,9 @@ def userotp(request):
         else:
             messages.error(request, "Invalid OTP. Please try again.")
 
-    return render(request, 'authentication1/userotp.html')
-
+    # Pass email to the template for better user experience
+    user_email = request.session.get('email', '')
+    return render(request, 'authentication1/userotp.html', {'email': user_email})
 
 
 def resend_otp(request):
