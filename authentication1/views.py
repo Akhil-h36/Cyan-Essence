@@ -102,6 +102,7 @@ def validate_phone_number(phone):
     
     return True
 
+
 def usersignup(request):
     if request.method == "POST":
         # Sanitize and strip input
@@ -205,53 +206,76 @@ def usersignup(request):
             request.session['otp'] = otp
             request.session['email'] = email
             request.session['signup_user_id'] = signup_obj.id
-            print(f"Generated OTP: {otp}")
             # Set longer session expiry for production
             request.session.set_expiry(3600)  # 1 hour in seconds
-            request.session.save()  # Explicitly save session
             
-            logger.debug(f"Generated OTP for {email}: {otp}")
-            logger.debug(f"Session data stored - OTP: {otp}, Email: {email}, User ID: {signup_obj.id}")
+            # Debug logging - add DEBUG level check to avoid sensitive info in production logs
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f"Generated OTP for {email}: {otp}")
+                logger.debug(f"Session data stored - OTP: {otp}, Email: {email}, User ID: {signup_obj.id}")
            
             subject = "Your OTP for Signup Verification"
             message = f"Hello {fname},\n\nYour OTP for account verification is: {otp}\n\nDo not share it with anyone."
             
+            # Get sender email from settings
+            from django.conf import settings
+            sender_email = getattr(settings, 'EMAIL_HOST_USER', 'noreply@example.com')
+            
             try:
+                from django.core.mail import send_mail
                 send_mail(
                     subject, 
                     message, 
-                    'your_verified_email@example.com', 
+                    sender_email,  # Use email from settings 
                     [email],
                     fail_silently=False,
                 )
+                # Explicitly save the session after confirming email is sent
+                request.session.save()
+                
+                messages.success(request, "Account created successfully. OTP sent to your email.")
+                return redirect('userotp')
+                
             except Exception as email_error:
-                # Log the email sending error
-                logger.error(f"Email send error: {email_error}")
+                # Log the email sending error with detailed info
+                logger.error(f"Email send error: {str(email_error)}")
+                # Add more detailed debugging
+                import traceback
+                logger.error(f"Email error traceback: {traceback.format_exc()}")
+                
+                # Debug email settings
+                logger.error(f"Email settings: HOST={settings.EMAIL_HOST}, "
+                            f"PORT={getattr(settings, 'EMAIL_PORT', 'Not set')}, "
+                            f"TLS={settings.EMAIL_USE_TLS}, "
+                            f"USER_SET={bool(settings.EMAIL_HOST_USER)}")
+                
                 # Delete the user if email fails
                 signup_obj.delete()
-                messages.error(request, "OTP could not be sent. Please contact support.")
+                messages.error(request, "OTP could not be sent. Please check your email address or contact support.")
                 return redirect('signup')
 
-            messages.success(request, "Account created successfully. OTP sent to your email.")
-            # Use redirect directly to avoid URL resolution issues
-            return redirect('userotp')
-
         except Exception as e:
-            # Log the error
-            logger.error(f"Signup error: {e}")
+            # Log the error with full traceback
+            import traceback
+            logger.error(f"Signup error: {str(e)}")
+            logger.error(f"Signup error traceback: {traceback.format_exc()}")
+            
             messages.error(request, "An error occurred during signup. Please try again.")
             return redirect('signup')
 
     return render(request, 'authentication1/usersignup.html')
 
 
+
+
 def userotp(request):
-    # Debug session data
-    logger.debug(f"OTP page accessed. Session contains: OTP: {request.session.get('otp')}, "
-                f"Email: {request.session.get('email')}, User ID: {request.session.get('signup_user_id')}")
+    # Debug session data - only if debug logging is enabled
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug(f"OTP page accessed. Session contains: OTP: {request.session.get('otp')}, "
+                    f"Email: {request.session.get('email')}, User ID: {request.session.get('signup_user_id')}")
     
     # Check if necessary session data exists
-    if not (request.session.get('otp') and request.session.get('email') and request.session.get('signup_user_id')):
+    if not all([request.session.get('otp'), request.session.get('email'), request.session.get('signup_user_id')]):
         messages.error(request, "Session data is missing. Please sign up again.")
         return redirect('signup')
     
@@ -266,8 +290,9 @@ def userotp(request):
         stored_otp = request.session.get('otp')
         email = request.session.get('email')
         user_id = request.session.get('signup_user_id')
-        print(f"Entered OTP: {entered_otp}, Stored OTP: {stored_otp}")
-        logger.debug(f"OTP validation: Entered={entered_otp}, Stored={stored_otp}")
+        
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"OTP validation: Entered={entered_otp}, Stored={stored_otp}")
         
         if entered_otp == str(stored_otp):
             try:
@@ -277,9 +302,9 @@ def userotp(request):
                 user.save()
                 
                 # Clear session data
-                request.session.pop('otp', None)
-                request.session.pop('email', None)
-                request.session.pop('signup_user_id', None)
+                for key in ['otp', 'email', 'signup_user_id']:
+                    if key in request.session:
+                        del request.session[key]
                 request.session.save()
                 
                 messages.success(request, "Account activated successfully. You can now log in.")
@@ -287,12 +312,17 @@ def userotp(request):
             except usertable.DoesNotExist:
                 messages.error(request, "User not found. Please sign up again.")
                 return redirect('signup')
+            except Exception as e:
+                logger.error(f"Error activating user: {str(e)}")
+                messages.error(request, "An error occurred. Please try again or contact support.")
+                return redirect('signup')
         else:
             messages.error(request, "Invalid OTP. Please try again.")
 
     # Pass email to the template for better user experience
     user_email = request.session.get('email', '')
     return render(request, 'authentication1/userotp.html', {'email': user_email})
+
 
 
 def resend_otp(request):
@@ -307,20 +337,36 @@ def resend_otp(request):
         user = usertable.objects.get(id=user_id)
         new_otp = f"{random.randint(0, 9999):04d}"
         request.session['otp'] = new_otp
-        request.session.save()  # Explicitly save session
-        print(f"Generated OTP: {new_otp}")
-        print(f"Session data stored - OTP: {new_otp}, Email: {email}, User ID: {user_id}")
-        logger.debug(f"Generated new OTP for {email}: {new_otp}")
+        
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Generated new OTP for {email}: {new_otp}")
+        
+        # Get sender email from settings
+        from django.conf import settings
+        sender_email = getattr(settings, 'EMAIL_HOST_USER', 'noreply@example.com')
         
         # Send OTP via email
         subject = "Your New OTP for Verification"
         message = f"Hello,\n\nYour new OTP for account verification is: {new_otp}\n\nDo not share it with anyone."
-        send_mail(subject, message, 'your_verified_email@example.com', [email])
-
-        messages.success(request, "A new OTP has been sent to your email.")
-        return redirect('userotp')
+        
+        try:
+            from django.core.mail import send_mail
+            send_mail(subject, message, sender_email, [email], fail_silently=False)
+            request.session.save()  # Explicitly save session after email success
+            
+            messages.success(request, "A new OTP has been sent to your email.")
+            return redirect('userotp')
+        except Exception as email_error:
+            logger.error(f"Error sending resend OTP email: {str(email_error)}")
+            messages.error(request, "Failed to send OTP. Please try again or contact support.")
+            return redirect('userotp')
+            
     except usertable.DoesNotExist:
         messages.error(request, "User not found. Please sign up again.")
+        return redirect('signup')
+    except Exception as e:
+        logger.error(f"Error in resend OTP: {str(e)}")
+        messages.error(request, "An error occurred. Please try again.")
         return redirect('signup')
 
 
@@ -340,40 +386,49 @@ def enteremail(request):
         # Generate OTP
         otp = f"{random.randint(1000, 9999):04d}"
         
-        logger.debug(f"Generated password reset OTP for {email}: {otp}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Generated password reset OTP for {email}: {otp}")
 
         # Store in session with explicit save
         request.session['reset_otp'] = otp
         request.session['reset_email'] = email
         request.session['reset_user_id'] = user.id
         request.session.set_expiry(3600)  # 1 hour in seconds
-        request.session.save()  # Explicitly save session
+        
+        # Get sender email from settings
+        from django.conf import settings
+        sender_email = getattr(settings, 'EMAIL_HOST_USER', 'noreply@example.com')
 
         # Send OTP via email
         subject = "Password Reset OTP"
         message = f"Hello,\n\nYour OTP for password reset is: {otp}\n\nDo not share it with anyone."
         
         try:
-            send_mail(subject, message, 'your_email@gmail.com', [email])
+            from django.core.mail import send_mail
+            send_mail(subject, message, sender_email, [email], fail_silently=False)
+            request.session.save()  # Save session after successful email
+            
             messages.success(request, "OTP sent to your email. Please verify.")
             # Redirect to OTP entry page
             return redirect('forgototp')
         except Exception as e:
-            logger.error(f"Error sending password reset OTP: {e}")
-            messages.error(request, "Failed to send OTP. Please try again.")
+            logger.error(f"Error sending password reset OTP: {str(e)}")
+            messages.error(request, "Failed to send OTP. Please try again or contact support.")
             return redirect('resetemail')
 
     return render(request, 'authentication1/resetpassword.html')
 
+
 # ################################################################
 
 def forgototp(request):
-    # Debug session data at the start
-    logger.debug(f"Password reset OTP page accessed. Session contains: Reset OTP: {request.session.get('reset_otp')}, "
-                f"Reset Email: {request.session.get('reset_email')}")
+    # Debug session data only if debug logging is enabled
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug(f"Password reset OTP page accessed. Session contains: Reset OTP: {request.session.get('reset_otp')}, "
+                    f"Reset Email: {request.session.get('reset_email')}")
     
     # Check if session data exists
-    if not (request.session.get('reset_otp') and request.session.get('reset_email')):
+    if not all([request.session.get('reset_otp'), request.session.get('reset_email')]):
         messages.error(request, "Session data is missing. Please enter your email again.")
         return redirect('resetemail')
         
@@ -387,8 +442,9 @@ def forgototp(request):
         
         stored_otp = request.session.get('reset_otp')
         email = request.session.get('reset_email')
-        print(f"Entered OTP: {entered_otp}, Stored OTP: {stored_otp}")
-        logger.debug(f"Password reset OTP validation: Entered={entered_otp}, Stored={stored_otp}")
+        
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Password reset OTP validation: Entered={entered_otp}, Stored={stored_otp}")
 
         if str(entered_otp) == str(stored_otp):
             messages.success(request, "OTP verified successfully. You can reset your password.")
@@ -400,7 +456,6 @@ def forgototp(request):
     user_email = request.session.get('reset_email', '')
     return render(request, 'authentication1/forgototp.html', {'email': user_email})
 
-
 def resendpassotp(request):
     email = request.session.get('reset_email')
 
@@ -411,22 +466,36 @@ def resendpassotp(request):
     try:
         new_otp = f"{random.randint(0, 9999):04d}"
         request.session['reset_otp'] = new_otp
-        request.session.save()  # Explicitly save session
-        print(f"Generated new OTP: {new_otp}")
-        logger.debug(f"Generated new password reset OTP for {email}: {new_otp}")
+        
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Generated new password reset OTP for {email}: {new_otp}")
+        
+        # Get sender email from settings
+        from django.conf import settings
+        sender_email = getattr(settings, 'EMAIL_HOST_USER', 'noreply@example.com')
         
         subject = "New Password Reset OTP"
         message = f"Hello,\n\nYour new OTP for password reset is: {new_otp}\n\nDo not share it with anyone."
-        send_mail(subject, message, 'your_email@gmail.com', [email])
-
-        messages.success(request, "A new OTP has been sent to your email.")
-        return redirect('forgototp')  # Fixed typo in redirect name
+        
+        try:
+            from django.core.mail import send_mail
+            send_mail(subject, message, sender_email, [email], fail_silently=False)
+            request.session.save()  # Explicitly save session after email success
+            
+            messages.success(request, "A new OTP has been sent to your email.")
+            return redirect('forgototp')
+        except Exception as email_error:
+            logger.error(f"Error sending resend password reset OTP: {str(email_error)}")
+            messages.error(request, "Failed to send OTP. Please try again or contact support.")
+            return redirect('forgototp')
+            
     except Exception as e:
-        logger.error(f"Error resending password reset OTP: {e}")
+        logger.error(f"Error resending password reset OTP: {str(e)}")
         messages.error(request, "Failed to send OTP. Please try again.")
-        return redirect('forgototp') 
+        return redirect('forgototp')
     
 def resetpass(request):
+    
     # Check for session data first
     if not (request.session.get('reset_email') and request.session.get('reset_user_id')):
         messages.error(request, "Session expired. Please restart the password reset process.")

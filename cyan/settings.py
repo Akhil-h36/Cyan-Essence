@@ -146,8 +146,8 @@ DATABASES = {
 # for authenticate with email
 
 AUTHENTICATION_BACKENDS = [
-    'authentication1.backends.EmailBackend',  # Replace 'yourappname' with your actual app name
-    'django.contrib.auth.backends.ModelBackend',# Keep the default backend as a fallback
+    'authentication1.backends.EmailBackend',  
+    'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 AUTH_USER_MODEL = 'authentication1.usertable'
@@ -219,7 +219,8 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
 # #####################################open ai##########################
 
 
