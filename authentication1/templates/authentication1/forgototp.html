@@ -149,41 +149,45 @@
 <body>
     <div class="container">
         {% if messages %}
-                            {% for message in messages %}
-                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                                    {{ message }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            {% endfor %}
-                        {% endif %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
         <div class="otp-form">
             <div class="logo">OTP</div>
-            <div class="tagline">enter your resete otp</div>
+            <div class="tagline">Enter your reset OTP</div>
 
-         <form method="POST" action="{% url 'forgototp' %}"> 
-            {% csrf_token %}
+            <form method="POST" action="{% url 'forgototp' %}" id="otpForm"> 
+                {% csrf_token %}
 
-            <div class="otp-digits">
-                <input type="text" name="otp1" class="otp-digit" maxlength="1" oninput="moveToNext(this, 0)">
-                <input type="text" name="otp2" class="otp-digit" maxlength="1" oninput="moveToNext(this, 1)">
-                <input type="text" name="otp3" class="otp-digit" maxlength="1" oninput="moveToNext(this, 2)">
-                <input type="text" name="otp4" class="otp-digit" maxlength="1" oninput="moveToNext(this, 3)">
-            </div>
-                    
-                    <button class="submit-btn">submit</button>
-                    
-                    <div class="timer" id="timer">00:45</div>
-         </form>  
-            <form method="POST" action="{% url 'resendpassotp' %}">
+                <div class="otp-digits">
+                    <input type="text" name="otp1" class="otp-digit" maxlength="1" oninput="moveToNext(this, 0)">
+                    <input type="text" name="otp2" class="otp-digit" maxlength="1" oninput="moveToNext(this, 1)">
+                    <input type="text" name="otp3" class="otp-digit" maxlength="1" oninput="moveToNext(this, 2)">
+                    <input type="text" name="otp4" class="otp-digit" maxlength="1" oninput="moveToNext(this, 3)">
+                </div>
+                        
+                <button class="submit-btn">Submit</button>
+                        
+                <div class="timer" id="timer">00:45</div>
+            </form>  
+            
+            <form method="POST" action="{% url 'resendpassotp' %}" id="resendForm">
                 {% csrf_token %}
                 <button type="submit" class="resend-btn" id="resend-btn" disabled>Resend OTP</button>
             </form>
         </div>
-        <div class="debug-info" style="display: none;">
-            Session OTP: {{ request.session.otp }}<br>
-            Session Email: {{ request.session.email }}<br>
-            Session User ID: {{ request.session.signup_user_id }}
+        <!-- Debug info (only show in development) -->
+        {% if debug %}
+        <div class="debug-info">
+            Session Reset OTP: {{ request.session.reset_otp }}<br>
+            Session Reset Email: {{ request.session.reset_email }}<br>
+            Session Reset User ID: {{ request.session.reset_user_id }}
         </div>
+        {% endif %}
     </div>
 
     <script>
@@ -228,24 +232,25 @@
                 display = document.querySelector('#timer');
             startTimer(fortyFiveSeconds, display);
             
-            // Add event listener for form submission
-            document.getElementById('resendForm').addEventListener('submit', function(event) {
-                var resendBtn = document.getElementById('resend-btn');
-                
-                if (resendBtn.disabled) {
-                    event.preventDefault();
-                    return false;
-                }
-                
-                // Disable the button during submission to prevent multiple clicks
-                resendBtn.disabled = true;
-                resendBtn.textContent = "Sending...";
-                
-                return true;
-            });
+            // Add event listener for form submission if the form exists
+            var resendForm = document.getElementById('resendForm');
+            if (resendForm) {
+                resendForm.addEventListener('submit', function(event) {
+                    var resendBtn = document.getElementById('resend-btn');
+                    
+                    if (resendBtn.disabled) {
+                        event.preventDefault();
+                        return false;
+                    }
+                    
+                    // Disable the button during submission to prevent multiple clicks
+                    resendBtn.disabled = true;
+                    resendBtn.textContent = "Sending...";
+                    
+                    return true;
+                });
+            }
         };
     </script>
-
-
 </body>
 </html>
