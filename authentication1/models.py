@@ -58,8 +58,10 @@ class usertable(AbstractBaseUser, PermissionsMixin):
     )
 
     phonenumber = models.CharField(
-        max_length=10, 
+        max_length=10,
         unique=True,
+        null=True,  # Allow NULL values
+        blank=True,  # Allow empty in forms
         validators=[phone_regex],
         verbose_name='Phone Number'
     )
