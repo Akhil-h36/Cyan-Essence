@@ -205,6 +205,7 @@ def usersignup(request):
             request.session['otp'] = otp
             request.session['email'] = email
             request.session['signup_user_id'] = signup_obj.id
+            print(f"Generated OTP: {otp}")
             # Set longer session expiry for production
             request.session.set_expiry(3600)  # 1 hour in seconds
             request.session.save()  # Explicitly save session
@@ -265,7 +266,7 @@ def userotp(request):
         stored_otp = request.session.get('otp')
         email = request.session.get('email')
         user_id = request.session.get('signup_user_id')
-        
+        print(f"Entered OTP: {entered_otp}, Stored OTP: {stored_otp}")
         logger.debug(f"OTP validation: Entered={entered_otp}, Stored={stored_otp}")
         
         if entered_otp == str(stored_otp):
@@ -307,7 +308,8 @@ def resend_otp(request):
         new_otp = f"{random.randint(0, 9999):04d}"
         request.session['otp'] = new_otp
         request.session.save()  # Explicitly save session
-        
+        print(f"Generated OTP: {new_otp}")
+        print(f"Session data stored - OTP: {new_otp}, Email: {email}, User ID: {user_id}")
         logger.debug(f"Generated new OTP for {email}: {new_otp}")
         
         # Send OTP via email
@@ -385,7 +387,7 @@ def forgototp(request):
         
         stored_otp = request.session.get('reset_otp')
         email = request.session.get('reset_email')
-
+        print(f"Entered OTP: {entered_otp}, Stored OTP: {stored_otp}")
         logger.debug(f"Password reset OTP validation: Entered={entered_otp}, Stored={stored_otp}")
 
         if str(entered_otp) == str(stored_otp):
@@ -410,7 +412,7 @@ def resendpassotp(request):
         new_otp = f"{random.randint(0, 9999):04d}"
         request.session['reset_otp'] = new_otp
         request.session.save()  # Explicitly save session
-        
+        print(f"Generated new OTP: {new_otp}")
         logger.debug(f"Generated new password reset OTP for {email}: {new_otp}")
         
         subject = "New Password Reset OTP"
@@ -425,39 +427,38 @@ def resendpassotp(request):
         return redirect('forgototp') 
     
 def resetpass(request):
+    # Check for session data first
+    if not (request.session.get('reset_email') and request.session.get('reset_user_id')):
+        messages.error(request, "Session expired. Please restart the password reset process.")
+        return redirect('resetemail')
+
     if request.method == "POST":
         new_password = request.POST.get('new-password')
         confirm_password = request.POST.get('confirm-password')
 
         # Get the email from the session
-        email = request.session.get('email')
-
-        if not email:
-            messages.error(request, "Session expired. Please restart the password reset process.")
-            return redirect('resetemail')
+        email = request.session.get('reset_email')
+        user_id = request.session.get('reset_user_id')
 
         if new_password != confirm_password:
             messages.error(request, "Passwords do not match.")
             return render(request, 'authentication1/resetpass.html')
 
-        
         if not validate_password_strength(new_password):
             messages.error(request, """Password must:
             - Be at least 8 characters long
-            
             - Contain at least one lowercase letter
             - Contain at least one number
             - Contain at least one special character""")
             return render(request, 'authentication1/resetpass.html')
 
         try:
-            user = usertable.objects.get(email=email)
-            user.password = make_password(new_password)  # Hash the password before saving
+            user = usertable.objects.get(id=user_id, email=email)
+            user.password = make_password(new_password)
             user.save()
 
-            # Clear session data after password reset
-            del request.session['email']
-            del request.session['otp']
+            # Clear all session data after password reset
+            request.session.flush()
 
             messages.success(request, "Password reset successfully. You can now log in.")
             return redirect('login')
