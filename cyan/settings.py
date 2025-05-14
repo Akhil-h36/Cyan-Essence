@@ -27,11 +27,35 @@ SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!)
 DEBUG = config('DEBUG', default=False, cast=bool)
-
-ALLOWED_HOSTS = ['cyanessence.shop','www.cyanessence.shop',
+ALLOWED_HOSTS = ['cyanessence.shop', 'www.cyanessence.shop',
 'ec2-56-228-56-117.eu-north-1.compute.amazonaws.com',
-    'localhost',
-    '127.0.0.1']
+'localhost',
+'127.0.0.1']
+
+
+# secure socket layer
+import socket
+HOSTNAME = socket.gethostname()
+IS_DEVELOPMENT = HOSTNAME == 'localhost' or HOSTNAME.startswith('127.0.0.1') or DEBUG == True
+
+# Conditional security settings
+if IS_DEVELOPMENT:
+    # Development settings (HTTP)
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SECURE_HSTS_SECONDS = 0
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    SECURE_HSTS_PRELOAD = False
+else:
+    # Production settings (HTTPS)
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
 
 # Application definition
 
@@ -230,16 +254,3 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# secure socket layer
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SECURE_HSTS_SECONDS = 31536000  # 1 year
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
-
-
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Use database-backed sessions
-SESSION_COOKIE_SECURE = True  # For HTTPS sites
-SESSION_COOKIE_SAMESITE = 'Lax'  # Security setting
-SESSION_COOKIE_AGE = 1800  # 30 minutes in seconds
