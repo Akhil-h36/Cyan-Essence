@@ -207,6 +207,7 @@ def delete_address(request, address_id):
         messages.success(request, 'Address deleted successfully!')
     return redirect('address')
 
+
 @login_required
 def editaddress(request, address_id=None):
     if address_id:

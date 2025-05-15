@@ -1014,6 +1014,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function showNotification(message, isError = false) {
         const notification = document.getElementById('notification');
+        if (!notification) return; // Check if notification element exists
+        
         notification.textContent = message;
         notification.className = `notification ${isError ? 'error' : ''}`;
         notification.classList.add('show');
@@ -1033,6 +1035,57 @@ document.addEventListener('DOMContentLoaded', function() {
         if (overlay) overlay.classList.remove('show');
     }
     
+    function setupQuantityControls() {
+        const minusBtn = document.querySelector('.quantity-btn.minus');
+        const plusBtn = document.querySelector('.quantity-btn.plus');
+        const quantityInput = document.getElementById('quantity-input');
+        
+        // Exit the function if any of the required elements are missing
+        if (!minusBtn || !plusBtn || !quantityInput) return;
+        
+        // Remove any existing event listeners by cloning and replacing elements
+        const newMinusBtn = minusBtn.cloneNode(true);
+        const newPlusBtn = plusBtn.cloneNode(true);
+        minusBtn.parentNode.replaceChild(newMinusBtn, minusBtn);
+        plusBtn.parentNode.replaceChild(newPlusBtn, plusBtn);
+        
+        // Handle minus button click with new event listeners
+        newMinusBtn.addEventListener('click', function() {
+            let currentValue = parseInt(quantityInput.value);
+            if (currentValue > parseInt(quantityInput.min)) {
+                quantityInput.value = currentValue - 1;
+            }
+        });
+        
+        // Handle plus button click with new event listeners
+        newPlusBtn.addEventListener('click', function() {
+            let currentValue = parseInt(quantityInput.value);
+            if (currentValue < parseInt(quantityInput.max)) {
+                quantityInput.value = currentValue + 1;
+            }
+        });
+        
+        // Ensure input stays within bounds when manually entered
+        // Remove existing event listener by cloning
+        const newQuantityInput = quantityInput.cloneNode(true);
+        quantityInput.parentNode.replaceChild(newQuantityInput, quantityInput);
+        
+        newQuantityInput.addEventListener('change', function() {
+            let value = parseInt(this.value);
+            const min = parseInt(this.min);
+            const max = parseInt(this.max);
+            
+            if (isNaN(value) || value < min) {
+                this.value = min;
+            } else if (value > max) {
+                this.value = max;
+            }
+        });
+    }
+    
+    // Call the quantity control setup function
+    setupQuantityControls();
+
     // Size selection functionality
     function selectSize(element) {
         if (element.classList.contains('disabled')) return;
@@ -1048,7 +1101,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update the selected variance ID
         const varianceId = element.getAttribute('data-variance-id');
         const hiddenInput = document.getElementById('selectedVarianceId');
-        hiddenInput.value = varianceId;
+        if (hiddenInput) {
+            hiddenInput.value = varianceId;
+        }
         
         // Handle discount display
         const hasDiscount = element.getAttribute('data-has-discount') === 'true';
@@ -1056,6 +1111,25 @@ document.addEventListener('DOMContentLoaded', function() {
         const finalPrice = element.getAttribute('data-final-price') || element.getAttribute('data-price');
         const discountPercentage = element.getAttribute('data-discount-percentage');
         
+        const stock = parseInt(element.getAttribute('data-stock') || '0');
+        const quantityInput = document.getElementById('quantity-input');
+        if (quantityInput) {
+            quantityInput.max = stock > 10 ? 10 : stock;
+
+            if (parseInt(quantityInput.value) > quantityInput.max) {
+                quantityInput.value = quantityInput.max;
+            }
+        }
+        
+        // Enable/disable add to cart button based on stock
+        const addToCartBtn = document.getElementById('addToCartBtn');
+        if (addToCartBtn) {
+            addToCartBtn.disabled = stock <= 0;
+        }
+
+        // Re-setup quantity controls (to apply new max value)
+        setupQuantityControls();
+
         // Update the displayed price section
         const priceContainer = document.querySelector('.price-container');
         if (priceContainer) {
@@ -1134,24 +1208,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         }
-        
-        // Update quantity max based on stock
-        const stock = parseInt(element.getAttribute('data-stock'));
-        const quantityInput = document.getElementById('quantity-input');
-        quantityInput.max = stock > 10 ? 10 : stock;
-        
-        // If current quantity exceeds new stock, adjust it
-        if (parseInt(quantityInput.value) > quantityInput.max) {
-            quantityInput.value = quantityInput.max;
-        }
-        
-        // Enable/disable add to cart button based on stock
-        const addToCartBtn = document.getElementById('addToCartBtn');
-        if (stock > 0) {
-            addToCartBtn.disabled = false;
-        } else {
-            addToCartBtn.disabled = true;
-        }
     }
 
     // Countdown timer function
@@ -1179,19 +1235,26 @@ document.addEventListener('DOMContentLoaded', function() {
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
             
             // Update the countdown display
-            countdownElement.querySelector('.days span:first-child').textContent = days.toString().padStart(2, '0');
-            countdownElement.querySelector('.hours span:first-child').textContent = hours.toString().padStart(2, '0');
-            countdownElement.querySelector('.minutes span:first-child').textContent = minutes.toString().padStart(2, '0');
-            countdownElement.querySelector('.seconds span:first-child').textContent = seconds.toString().padStart(2, '0');
+            const daysElement = countdownElement.querySelector('.days span:first-child');
+            const hoursElement = countdownElement.querySelector('.hours span:first-child');
+            const minutesElement = countdownElement.querySelector('.minutes span:first-child');
+            const secondsElement = countdownElement.querySelector('.seconds span:first-child');
+            
+            if (daysElement) daysElement.textContent = days.toString().padStart(2, '0');
+            if (hoursElement) hoursElement.textContent = hours.toString().padStart(2, '0');
+            if (minutesElement) minutesElement.textContent = minutes.toString().padStart(2, '0');
+            if (secondsElement) secondsElement.textContent = seconds.toString().padStart(2, '0');
         }, 1000);
     }
 
     // Function to load all reviews when the page loads
     function loadAllReviews() {
         const reviewsList = document.querySelector('.reviews-list');
-        const productId = document.querySelector('[data-product-id]')?.getAttribute('data-product-id');
+        const productIdElement = document.querySelector('[data-product-id]');
         
-        if (!reviewsList || !productId) return;
+        if (!reviewsList || !productIdElement) return;
+        
+        const productId = productIdElement.getAttribute('data-product-id');
         
         showLoading();
         
@@ -1336,7 +1399,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         resetStars();
                     }
                 } else {
-                    showNotification(data.message, true);
+                    showNotification(data.message || 'Error submitting review', true);
                 }
             })
             .catch(error => {
@@ -1351,7 +1414,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Star rating hover effect
     const starLabels = document.querySelectorAll('.star-label');
-    if (starLabels) {
+    if (starLabels && starLabels.length > 0) {
         starLabels.forEach(label => {
             label.addEventListener('mouseover', function() {
                 const rating = this.htmlFor.replace('star', '');
@@ -1371,6 +1434,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function highlightStars(rating) {
         const stars = document.querySelectorAll('.star-label i');
+        if (!stars || stars.length === 0) return;
+        
         stars.forEach((star, index) => {
             if (index >= 5 - rating) {
                 star.classList.remove('far');
@@ -1384,6 +1449,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function resetStars() {
         const stars = document.querySelectorAll('.star-label i');
+        if (!stars || stars.length === 0) return;
+        
         stars.forEach(star => {
             star.classList.remove('fas');
             star.classList.add('far');
@@ -1408,10 +1475,14 @@ document.addEventListener('DOMContentLoaded', function() {
             if (activeSize) {
                 varianceId = activeSize.getAttribute('data-variance-id');
             } else {
-                varianceId = document.getElementById('selectedVarianceId').value;
+                const selectedVarianceIdInput = document.getElementById('selectedVarianceId');
+                if (selectedVarianceIdInput) {
+                    varianceId = selectedVarianceIdInput.value;
+                }
             }
             
-            const quantity = document.getElementById('quantity-input').value;
+            const quantityInput = document.getElementById('quantity-input');
+            const quantity = quantityInput ? quantityInput.value : 1;
             
             console.log("Adding to cart with variance ID:", varianceId);
             console.log("Quantity:", quantity);
@@ -1423,6 +1494,17 @@ document.addEventListener('DOMContentLoaded', function() {
             
             showLoading();
             
+            // Get the product ID from the page
+            let productId = '{{ product.product_id }}';
+            
+            // Try to get the product ID from an element if the template literal is not replaced
+            if (productId.includes('{{')) {
+                const productElement = document.querySelector('[data-product-id]');
+                if (productElement) {
+                    productId = productElement.getAttribute('data-product-id');
+                }
+            }
+            
             fetch('/add-to-cart/', {
                 method: 'POST',
                 headers: {
@@ -1430,7 +1512,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'X-CSRFToken': getCookie('csrftoken')
                 },
                 body: JSON.stringify({
-                    product_id: '{{ product.product_id }}',
+                    product_id: productId,
                     variance_id: varianceId,
                     quantity: quantity
                 })
@@ -1495,12 +1577,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Make sure all size options are clickable
-    document.querySelectorAll('.size-option').forEach(option => {
-        option.addEventListener('click', function(e) {
-            e.preventDefault();
-            selectSize(this);
+    const sizeOptions = document.querySelectorAll('.size-option');
+    if (sizeOptions && sizeOptions.length > 0) {
+        sizeOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                selectSize(this);
+            });
         });
-    });
+    }
 
     // Wishlist functionality
     const wishlistBtn = document.getElementById('wishlistBtn');
@@ -1549,11 +1634,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (isInWishlist) {
                         wishlistBtn.classList.remove('in-wishlist');
                         wishlistBtn.title = 'Add to Wishlist';
-                        wishlistBtn.querySelector('i').className = 'far fa-heart';
+                        const icon = wishlistBtn.querySelector('i');
+                        if (icon) {
+                            icon.className = 'far fa-heart';
+                        }
                     } else {
                         wishlistBtn.classList.add('in-wishlist');
                         wishlistBtn.title = 'Remove from Wishlist';
-                        wishlistBtn.querySelector('i').className = 'fas fa-heart';
+                        const icon = wishlistBtn.querySelector('i');
+                        if (icon) {
+                            icon.className = 'fas fa-heart';
+                        }
                     }
                 } else {
                     showNotification(data.message, true);
@@ -1575,8 +1666,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function initImageZoom() {
         // Get the main image container and image
         const mainImageContainer = document.querySelector('.main-image-container');
-        const mainImage = mainImageContainer.querySelector('.main-image img');
+        if (!mainImageContainer) return;
         
+        const mainImage = mainImageContainer.querySelector('.main-image img');
         if (!mainImage) return;
         
         // Create lens element if it doesn't exist
@@ -1584,7 +1676,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!lens) {
             lens = document.createElement('div');
             lens.className = 'img-zoom-lens';
-            mainImageContainer.querySelector('.main-image').appendChild(lens);
+            const mainImageElement = mainImageContainer.querySelector('.main-image');
+            if (mainImageElement) {
+                mainImageElement.appendChild(lens);
+            }
         }
         
         // Create result container if it doesn't exist
@@ -1689,17 +1784,19 @@ document.addEventListener('DOMContentLoaded', function() {
     initImageZoom();
     
     // Also reinitialize zoom when thumbnails are clicked
-    document.querySelectorAll('.thumbnail').forEach(thumbnail => {
-        thumbnail.addEventListener('click', function() {
-            // Let the image load first
-            setTimeout(initImageZoom, 100);
+    const thumbnailElements = document.querySelectorAll('.thumbnail');
+    if (thumbnailElements && thumbnailElements.length > 0) {
+        thumbnailElements.forEach(thumbnail => {
+            thumbnail.addEventListener('click', function() {
+                // Let the image load first
+                setTimeout(initImageZoom, 100);
+            });
         });
-    });
+    }
     
     // Load all reviews when the page loads
     loadAllReviews();
 });
-
 // Remove the duplicate jQuery code since we've integrated its functionality into the main script
 </script>
 {% endblock %}

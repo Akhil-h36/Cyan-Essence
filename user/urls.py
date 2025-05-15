@@ -23,6 +23,9 @@ urlpatterns = [
     path('get-cart-count/', views.get_cart_count, name='get_cart_count'),
     path('api/product-variances/<int:product_id>/', views.get_product_variances, name='get_product_variances'),
 
+    path('get-product-stock/', views.get_product_stock, name='get-product-stock'),
+
+
      path('product/<int:product_id>/review/',views.submit_review, name='submit_review'), 
      path('get-product-reviews/<str:product_id>/',views.get_product_reviews, name='get_product_reviews'),
 

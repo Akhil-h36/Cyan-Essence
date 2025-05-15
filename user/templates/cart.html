@@ -619,6 +619,7 @@ h1 {
 
 <script>
 // Get CSRF token function
+// Get CSRF token function
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -741,7 +742,7 @@ async function removeCartItem(itemId, cartItem) {
 }
 
 // Update cart item quantity
-async function updateCartItem(itemId, quantity) {
+async function updateCartItem(itemId, quantity, previousQuantity) {
     showLoading();
     
     try {
@@ -781,6 +782,20 @@ async function updateCartItem(itemId, quantity) {
             
             showNotification('Cart updated successfully');
         } else {
+            // If update failed, revert to previous quantity
+            const cartItem = document.querySelector(`.cart-item[data-item-id="${itemId}"]`);
+            if (cartItem) {
+                const input = cartItem.querySelector('.quantity-input');
+                const price = parseFloat(input.dataset.price);
+                
+                // Reset to previous quantity
+                input.value = previousQuantity;
+                
+                // Update item total
+                const totalElement = cartItem.querySelector('.total');
+                totalElement.textContent = '₹' + (price * previousQuantity).toFixed(2);
+            }
+            
             showNotification(data.message || 'Failed to update cart', true);
         }
     } catch (error) {
@@ -798,9 +813,17 @@ function handleQuantityButtonClick() {
     const input = cartItem.querySelector('.quantity-input');
     let quantity = parseInt(input.value);
     const price = parseFloat(input.dataset.price);
+    const maxStock = parseInt(input.dataset.stock || 9999);
+    const previousQuantity = quantity;
 
     if (this.classList.contains('increase')) {
-        quantity++;
+        // Only increase if within stock limit
+        if (quantity < maxStock) {
+            quantity++;
+        } else {
+            showNotification(`Only ${maxStock} items available in stock`, true);
+            return; // Don't proceed if over stock limit
+        }
     } else if (this.classList.contains('decrease') && quantity > 1) {
         quantity--;
     }
@@ -812,7 +835,7 @@ function handleQuantityButtonClick() {
     totalElement.textContent = '₹' + (price * quantity).toFixed(2);
     
     // Update cart via AJAX
-    updateCartItem(itemId, quantity);
+    updateCartItem(itemId, quantity, previousQuantity);
 }
 
 // Handle manual quantity input with debounce
@@ -822,17 +845,27 @@ function handleQuantityInputChange() {
     
     const cartItem = this.closest('.cart-item');
     const itemId = cartItem.dataset.itemId;
+    const previousQuantity = parseInt(this.dataset.previousValue || 1);
     let quantity = parseInt(this.value);
     const price = parseFloat(this.dataset.price);
+    const maxStock = parseInt(this.dataset.stock || 9999);
 
-    // Validate input - FIXED SYNTAX ERROR HERE
-    if (isNaN(quantity)) {  // Added missing closing parenthesis
+    // Validate input
+    if (isNaN(quantity)) {
         this.value = 1;
         quantity = 1;
     } else if (quantity < 1) {
         this.value = 1;
         quantity = 1;
+    } else if (quantity > maxStock) {
+        // Limit to available stock
+        this.value = maxStock;
+        quantity = maxStock;
+        showNotification(`Only ${maxStock} items available in stock`, true);
     }
+
+    // Store current value for potential revert
+    this.dataset.previousValue = quantity;
 
     // Update item total immediately
     const totalElement = cartItem.querySelector('.total');
@@ -840,7 +873,7 @@ function handleQuantityInputChange() {
     
     // Debounce the AJAX call
     inputTimeout = setTimeout(() => {
-        updateCartItem(itemId, quantity);
+        updateCartItem(itemId, quantity, previousQuantity);
     }, 500);
 }
 
@@ -848,6 +881,30 @@ function handleQuantityInputChange() {
 document.addEventListener('DOMContentLoaded', function() {
     // Only attach event listeners if elements exist
     // This fixes the "Cannot read properties of null" error
+    
+    // Initialize stock data for each cart item
+    document.querySelectorAll('.cart-item').forEach(async (item) => {
+        const itemId = item.dataset.itemId;
+        const input = item.querySelector('.quantity-input');
+        
+        if (input) {
+            // Store the current value as previous value
+            input.dataset.previousValue = input.value;
+            
+            // Fetch current stock information for this item
+            try {
+                const response = await fetch(`/get-product-stock/?item_id=${itemId}`);
+                const data = await response.json();
+                
+                if (data.success && data.stock) {
+                    // Store stock information in the input element
+                    input.dataset.stock = data.stock;
+                }
+            } catch (error) {
+                console.error('Error fetching stock data:', error);
+            }
+        }
+    });
     
     // Quantity change handlers with touch support
     const quantityButtons = document.querySelectorAll('.quantity-btn');

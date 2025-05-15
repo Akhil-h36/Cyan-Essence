@@ -112,6 +112,9 @@ def best_selling_products3(limit=10):
     
     return result
 
+from django.views.decorators.cache import never_cache
+
+@never_cache
 @login_required(login_url='login')
 def home(request):
     brands = BrandTable.objects.all()
@@ -655,6 +658,38 @@ def update_cart_item(request):
             'success': False,
             'message': str(e)
         })
+    
+
+@require_GET
+@login_required
+def get_product_stock(request):
+    """
+    Get the current stock for a cart item
+    """
+    try:
+        item_id = request.GET.get('item_id')
+        
+        if not item_id:
+            return JsonResponse({'success': False, 'message': 'Item ID is required'})
+        
+        # Get the cart item
+        cart_item = CartItem.objects.select_related('variance').get(
+            id=item_id, 
+            cart__user=request.user
+        )
+        
+        # Return the stock information
+        return JsonResponse({
+            'success': True,
+            'stock': cart_item.variance.stock,
+            'item_id': item_id
+        })
+        
+    except CartItem.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Item not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
 @require_POST
 @login_required
 def remove_cart_item(request):

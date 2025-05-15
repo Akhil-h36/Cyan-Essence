@@ -5,6 +5,7 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from adminapp.models import Wallet,WalletTransaction
 import re
+from django.contrib import messages
 from django.core.mail import send_mail
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -538,12 +539,40 @@ def resetpass(request):
 
     return render(request, 'authentication1/resetpass.html')
 
+from django.contrib.auth import logout
+from django.shortcuts import render
+from django.contrib import messages
+from django.views.decorators.cache import never_cache
+import logging
+
+logger = logging.getLogger(__name__)
+
 @never_cache
 def logoutPage(request):
     if request.user.is_authenticated:
-        # Use email instead of username
+        # Store email before logout for the message
         user_identifier = request.user.email
+        
+        # Clear session data
+        request.session.flush()
+        
+        # Perform the logout
         logout(request)
+        
+        # Add success message
         messages.info(request, f"Successfully logged out. Goodbye, {user_identifier}!")
         logger.info(f"Logout message added for user: {user_identifier}")
-    return redirect('login')
+        
+        # Set cache-control headers to prevent caching
+        response = redirect('login')
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
+    else:
+        # Even if not authenticated, set cache-control headers
+        response = redirect('login')
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
