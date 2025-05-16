@@ -521,7 +521,7 @@ def get_product_reviews(request, product_id):
             'message': str(e)
         }, status=500)
 
-@login_required
+@login_required(login_url='login')
 def cart(request):
 
     cart, created = Cart.objects.get_or_create(user=request.user)
