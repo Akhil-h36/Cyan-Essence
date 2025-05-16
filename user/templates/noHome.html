@@ -50,7 +50,7 @@
         </div>
         
         <div class="nav-icons">
-            <a href="{% url 'login' %}">
+            <a href="{% url 'login' %}" style="color:#007474 ;">
                 <i class="fas fa-user"></i>
             </a>
         </div>
@@ -70,6 +70,7 @@
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
             
             <!-- Product 1 -->
+            <a href="{% url 'myshop' %}">
             <div class="col"> 
                 <div class="card h-100 d-flex product-card">
                     <div class="product-image-container">
@@ -87,8 +88,10 @@
                     </div>
                 </div>
             </div>
-    
+            </a>
             <!-- Product 2 -->
+
+            <a href="{% url 'myshop' %}">
             <div class="col">
                 <div class="card h-100 d-flex product-card">
                     <div class="product-image-container">
@@ -106,8 +109,9 @@
                     </div>
                 </div>
             </div>
-    
+            </a>
             <!-- Product 3 -->
+            <a href="{% url 'myshop' %}">
             <div class="col">
                 <div class="card h-100 d-flex product-card">
                     <div class="product-image-container">
@@ -126,6 +130,7 @@
                   </div>
               </div>
           </div>
+         </a>
       </div>
   </div>
   
