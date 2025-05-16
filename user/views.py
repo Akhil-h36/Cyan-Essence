@@ -301,7 +301,7 @@ def myshop(request):
     return render(request, 'myshop.html', context)
 
 
-
+@never_cache
 def singleproduct(request, product_id):
     try:
         # First get the product - this needs to happen BEFORE accessing product.reviews
@@ -726,6 +726,7 @@ def get_cart_count(request):
     except Cart.DoesNotExist:
         return JsonResponse({'success': True, 'cart_count': 0})
 
+@never_cache
 @login_required
 def checkout(request):
     cart =Cart.objects.get(user=request.user)
@@ -762,7 +763,7 @@ def checkout(request):
 
 
 
-
+@never_cache
 @login_required
 @transaction.atomic
 def place_order(request):
@@ -801,6 +802,9 @@ def place_order(request):
                     'message': 'Cash on Delivery is not available for orders above ₹5000'
                 })
 
+
+
+
             delivery_address = {
                 'full_name': address.full_name,
                 'phone_number': address.phone_number,
@@ -824,6 +828,7 @@ def place_order(request):
 
             # Create order items
             for cart_item in cart_items:
+
                 OrderItem.objects.create(
                     order=order,
                     product_variation=cart_item.variance,
@@ -831,6 +836,8 @@ def place_order(request):
                     price=cart_item.total_price,
                 )
             
+            
+
             # Process wallet payment if selected
             if payment_method == 'Wallet':
                 try:
@@ -1038,7 +1045,7 @@ def razorpay_callback(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
 
 
-
+@never_cache
 @require_POST
 def razorpay_payment_cancel(request):
     if request.method == "POST":

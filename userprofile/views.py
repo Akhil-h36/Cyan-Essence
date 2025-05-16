@@ -36,9 +36,11 @@ from decimal import Decimal
 # Create your views here.
 import razorpay
 razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+from django.views.decorators.cache import never_cache
 
 
 
+@never_cache
 @login_required(login_url='login')
 def userprofile(request):
     user = request.user
@@ -96,6 +98,8 @@ def userprofile(request):
     return render(request, 'userprofile.html', context)
 
 # ##################################################################my account#######################################################################
+
+@never_cache
 @login_required
 def myaccount(request):
    
@@ -116,6 +120,7 @@ def myaccount(request):
     
     return render(request, 'myaccount.html', context)
 
+@never_cache
 @login_required
 def wallet_transactions(request):
     wallet, created = Wallet.objects.get_or_create(
@@ -171,6 +176,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
 
+
 @require_POST
 def set_default_address(request):
     if not request.user.is_authenticated:
@@ -207,7 +213,7 @@ def delete_address(request, address_id):
         messages.success(request, 'Address deleted successfully!')
     return redirect('address')
 
-
+@never_cache
 @login_required
 def editaddress(request, address_id=None):
     if address_id:
@@ -253,6 +259,7 @@ def editaddress(request, address_id=None):
 
 
 # ###########################################################my orders#######################################################################
+@never_cache
 def order_list(request):
     orders = Order.objects.filter(user=request.user).order_by('-order_date')
 
@@ -283,7 +290,7 @@ def order_list(request):
     return render(request, 'myorders.html', context)
 
 from django.urls import reverse
-# Fixed retry_payment view
+@never_cache
 @login_required
 def retry_payment(request, order_id):
     if request.method != 'POST':
@@ -974,7 +981,7 @@ def mypassword(request):
     return render(request, 'mypassword.html')
 
 
-# ######################################################add money###########################################################
+# ###################################################### add money ###########################################################
 @login_required(login_url='login')
 def add_money(request):
     try:
@@ -1033,7 +1040,7 @@ def create_razorpay_order(request):
     
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
-
+@never_cache
 @login_required(login_url='login')
 def verify_payment(request):
     if request.method == "POST":
