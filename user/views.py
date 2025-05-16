@@ -613,7 +613,7 @@ def add_to_cart(request):
         logger.error(f"Error adding to cart: {str(e)}")
         return JsonResponse({
             'success': False,
-            'message': f"An error occurred: {str(e)}"
+            'message': f"An error occurred try login: {str(e)}"
         })
     
 @require_POST
