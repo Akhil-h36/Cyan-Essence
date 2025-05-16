@@ -995,7 +995,6 @@
 
 <!-- Combine all your JavaScript into one cohesive script -->
 <script>
-    
 document.addEventListener('DOMContentLoaded', function() {
     // Utility functions
     function getCookie(name) {
@@ -1015,7 +1014,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function showNotification(message, isError = false) {
         const notification = document.getElementById('notification');
-        if (!notification) return; // Check if notification element exists
+        if (!notification) return;
         
         notification.textContent = message;
         notification.className = `notification ${isError ? 'error' : ''}`;
@@ -1037,41 +1036,37 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function setupQuantityControls() {
-        const minusBtn = document.querySelector('.quantity-btn.minus');
-        const plusBtn = document.querySelector('.quantity-btn.plus');
-        const quantityInput = document.getElementById('quantity-input');
+        const quantityControl = document.querySelector('.quantity-control');
+        if (!quantityControl) return;
         
-        // Exit the function if any of the required elements are missing
+        // Remove all existing event listeners by replacing the entire control
+        const newControl = quantityControl.cloneNode(true);
+        quantityControl.parentNode.replaceChild(newControl, quantityControl);
+        
+        // Get fresh references to the elements
+        const minusBtn = newControl.querySelector('.minus');
+        const plusBtn = newControl.querySelector('.plus');
+        const quantityInput = newControl.querySelector('#quantity-input');
+        
         if (!minusBtn || !plusBtn || !quantityInput) return;
         
-        // Remove any existing event listeners by cloning and replacing elements
-        const newMinusBtn = minusBtn.cloneNode(true);
-        const newPlusBtn = plusBtn.cloneNode(true);
-        minusBtn.parentNode.replaceChild(newMinusBtn, minusBtn);
-        plusBtn.parentNode.replaceChild(newPlusBtn, plusBtn);
-        
-        // Handle minus button click with new event listeners
-        newMinusBtn.addEventListener('click', function() {
+        minusBtn.addEventListener('click', function() {
             let currentValue = parseInt(quantityInput.value);
             if (currentValue > parseInt(quantityInput.min)) {
                 quantityInput.value = currentValue - 1;
+                quantityInput.dispatchEvent(new Event('change'));
             }
         });
         
-        // Handle plus button click with new event listeners
-        newPlusBtn.addEventListener('click', function() {
+        plusBtn.addEventListener('click', function() {
             let currentValue = parseInt(quantityInput.value);
             if (currentValue < parseInt(quantityInput.max)) {
                 quantityInput.value = currentValue + 1;
+                quantityInput.dispatchEvent(new Event('change'));
             }
         });
         
-        // Ensure input stays within bounds when manually entered
-        // Remove existing event listener by cloning
-        const newQuantityInput = quantityInput.cloneNode(true);
-        quantityInput.parentNode.replaceChild(newQuantityInput, quantityInput);
-        
-        newQuantityInput.addEventListener('change', function() {
+        quantityInput.addEventListener('change', function() {
             let value = parseInt(this.value);
             const min = parseInt(this.min);
             const max = parseInt(this.max);
@@ -1485,9 +1480,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const quantityInput = document.getElementById('quantity-input');
             const quantity = quantityInput ? quantityInput.value : 1;
             
-            console.log("Adding to cart with variance ID:", varianceId);
-            console.log("Quantity:", quantity);
-            
             if (!varianceId) {
                 showNotification('Please select a size first', true);
                 return;
@@ -1525,7 +1517,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response.json();
             })
             .then(data => {
-                console.log('Add to cart response:', data);
                 if (data.success) {
                     showNotification(data.message);
                     // Update cart count in navbar if needed
@@ -1589,26 +1580,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Wishlist functionality
-    // Wishlist functionality
     const wishlistBtn = document.getElementById('wishlistBtn');
-
     if (wishlistBtn) {
-        console.log('Wishlist button found, setting up click handler');
         wishlistBtn.addEventListener('click', function(e) {
             e.preventDefault();
             
             const productId = this.getAttribute('data-product-id');
             const isInWishlist = this.classList.contains('in-wishlist');
             
-            console.log('Wishlist button clicked:', 
-                        'Product ID:', productId, 
-                        'In wishlist:', isInWishlist);
-            
             showLoading();
             
             const endpoint = isInWishlist ? '/remove-from-wishlist/' : '/add-to-wishlist/';
-            
-            console.log('Sending request to:', endpoint);
             
             fetch(endpoint, {
                 method: 'POST',
@@ -1621,29 +1603,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
             })
             .then(response => {
-                console.log('Response status:', response.status);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 return response.json();
             })
             .then(data => {
-                console.log('Response data:', data);
                 if (data.success) {
                     showNotification(data.message);
                     
                     // Toggle the wishlist state
                     if (isInWishlist) {
-                        wishlistBtn.classList.remove('in-wishlist');
-                        wishlistBtn.title = 'Add to Wishlist';
-                        const icon = wishlistBtn.querySelector('i');
+                        this.classList.remove('in-wishlist');
+                        this.title = 'Add to Wishlist';
+                        const icon = this.querySelector('i');
                         if (icon) {
                             icon.className = 'far fa-heart';
                         }
                     } else {
-                        wishlistBtn.classList.add('in-wishlist');
-                        wishlistBtn.title = 'Remove from Wishlist';
-                        const icon = wishlistBtn.querySelector('i');
+                        this.classList.add('in-wishlist');
+                        this.title = 'Remove from Wishlist';
+                        const icon = this.querySelector('i');
                         if (icon) {
                             icon.className = 'fas fa-heart';
                         }
@@ -1660,8 +1640,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 hideLoading();
             });
         });
-    } else {
-        console.log('Wishlist button not found');
     }
 
     // Image zoom functionality
