@@ -1716,601 +1716,390 @@ def contact(request):
 def loadtest(request):
     return render(request,'test.html')
 
+import traceback
+import json
+import logging
 from django.views import View
 from django.conf import settings
 from django.http import JsonResponse
 from django.db.models import Q
-import openai
-openai.api_key = settings.OPENAI_API_KEY
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
-import os
-import json
+# Import your models
 
-def test_openai(request):
-    try:
-       
-        response = openai.completions.create(
-            model="gpt-3.5-turbo",  
-            prompt="Say hello", 
-            max_tokens=50  
+
+logger = logging.getLogger(__name__)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class PerfumeChatbotView(View):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.client = None
+        self._initialize_openai()
+
+    def _initialize_openai(self):
+        """Initialize OpenAI client safely"""
+        try:
+            if hasattr(settings, 'OPENAI_API_KEY') and settings.OPENAI_API_KEY:
+                from openai import OpenAI
+                self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
+                logger.info("OpenAI client initialized successfully")
+            else:
+                logger.warning("OpenAI API key not found - using fallback mode")
+        except ImportError:
+            logger.warning("OpenAI library not installed - using fallback mode")
+        except Exception as e:
+            logger.error(f"OpenAI initialization failed: {str(e)}")
+
+    def post(self, request):
+        """Main chatbot endpoint"""
+        try:
+            # Parse request data
+            try:
+                data = json.loads(request.body)
+            except json.JSONDecodeError:
+                return JsonResponse({
+                    'status': 'error',
+                    'response': "Invalid request format. Please send valid JSON."
+                }, status=400)
+
+            user_input = data.get('message', '').strip()
+            product_id = data.get('product_id')
+
+            # Handle empty input
+            if not user_input:
+                return JsonResponse({
+                    'status': 'success',
+                    'response': "How can I help you with perfumes today?",
+                    'follow_ups': [
+                        "What type of fragrance do you prefer?", 
+                        "Are you shopping for a special occasion?",
+                        "Show me popular perfumes"
+                    ]
+                })
+
+            # Generate response
+            response = self._generate_response(user_input, product_id)
+            follow_ups = self._get_follow_ups(user_input)
+
+            return JsonResponse({
+                'status': 'success',
+                'response': response,
+                'follow_ups': follow_ups
+            })
+
+        except Exception as e:
+            logger.error(f"Chatbot view error: {str(e)}")
+            logger.error(traceback.format_exc())
+            
+            return JsonResponse({
+                'status': 'success',
+                'response': "I'm here to help you find the perfect fragrance! What are you looking for today?",
+                'follow_ups': ["Browse all products", "Popular perfumes", "Get recommendations"]
+            })
+
+    def _generate_response(self, user_input, product_id=None):
+        """Generate chatbot response with fallback"""
+        try:
+            # Try AI response first if available
+            if self.client:
+                try:
+                    return self._generate_ai_response(user_input, product_id)
+                except Exception as e:
+                    logger.warning(f"AI response failed, using fallback: {str(e)}")
+            
+            # Fallback to rule-based response
+            return self._generate_rule_based_response(user_input, product_id)
+            
+        except Exception as e:
+            logger.error(f"Response generation failed: {str(e)}")
+            return "I'd love to help you find the perfect fragrance! What type of scent are you looking for?"
+
+    def _generate_ai_response(self, user_input, product_id=None):
+        """Generate AI-powered response using OpenAI"""
+        messages = [{
+            "role": "system",
+            "content": (
+                "You are ScentBot, a knowledgeable perfume expert assistant. "
+                "Be helpful, friendly, and concise. Provide specific advice about fragrances. "
+                "Keep responses under 200 words and suggest products when appropriate."
+            )
+        }]
+
+        # Add product context if viewing specific product
+        if product_id:
+            try:
+                product = ProductTable.objects.get(product_id=product_id)
+                messages.append({
+                    "role": "system",
+                    "content": f"User is currently viewing: {product.product_name} by {product.brand.brand_name} - {product.fragrance.fragrance_type} fragrance for {product.occasion.occasion}"
+                })
+            except ProductTable.DoesNotExist:
+                pass
+
+        messages.append({"role": "user", "content": user_input})
+
+        response = self.client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=messages,
+            temperature=0.7,
+            max_tokens=250
         )
-       
-        reply = response.choices[0].text.strip()
-        return JsonResponse({'status': 'success', 'reply': reply})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)})
-    
 
-# class PerfumeChatbotView(View):
-#     def __init__(self, **kwargs):
-#         super().__init__(**kwargs)
-       
-#         try:
-#             self.validate_database_data()
-#         except Exception as e:
-#             logger.error(f"Database validation failed: {str(e)}")
-    
-#     def validate_database_data(self):
-#         """Validate that database has the minimum required data for the chatbot to function"""
-#         fragrances_count = Fragrance.objects.count()
-#         genders_count = Gender.objects.count()
-#         occasions_count = Occasion.objects.count()
-#         brands_count = BrandTable.objects.count()
-#         products_count = ProductTable.objects.count()
+        return response.choices[0].message.content
+
+    def _generate_rule_based_response(self, user_input, product_id=None):
+        """Generate response using rules and database queries"""
+        user_lower = user_input.lower()
+
+        # Handle product-specific queries
+        if product_id:
+            try:
+                product = ProductTable.objects.get(product_id=product_id)
+                return (f"You're looking at **{product.product_name}** by {product.brand.brand_name}. "
+                       f"This is a {product.fragrance.fragrance_type} fragrance perfect for {product.occasion.occasion}. "
+                       f"Would you like to know more about this product or see similar options?")
+            except ProductTable.DoesNotExist:
+                pass
+
+        # Handle different query types
+        if any(word in user_lower for word in ['recommend', 'suggest', 'help me find']):
+            return self._get_recommendations(user_input)
         
-#         logger.info(f"Database validation: Found {fragrances_count} fragrances, {genders_count} genders, " 
-#               f"{occasions_count} occasions, {brands_count} brands, {products_count} products")
+        elif any(word in user_lower for word in ['price', 'cost', 'expensive', 'budget']):
+            return ("Our perfumes range from affordable to luxury options. "
+                   "What's your budget range, and what type of fragrance interests you?")
         
+        elif any(word in user_lower for word in ['popular', 'best', 'trending']):
+            return self._get_popular_products()
         
-#         citrus_fragrances = Fragrance.objects.filter(
-#             Q(fragrance_type__icontains='citrus') |
-#             Q(fragrance_type__icontains='lemon') |
-#             Q(fragrance_type__icontains='orange') |
-#             Q(fragrance_type__icontains='bergamot')
-#         )
-#         logger.info(f"Found {citrus_fragrances.count()} citrus-related fragrances")
+        elif any(word in user_lower for word in ['floral', 'flower']):
+            return ("Floral fragrances are perfect for a feminine, romantic touch! "
+                   "They feature notes like rose, jasmine, or lily. Would you like to see our floral collection?")
         
-       
-#         if fragrances_count == 0 or genders_count == 0 or products_count == 0:
-#             raise ValueError("Missing essential data in database")
+        elif any(word in user_lower for word in ['woody', 'wood']):
+            return ("Woody fragrances offer sophistication with notes like cedar, sandalwood, or oud. "
+                   "Perfect for those who prefer deeper, more grounded scents.")
         
-#     def post(self, request):
-#         try:
-           
-#             if request.content_type == 'application/json':
-#                 data = json.loads(request.body)
-#                 user_input = data.get('message', '').lower()
-#                 product_id = data.get('product_id')
-#             else:
-#                 user_input = request.POST.get('message', '').lower()
-#                 product_id = request.POST.get('product_id')
-            
-            
-#             logger.info(f"Chatbot request received: message='{user_input}', product_id={product_id}")
-            
-            
-#             response = self.generate_chatbot_response(user_input, product_id)
-            
-           
-#             return JsonResponse({'response': response, 'status': 'success'})
-            
-#         except Exception as e:
-           
-#             import traceback
-#             logger.error(f"Error processing chatbot request: {str(e)}")
-#             logger.error(traceback.format_exc())
-#             return JsonResponse({
-#                 'status': 'error',
-#                 'response': "I'm having trouble processing your request right now. Please try again shortly.",
-#                 'error': str(e)  
-#             }, status=500)
-
-#     def generate_chatbot_response(self, user_input, product_id=None):
-#         try:
-#             logger.info(f"Processing user input: '{user_input}'")
-            
-           
-#             if not user_input or user_input.strip() == '':
-#                 return "How can I help you find the perfect perfume today?"
-            
-           
-#             current_product = None
-#             if product_id:
-#                 try:
-#                     current_product = ProductTable.objects.get(product_id=product_id)
-#                     logger.info(f"Found current product: {current_product.product_name}")
-#                 except ProductTable.DoesNotExist:
-#                     logger.warning(f"Product with ID {product_id} not found")
-#                     pass
-            
-            
-#             keywords = {
-#                 'gender': self.extract_gender(user_input),
-#                 'fragrance': self.extract_fragrance(user_input),
-#                 'concentration': self.extract_concentration(user_input),
-#                 'occasion': self.extract_occasion(user_input),
-#                 'brand': self.extract_brand(user_input),
-#             }
-            
-            
-#             logger.info(f"Extracted keywords: {str({k: (v.__str__() if v else None) for k, v in keywords.items()})}")
-            
-           
-#             any_keywords_found = any(keywords.values())
-            
-#             # Handle common case for citrus specifically
-#             if 'citrus' in user_input.lower() and not keywords['fragrance']:
-#                 logger.info("Special handling for citrus request")
-#                 try:
-#                     citrus_fragrances = Fragrance.objects.filter(fragrance_type__icontains='citrus')
-#                     if citrus_fragrances.exists():
-#                         keywords['fragrance'] = citrus_fragrances.first()
-#                         logger.info(f"Found citrus fragrance: {keywords['fragrance'].fragrance_type}")
-#                 except Exception as e:
-#                     logger.error(f"Error finding citrus fragrances: {str(e)}")
-            
-#             products = self.filter_products(keywords)
-            
-#             if products:
-#                 response = "Here are some perfumes that match your preferences:\n\n"
-#                 for product in products[:3]:  # Show top 3 matches
-#                     response += self.format_product_response(product)
-#                 return response
-#             else:
-#                 # If we have any keywords but no products, log this unusual case
-#                 if any_keywords_found:
-#                     logger.warning("Keywords found but no matching products")
-                
-#                 # Fall back to AI recommendation
-#                 return self.generate_ai_recommendation(user_input, current_product)
+        elif any(word in user_lower for word in ['fresh', 'citrus']):
+            return ("Fresh and citrus fragrances are energizing and perfect for daily wear! "
+                   "Think lemon, bergamot, or ocean breeze scents.")
         
-#         except Exception as e:
-#             # Enhanced logging for better debugging
-#             import traceback
-#             logger.error(f"Error in generate_chatbot_response: {str(e)}")
-#             logger.error(traceback.format_exc())
-#             return "I apologize, but I'm having trouble processing your request. Please try rephrasing or ask about a specific type of perfume."
+        else:
+            return ("I'd be happy to help you find the perfect fragrance! "
+                   "Are you looking for something floral, woody, fresh, or perhaps for a specific occasion?")
 
-#     # Other methods remain the same...
-    
-#     def generate_ai_recommendation(self, user_input, current_product=None):
-#         try:
-#             # Get all available options for context
-#             fragrances = ", ".join([f.fragrance_type for f in Fragrance.objects.all()])
-#             genders = ", ".join([g.gender for g in Gender.objects.all()])
-#             occasions = ", ".join([o.occasion for o in Occasion.objects.all()])
-#             brands = ", ".join([b.brand_name for b in BrandTable.objects.all()])
+    def _get_recommendations(self, user_input):
+        """Get product recommendations based on user input"""
+        try:
+            # Extract preferences from user input
+            filters = self._extract_preferences(user_input)
             
-           
-#             current_product_context = ""
-#             if current_product:
-#                 current_product_context = f"""
-#                 Current product being viewed:
-#                 - Name: {current_product.product_name}
-#                 - Brand: {current_product.brand.brand_name}
-#                 - Fragrance: {current_product.fragrance.fragrance_type}
-#                 - Gender: {current_product.gender.gender}
-#                 - Occasion: {current_product.occasion.occasion}
-#                 """
-            
-#             prompt = f"""
-#             You're a perfume expert helping a customer find their perfect fragrance. 
-#             The customer said: "{user_input}"
-            
-#             {current_product_context}
-            
-#             Available in our store:
-#             - Fragrance types: {fragrances}
-#             - Genders: {genders}
-#             - Occasions: {occasions}
-#             - Brands: {brands}
-            
-#             Suggest 2-3 perfume recommendations that would fit their preferences.
-#             For each recommendation, include:
-#             - Why it matches their request
-#             - Key fragrance notes
-#             - Best occasions to wear it
-#             - Similar options they might like
-            
-#             Format with clear headings for each recommendation.
-#             """
-            
-#             # Set API key from settings
-#             openai_key = settings.OPENAI_API_KEY
-#             if not openai_key:
-#                 logger.error("OpenAI API key is not set in settings")
-#                 return "I'm having trouble connecting to my recommendation service. Please try describing the type of perfume you're looking for instead."
-            
-#             try:
-#                 # Try the new OpenAI client first
-#                 from openai import OpenAI
-#                 client = OpenAI(api_key=openai_key)
-                
-#                 logger.info("Using new OpenAI client")
-#                 response = client.chat.completions.create(
-#                     model="gpt-3.5-turbo",
-#                     messages=[
-#                         {"role": "system", "content": "You are a knowledgeable perfume recommendation assistant."},
-#                         {"role": "user", "content": prompt}
-#                     ],
-#                     temperature=0.7,
-#                     max_tokens=500
-#                 )
-                
-#                 ai_response = response.choices[0].message.content
-#                 logger.info("Successfully received OpenAI response with new client")
-                
-#             except (ImportError, AttributeError) as e:
-#                 # Fallback to older OpenAI API
-#                 logger.warning(f"Using legacy OpenAI client due to: {str(e)}")
-#                 import openai
-#                 openai.api_key = openai_key
-                
-#                 response = openai.ChatCompletion.create(
-#                     model="gpt-3.5-turbo",
-#                     messages=[
-#                         {"role": "system", "content": "You are a knowledgeable perfume recommendation assistant."},
-#                         {"role": "user", "content": prompt}
-#                     ],
-#                     temperature=0.7,
-#                     max_tokens=500
-#                 )
-                
-#                 ai_response = response.choices[0].message["content"]
-#                 logger.info("Successfully received OpenAI response with legacy client")
-            
-#             return f"""I couldn't find exact matches, but here are some recommendations based on your preferences:\n\n{ai_response}\n\nYou might also want to <a href="/products">browse our full collection</a>."""
-            
-#         except Exception as e:
-#             import traceback
-#             logger.error(f"Error in AI recommendation: {str(e)}")
-#             logger.error(traceback.format_exc())
-#             return "I couldn't find exact matches for your preferences right now. You might want to browse our collection or try different search terms."
+            # Build query
+            query = Q(is_active=True)
+            if filters['gender']:
+                query &= Q(gender=filters['gender'])
+            if filters['fragrance']:
+                query &= Q(fragrance=filters['fragrance'])
+            if filters['brand']:
+                query &= Q(brand=filters['brand'])
+            if filters['occasion']:
+                query &= Q(occasion=filters['occasion'])
 
-#     def extract_gender(self, text):
-    
-#         try:
-#             text_lower = text.lower()
-#             genders = Gender.objects.all()
-            
-#             # Check for direct gender mentions
-#             for gender in genders:
-#                 if gender.gender.lower() in text_lower:
-#                     logger.info(f"Found gender match: {gender.gender}")
-#                     return gender
-            
-#             # Check for common gender terms not in database
-#             gender_terms = {
-#                 'male': ['man', 'men', 'male', 'masculine', 'guy', 'boy', 'gentleman'],
-#                 'female': ['woman', 'women', 'female', 'feminine', 'girl', 'lady'],
-#                 'unisex': ['unisex', 'both', 'either', 'everyone', 'all genders', 'any gender']
-#             }
-            
-#             for gender_name, terms in gender_terms.items():
-#                 if any(term in text_lower for term in terms):
-#                     # Try to find this gender in database
-#                     try:
-#                         gender = Gender.objects.filter(gender__icontains=gender_name).first()
-#                         if gender:
-#                             logger.info(f"Found gender through terms: {gender.gender}")
-#                             return gender
-#                     except Exception as e:
-#                         logger.error(f"Error finding gender through terms: {str(e)}")
-            
-#             logger.info("No gender match found")
-#             return None
-#         except Exception as e:
-#             logger.error(f"Error in extract_gender: {str(e)}")
-#             return None
+            products = ProductTable.objects.filter(query)[:3]
 
-#     def extract_fragrance(self, text):
-#         """Extract fragrance mentions from user input with sophisticated matching"""
-#         try:
-#             # Common fragrance families and their related terms
-#             fragrance_families = {
-#                 'citrus': ['citrus', 'lemon', 'lime', 'orange', 'grapefruit', 'bergamot', 'mandarin', 'tangerine', 'fresh'],
-#                 'floral': ['floral', 'flower', 'rose', 'jasmine', 'lily', 'peony', 'violet', 'orchid', 'feminine'],
-#                 'woody': ['woody', 'wood', 'cedar', 'sandalwood', 'oud', 'patchouli', 'earthy', 'forest'],
-#                 'oriental': ['oriental', 'spicy', 'vanilla', 'amber', 'musk', 'exotic', 'warm', 'sensual'],
-#                 'aromatic': ['aromatic', 'herbal', 'lavender', 'mint', 'sage', 'thyme', 'herb'],
-#                 'fruity': ['fruity', 'fruit', 'apple', 'pear', 'peach', 'berry', 'strawberry', 'raspberry', 'sweet']
-#             }
-            
-#             # First try direct matching with database entries
-#             text_lower = text.lower()
-#             fragrances = Fragrance.objects.all()
-            
-#             # Check for exact matches
-#             for fragrance in fragrances:
-#                 if fragrance.fragrance_type.lower() in text_lower:
-#                     logger.info(f"Found exact fragrance match: {fragrance.fragrance_type}")
-#                     return fragrance
-                    
-#             # If no exact matches, check for family keywords
-#             for family_name, keywords in fragrance_families.items():
-#                 if any(keyword in text_lower for keyword in keywords):
-#                     # Find a fragrance that matches this family
-#                     for fragrance in fragrances:
-#                         frag_lower = fragrance.fragrance_type.lower()
-#                         # Check if the fragrance belongs to this family
-#                         if family_name in frag_lower or any(keyword in frag_lower for keyword in keywords):
-#                             logger.info(f"Found family match: {family_name} → {fragrance.fragrance_type}")
-#                             return fragrance
-                    
-#                     # If found family but no matching fragrance, try to find something with the main family name
-#                     family_fragrance = fragrances.filter(fragrance_type__icontains=family_name).first()
-#                     if family_fragrance:
-#                         logger.info(f"Found family name match: {family_name} → {family_fragrance.fragrance_type}")
-#                         return family_fragrance
-            
-#             # Special case for citrus since it's a common request
-#             if 'citrus' in text_lower or any(citrus_term in text_lower for citrus_term in ['lemon', 'orange', 'grapefruit']):
-#                 # Try to find any citrus-related fragrance
-#                 for fragrance in fragrances:
-#                     frag_lower = fragrance.fragrance_type.lower()
-#                     if any(term in frag_lower for term in ['citrus', 'lemon', 'orange', 'grapefruit', 'bergamot']):
-#                         logger.info(f"Found citrus-related fragrance: {fragrance.fragrance_type}")
-#                         return fragrance
-            
-#             logger.info(f"No fragrance match found for: {text}")
-#             return None
-            
-#         except Exception as e:
-#             logger.error(f"Error in extract_fragrance: {str(e)}")
-#             return None
+            if products:
+                response = "Here are some great options for you:\n\n"
+                for i, product in enumerate(products, 1):
+                    response += f"{i}. **{product.product_name}** by {product.brand.brand_name}\n"
+                    response += f"   - {product.fragrance.fragrance_type} fragrance\n"
+                    response += f"   - Perfect for {product.occasion.occasion}\n\n"
+                return response
+            else:
+                return ("I'd love to help you find something perfect! Could you tell me more? "
+                       "For example, do you prefer floral or woody scents? Daily wear or special occasions?")
 
-#     def extract_concentration(self, text):
-#         """Extract concentration type from user input"""
-#         try:
-#             text_lower = text.lower()
-            
-#             # Map of common concentration terms
-#             concentration_map = {
-#                 'edt': ['eau de toilette', 'toilette', 'edt'],
-#                 'edp': ['eau de parfum', 'parfum', 'edp'],
-#                 'perfume': ['perfume', 'parfum', 'pure perfume'],
-#                 'cologne': ['cologne', 'eau de cologne', 'edc'],
-#             }
-            
-#             # Check for mentions of concentration
-#             for conc_key, terms in concentration_map.items():
-#                 if any(term in text_lower for term in terms):
-#                     # Find a concentration type that matches
-#                     concentration = ConcentrationType.objects.filter(
-#                         Q(concentration__icontains=conc_key) |
-#                         Q(concentration__icontains=terms[0])
-#                     ).first()
-                    
-#                     if concentration:
-#                         logger.info(f"Found concentration match: {concentration.concentration}")
-#                         return concentration
-            
-#             logger.info("No concentration match found")
-#             return None
-            
-#         except Exception as e:
-#             logger.error(f"Error in extract_concentration: {str(e)}")
-#             return None
+        except Exception as e:
+            logger.error(f"Recommendations failed: {str(e)}")
+            return "I can help you find great fragrances! What type of scent do you prefer?"
 
-#     def extract_occasion(self, text):
-#         """Extract occasion mentions from user input"""
-#         try:
-#             text_lower = text.lower()
-#             occasions = Occasion.objects.all()
+    def _get_popular_products(self):
+        """Get popular products response"""
+        try:
+            products = ProductTable.objects.filter(is_active=True)[:3]
             
-#             # Check for direct occasion mentions
-#             for occasion in occasions:
-#                 if occasion.occasion.lower() in text_lower:
-#                     logger.info(f"Found occasion match: {occasion.occasion}")
-#                     return occasion
-            
-#             # Common occasion terms that might not be in the database
-#             occasion_terms = {
-#                 'casual': ['daily', 'everyday', 'casual', 'regular', 'day to day', 'daytime'],
-#                 'formal': ['formal', 'special', 'elegant', 'dressy', 'evening', 'night out', 'party'],
-#                 'office': ['work', 'office', 'business', 'professional', 'meeting'],
-#                 'date': ['date', 'dating', 'romantic', 'dinner', 'anniversary'],
-#                 'summer': ['summer', 'hot', 'beach', 'vacation', 'holiday'],
-#                 'winter': ['winter', 'cold', 'christmas', 'holiday'],
-#             }
-            
-#             # Check for occasion terms
-#             for occasion_name, terms in occasion_terms.items():
-#                 if any(term in text_lower for term in terms):
-#                     # Try to find a matching occasion
-#                     occasion = Occasion.objects.filter(occasion__icontains=occasion_name).first()
-#                     if occasion:
-#                         logger.info(f"Found occasion match through terms: {occasion.occasion}")
-#                         return occasion
-            
-#             logger.info("No occasion match found")
-#             return None
-            
-#         except Exception as e:
-#             logger.error(f"Error in extract_occasion: {str(e)}")
-#             return None
-            
-#     def extract_brand(self, text):
-#         """Extract brand mentions from user input"""
-#         try:
-#             text_lower = text.lower()
-#             brands = BrandTable.objects.all()
-            
-#             # Try exact brand name matches
-#             for brand in brands:
-#                 if brand.brand_name.lower() in text_lower:
-#                     logger.info(f"Found brand match: {brand.brand_name}")
-#                     return brand
-            
-#             # Try more complex matching for partial or similar brand names
-#             words = text_lower.split()
-#             for word in words:
-#                 if len(word) > 3:  # Only consider words that are not too short
-#                     brand_match = brands.filter(brand_name__icontains=word).first()
-#                     if brand_match:
-#                         logger.info(f"Found partial brand match: {brand_match.brand_name}")
-#                         return brand_match
-            
-#             logger.info("No brand match found")
-#             return None
-            
-#         except Exception as e:
-#             logger.error(f"Error in extract_brand: {str(e)}")
-#             return None
+            if products:
+                response = "Here are some of our popular fragrances:\n\n"
+                for product in products:
+                    response += f"• **{product.product_name}** by {product.brand.brand_name}\n"
+                    response += f"  {product.fragrance.fragrance_type} - Perfect for {product.occasion.occasion}\n\n"
+                return response
+            else:
+                return "We have many wonderful fragrances available! What type of scent interests you most?"
 
-#     def filter_products(self, keywords):
-#         """Filter products based on extracted keywords"""
-#         try:
-#             # Start with a base query for active products
-#             query = Q(is_active=True)
-            
-#             # Log detected keywords for debugging
-#             keyword_info = {
-#                 'gender': keywords['gender'].gender if keywords['gender'] else None,
-#                 'fragrance': keywords['fragrance'].fragrance_type if keywords['fragrance'] else None,
-#                 'concentration': keywords['concentration'].concentration if keywords['concentration'] else None,
-#                 'occasion': keywords['occasion'].occasion if keywords['occasion'] else None,
-#                 'brand': keywords['brand'].brand_name if keywords['brand'] else None
-#             }
-#             logger.info(f"Filtering with keywords: {keyword_info}")
-            
-#             # Add filters for each provided keyword
-#             if keywords['gender']:
-#                 query &= Q(gender=keywords['gender'])
-#             if keywords['fragrance']:
-#                 query &= Q(fragrance=keywords['fragrance'])
-#             if keywords['concentration']:
-#                 query &= Q(concentration=keywords['concentration'])
-#             if keywords['brand']:
-#                 query &= Q(brand=keywords['brand'])
-            
-#             # Execute the query
-#             products = list(ProductTable.objects.filter(query))
-#             logger.info(f"Found {len(products)} products matching base criteria")
-            
-#             # Further filter by occasion if specified
-#             if keywords['occasion'] and products:
-#                 occasion_products = []
-#                 for product in products:
-#                     if product.occasion == keywords['occasion']:
-#                         occasion_products.append(product)
-#                 logger.info(f"After occasion filtering: {len(occasion_products)} products")
-#                 return occasion_products
-            
-#             return products
-            
-#         except Exception as e:
-#             logger.error(f"Error in filter_products: {str(e)}")
-#             import traceback
-#             logger.error(traceback.format_exc())
-#             return []
+        except Exception as e:
+            logger.error(f"Popular products query failed: {str(e)}")
+            return "We have a great selection of popular fragrances! What are you in the mood for?"
 
-#     def format_product_response(self, product):
-#         """Format a product for response display"""
-#         try:
-#             # Get the smallest variance for price display
-#             variances = product.varience.all().order_by('size__size')
-#             price_display = "Price varies by size"
-#             if variances.exists():
-#                 first_variance = variances.first()
-#                 price_display = f"${first_variance.price} for {first_variance.size.size}ml"
-            
-#             product_images = product.images.all() if hasattr(product, 'images') else []
-#             image_url = None
-#             if product_images and product_images.exists():
-#                 image_url = product_images.first().image.url
-            
-#             # Build the HTML response
-#             return f"""
-#             <div class="product-recommendation">
-#                 <h3>{product.product_name}</h3>
-#                 <p><strong>Brand:</strong> {product.brand.brand_name}</p>
-#                 <p><strong>Fragrance:</strong> {product.fragrance.fragrance_type}</p>
-#                 <p><strong>Best for:</strong> {product.occasion.occasion}</p>
-#                 <p><strong>Gender:</strong> {product.gender.gender}</p>
-#                 <p><strong>Starting at:</strong> {price_display}</p>
-#                 <a href="/product/{product.product_id}" class="btn">View Details</a>
-#             </div>
-#             """
-            
-#         except Exception as e:
-#             logger.error(f"Error formatting product response: {str(e)}")
-#             return "<div class='product-recommendation'>Product information not available</div>"    
-    
-#     def handle_informational_query(self, user_input):
-#         """Generate responses for perfume knowledge questions"""
-#         try:
-#             # Get context about available perfumes
-#             inventory_context = self.get_inventory_context()
-            
-#             prompt = f"""
-#             You're a perfume expert assistant. A customer asked:
-#             "{user_input}"
-            
-#             Our store carries these types of products:
-#             {inventory_context}
-            
-#             Please provide:
-#             1. A knowledgeable answer to their question
-#             2. Brief educational information (1-2 sentences)
-#             3. Optional: Related products we carry (if relevant)
-#             4. Keep response under 3 paragraphs
-#             """
-            
-#             return self.get_openai_response(prompt)
-            
-#         except Exception as e:
-#             logger.error(f"Error handling info query: {str(e)}")
-#             return "I can share perfume knowledge, but I'm having trouble right now. Try asking about specific fragrance types or notes."
+    def _extract_preferences(self, user_input):
+        """Extract user preferences from input"""
+        preferences = {
+            'gender': None,
+            'fragrance': None,
+            'occasion': None,
+            'brand': None
+        }
+
+        try:
+            user_lower = user_input.lower()
+
+            # Extract gender
+            preferences['gender'] = self._extract_gender(user_lower)
+            preferences['fragrance'] = self._extract_fragrance(user_lower)
+            preferences['occasion'] = self._extract_occasion(user_lower)
+            preferences['brand'] = self._extract_brand(user_lower)
+
+        except Exception as e:
+            logger.error(f"Preference extraction failed: {str(e)}")
+
+        return preferences
+
+    def _extract_gender(self, text):
+        """Extract gender from text"""
+        try:
+            # Check database genders first
+            genders = Gender.objects.all()
+            for gender in genders:
+                if gender.gender.lower() in text:
+                    return gender
+
+            # Check common terms
+            gender_terms = {
+                'male': ['man', 'men', 'male', 'masculine', 'guy', 'boy', 'gentleman'],
+                'female': ['woman', 'women', 'female', 'feminine', 'girl', 'lady'],
+                'unisex': ['unisex', 'both', 'either', 'everyone']
+            }
+
+            for gender_name, terms in gender_terms.items():
+                if any(term in text for term in terms):
+                    return Gender.objects.filter(gender__icontains=gender_name).first()
+
+        except Exception as e:
+            logger.error(f"Gender extraction failed: {str(e)}")
         
-#     # def handle_no_matches_found(self, user_input, found_keywords):
-#     #     """Generate helpful response when no products match"""
-#     #     # Check if we found ANY keywords at all
-#     #     any_keywords = any(found_keywords.values())
+        return None
+
+    def _extract_fragrance(self, text):
+        """Extract fragrance type from text"""
+        try:
+            # Check database fragrances first
+            fragrances = Fragrance.objects.all()
+            for fragrance in fragrances:
+                if fragrance.fragrance_type.lower() in text:
+                    return fragrance
+
+            # Check fragrance families
+            fragrance_families = {
+                'citrus': ['citrus', 'lemon', 'lime', 'orange', 'fresh'],
+                'floral': ['floral', 'flower', 'rose', 'jasmine', 'feminine'],
+                'woody': ['woody', 'wood', 'cedar', 'sandalwood', 'earthy'],
+                'oriental': ['oriental', 'spicy', 'vanilla', 'warm', 'sensual'],
+                'fruity': ['fruity', 'fruit', 'apple', 'berry', 'sweet']
+            }
+
+            for family_name, keywords in fragrance_families.items():
+                if any(keyword in text for keyword in keywords):
+                    return fragrances.filter(fragrance_type__icontains=family_name).first()
+
+        except Exception as e:
+            logger.error(f"Fragrance extraction failed: {str(e)}")
         
-#     #     if not any_keywords:
-#     #         # Comually generic query with no recognizable terms
-#     #         return ("I'm not sure I understand what you're looking for. "
-#     #                 "Try being more specific like: 'floral perfumes for women' "
-#     #                 "or 'citrus colognes for summer'.")
+        return None
+
+    def _extract_occasion(self, text):
+        """Extract occasion from text"""
+        try:
+            # Check database occasions first
+            occasions = Occasion.objects.all()
+            for occasion in occasions:
+                if occasion.occasion.lower() in text:
+                    return occasion
+
+            # Check common terms
+            occasion_terms = {
+                'casual': ['daily', 'everyday', 'casual', 'regular'],
+                'formal': ['formal', 'special', 'elegant', 'evening'],
+                'office': ['work', 'office', 'business', 'professional'],
+                'romantic': ['date', 'romantic', 'dinner', 'anniversary']
+            }
+
+            for occasion_name, terms in occasion_terms.items():
+                if any(term in text for term in terms):
+                    return occasions.filter(occasion__icontains=occasion_name).first()
+
+        except Exception as e:
+            logger.error(f"Occasion extraction failed: {str(e)}")
         
-#     #     # We found some keywords but no products matched
-#     #     return self.generate_alternative_suggestions(user_input, found_keywords)
+        return None
 
-#     # def generate_alternative_suggestions(self, user_input, found_keywords):
-#     #     """Suggest alternatives when exact matches aren't found"""
-#     #     try:
-#     #         # Build a description of what WAS found
-#     #         detected = []
-#     #         if found_keywords['gender']:
-#     #             detected.append(f"for {found_keywords['gender'].gender}")
-#     #         if found_keywords['fragrance']:
-#     #             detected.append(f"with {found_keywords['fragrance'].fragrance_type} notes")
-#     #         if found_keywords['occasion']:
-#     #             detected.append(f"for {found_keywords['occasion'].occasion}")
-                
-#     #         detection_note = " ".join(detected) if detected else "like what you described"
-
-#     #         # Get some random popular products as fallback suggestions
-#     #         fallback_products = ProductTable.objects.filter(
-#     #             is_active=True
-#     #         ).order_by('?')[:3]  # Random 3 products
-
-#     #         if fallback_products:
-#     #             response = (f"I couldn't find exact matches {detection_note}, "
-#     #                     f"but you might like these popular options:\n\n")
-#     #             for product in fallback_products:
-#     #                 response += self.format_product_response(product)
-#     #             response += ("\nOr try browsing our <a href='/collections'>full collection</a> "
-#     #                         "with filters to find exactly what you want.")
-#     #             return response
+    def _extract_brand(self, text):
+        """Extract brand from text"""
+        try:
+            brands = BrandTable.objects.all()
             
-#     #         # If no products at all (shouldn't happen)
-#     #         return ("I couldn't find exact matches, but our fragrance experts "
-#     #                 "can help you find something perfect. Try visiting our "
-#     #                 "<a href='/contact'>contact page</a> for personalized help.")
+            # Check exact matches first
+            for brand in brands:
+                if brand.brand_name.lower() in text:
+                    return brand
 
-#     #     except Exception as e:
-#     #         logger.error(f"Error generating alternatives: {str(e)}")
-#     #         return "I couldn't find matches, but please try different search terms."
-    
+            # Check partial matches
+            words = text.split()
+            for word in words:
+                if len(word) > 3:
+                    brand_match = brands.filter(brand_name__icontains=word).first()
+                    if brand_match:
+                        return brand_match
+
+        except Exception as e:
+            logger.error(f"Brand extraction failed: {str(e)}")
+        
+        return None
+
+    def _get_follow_ups(self, user_input):
+        """Generate follow-up questions based on user input"""
+        try:
+            user_lower = user_input.lower()
+
+            if any(word in user_lower for word in ['recommend', 'suggest']):
+                return [
+                    "Tell me more about these options",
+                    "What's the price range?",
+                    "Show me similar products"
+                ]
+            elif any(word in user_lower for word in ['price', 'cost']):
+                return [
+                    "Show me budget-friendly options",
+                    "What sizes are available?",
+                    "Any current promotions?"
+                ]
+            elif any(word in user_lower for word in ['popular', 'best']):
+                return [
+                    "What makes these special?",
+                    "Show me customer reviews",
+                    "Any new arrivals?"
+                ]
+            else:
+                return [
+                    "What occasions are you shopping for?",
+                    "Do you prefer light or strong fragrances?",
+                    "What's your budget range?"
+                ]
+
+        except Exception as e:
+            logger.error(f"Follow-ups generation failed: {str(e)}")
+            return [
+                "Browse our collection",
+                "Get personalized recommendations",
+                "Contact our experts"
+            ]

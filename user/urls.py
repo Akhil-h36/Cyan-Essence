@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 from .views import singleproduct
-# from .views import PerfumeChatbotView
+from .views import PerfumeChatbotView
 urlpatterns = [
     # Basic pages
     path('', views.nohome, name='nohome'),
@@ -54,9 +54,8 @@ urlpatterns = [
     # API endpoints
     path('api/order-status/<int:order_id>/', views.order_status_api, name='order_status_api'),
 
-    # path('api/chatbot/', PerfumeChatbotView.as_view(), name='perfume_chatbot'),
-    # path('test-openai/', views.test_openai, name='test_openai'),
-
+    path('api/chatbot/',PerfumeChatbotView.as_view(), name='perfume_chatbot'),
+    
     path('contact/', views.contact, name='contact'),
 
 ]

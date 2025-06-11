@@ -57,6 +57,9 @@ else:
     SECURE_HSTS_PRELOAD = True
 
 
+SESSION_ENGINE = "django.contrib.sessions.backends.db"  # Or 'cache' if using cache
+SESSION_COOKIE_SECURE = True  # If using HTTPS
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -66,6 +69,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+
     'user',
     'adminapp',
     'authentication1',

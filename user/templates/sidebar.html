@@ -562,6 +562,43 @@
         font-size: 1.1rem;
         cursor: pointer;
     }
+    .quick-replies-container {
+    margin: 10px 0;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.quick-replies-label {
+    font-size: 0.8em;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.quick-replies {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.quick-reply {
+    background: #f0e6ff;
+    border: 1px solid #d9c2ff;
+    color: #5e35b1;
+    padding: 6px 12px;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.2s;
+}
+
+.quick-reply:hover {
+    background: #e1d0ff;
+    transform: translateY(-2px);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 </style>
 
     {% block styles %}
@@ -794,96 +831,252 @@
         });
     });
 </script>
-
-
- <!-- Chatbot JavaScript -->
- <script>
-   // Chatbot functionality
-document.addEventListener('DOMContentLoaded', function() {
-    // Toggle chatbot visibility
-    const chatbotToggle = document.getElementById('chatbot-toggle');
-    const chatbotContainer = document.getElementById('chatbot-container');
-    const chatbotClose = document.getElementById('chatbot-close');
-    
-    if (chatbotToggle && chatbotContainer) {
-        chatbotToggle.addEventListener('click', function() {
-            chatbotContainer.classList.toggle('active');
-        });
+<!-- CHAT BOT -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Perfume Chatbot initialized');
         
-        if (chatbotClose) {
-            chatbotClose.addEventListener('click', function() {
-                chatbotContainer.classList.remove('active');
-            });
+        // ======================
+        // Utility Functions
+        // ======================
+        function getCookie(name) {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [cookieName, cookieValue] = cookie.trim().split('=');
+                if (cookieName === name) {
+                    return decodeURIComponent(cookieValue);
+                }
+            }
+            return null;
         }
-    }
-
-    // Initialize messages
-    const messagesContainer = document.getElementById('chatbot-messages');
-    const userInput = document.getElementById('user-message');
-    const sendButton = document.getElementById('send-button');
     
-    if (messagesContainer && userInput && sendButton) {
-        // Add welcome message
-        addBotMessage("Hello! I'm your perfume assistant. I can help you find similar fragrances or answer questions about this product. Try asking: 'What perfumes are similar to this one?' or 'Recommend something with similar notes'");
-
-        // Send message on button click or Enter key
-        sendButton.addEventListener('click', sendMessage);
-        userInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') sendMessage();
-        });
-        
-        function sendMessage() {
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    
+        function getProductId() {
+            // Check data attributes first
+            const productElement = document.querySelector('[data-product-id]');
+            if (productElement) {
+                const productId = productElement.getAttribute('data-product-id');
+                if (productId && productId !== 'None') return productId;
+            }
+    
+            // Check URL path
+            const urlMatch = window.location.pathname.match(/product\/([^\/]+)/);
+            if (urlMatch) return urlMatch[1];
+    
+            // Check global variable
+            if (typeof window.productId !== 'undefined') {
+                return window.productId;
+            }
+    
+            return null; // Let backend handle missing ID
+        }
+    
+        // ======================
+        // Chat UI Components
+        // ======================
+        function createMessageElement(text, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isUser ? 'user-message' : 'bot-message';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.innerHTML = isUser ? escapeHtml(text) : text;
+            
+            messageDiv.innerHTML = `<strong>${isUser ? 'You:' : 'chemist:'}</strong>`;
+            messageDiv.appendChild(contentDiv);
+            
+            return messageDiv;
+        }
+    
+        function addMessage(text, isUser = false) {
+            const messageElement = createMessageElement(text, isUser);
+            messagesContainer.appendChild(messageElement);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            return messageElement;
+        }
+    
+        function showTypingIndicator() {
+            const indicator = document.createElement('div');
+            indicator.className = 'typing-indicator';
+            indicator.innerHTML = `
+                <strong>chemist:</strong> 
+                <span class="typing-dots">
+                    <span>.</span><span>.</span><span>.</span>
+                </span>
+            `;
+            messagesContainer.appendChild(indicator);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            return indicator;
+        }
+    
+        function addQuickReplies(replies) {
+            if (!replies || !Array.isArray(replies) || replies.length === 0) return;
+            
+            const container = document.createElement('div');
+            container.className = 'quick-replies-container';
+            
+            const label = document.createElement('div');
+            label.className = 'quick-replies-label';
+            label.textContent = 'Quick suggestions:';
+            container.appendChild(label);
+            
+            const buttonsContainer = document.createElement('div');
+            buttonsContainer.className = 'quick-replies';
+            
+            replies.forEach(reply => {
+                if (!reply) return;
+                
+                const button = document.createElement('button');
+                button.className = 'quick-reply';
+                button.textContent = reply;
+                button.addEventListener('click', () => {
+                    userInput.value = reply;
+                    sendMessage();
+                    container.remove();
+                });
+                buttonsContainer.appendChild(button);
+            });
+            
+            if (buttonsContainer.children.length > 0) {
+                container.appendChild(buttonsContainer);
+                messagesContainer.appendChild(container);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+        }
+    
+        // ======================
+        // Core Chat Functionality
+        // ======================
+        async function sendMessage() {
             const message = userInput.value.trim();
             if (!message) return;
             
-            addUserMessage(message);
+            // Add user message and clear input
+            addMessage(message, true);
             userInput.value = '';
             
             // Show typing indicator
-            const typingIndicator = document.createElement('div');
-            typingIndicator.className = 'typing-indicator';
-            typingIndicator.innerHTML = '<strong>Bot:</strong> <span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>';
-            messagesContainer.appendChild(typingIndicator);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            const typingIndicator = showTypingIndicator();
             
-            // Send to backend
-            fetch('/api/chatbot/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': getCookie('csrftoken'),
-                },
-                body: `message=${encodeURIComponent(message)}&product_id=${encodeURIComponent('{{ product.product_id }}')}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Remove typing indicator
+            try {
+                const csrfToken = getCookie('csrftoken');
+                if (!csrfToken) {
+                    throw new Error('Authentication token missing. Please refresh the page.');
+                }
+                
+                const productId = getProductId();
+                const payload = {
+                    message: message,
+                    product_id: productId
+                };
+                
+                const response = await fetch('/api/chatbot/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `Request failed with status ${response.status}`);
+                }
+                
+                const data = await response.json();
                 typingIndicator.remove();
-                addBotMessage(data.response);
-            })
-            .catch(error => {
+                
+                if (data.response) {
+                    addMessage(data.response);
+                    if (data.follow_ups) {
+                        addQuickReplies(data.follow_ups);
+                    }
+                } else {
+                    addMessage("I didn't understand that. Could you try rephrasing?");
+                }
+            } catch (error) {
+                console.error('Chat error:', error);
                 typingIndicator.remove();
-                addBotMessage("Sorry, I'm having trouble connecting. Please try again later.");
+                
+                const errorMessage = error.message.includes('token') 
+                    ? "Session expired. Please refresh the page."
+                    : "I'm having technical difficulties. Please try again later.";
+                
+                addMessage(errorMessage);
+            }
+        }
+    
+        // ======================
+        // DOM Elements & Event Listeners
+        // ======================
+        const chatbotToggle = document.getElementById('chatbot-toggle');
+        const chatbotContainer = document.getElementById('chatbot-container');
+        const chatbotClose = document.getElementById('chatbot-close');
+        const messagesContainer = document.getElementById('chatbot-messages');
+        const userInput = document.getElementById('user-message');
+        const sendButton = document.getElementById('send-button');
+    
+        // Toggle chatbot visibility
+        if (chatbotToggle && chatbotContainer) {
+            chatbotToggle.addEventListener('click', () => {
+                chatbotContainer.classList.toggle('active');
+            });
+            
+            if (chatbotClose) {
+                chatbotClose.addEventListener('click', () => {
+                    chatbotContainer.classList.remove('active');
+                });
+            }
+        }
+    
+        // Initialize chat if required elements exist
+        if (messagesContainer && userInput && sendButton) {
+            // Message sending
+            sendButton.addEventListener('click', sendMessage);
+            userInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            // Welcome message
+            setTimeout(() => {
+                addMessage(`
+                    Welcome to our Perfume Assistant! 💫<br><br>
+                    I can help you:<br>
+                    • Find perfumes by scent, occasion, or brand<br>
+                    • Compare different fragrances<br>
+                    • Suggest perfect gifts<br>
+                    • Explain perfume terminology<br><br>
+                    Try asking:<br>
+                    "Show me floral perfumes for women"<br>
+                    "What's good for summer evenings?"<br>
+                    "Recommend something similar to Chanel No. 5"
+                `);
+                
+                // Initial quick replies
+                addQuickReplies([
+                    "Show bestsellers",
+                    "Recommend a gift",
+                    "Help me choose"
+                ]);
+            }, 500);
+        } else {
+            console.error('Missing required chat elements:', {
+                messagesContainer: !!messagesContainer,
+                userInput: !!userInput,
+                sendButton: !!sendButton
             });
         }
-        
-        function addUserMessage(text) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'user-message';
-            messageDiv.textContent = text;
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-        
-        function addBotMessage(text) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'bot-message';
-            messageDiv.innerHTML = text; // Allow HTML for links
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-    }
-});
+    });
     </script>
     {% block extra_scripts %} 
     
