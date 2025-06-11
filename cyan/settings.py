@@ -75,7 +75,6 @@ INSTALLED_APPS = [
     'adminapp',
     'authentication1',
     'userprofile',
-    'django.contrib.sites',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
