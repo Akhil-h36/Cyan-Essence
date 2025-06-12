@@ -33,7 +33,16 @@
             color: #333;
             background-color: #fff;
             line-height: 1.6;
+            padding-top: 80px;
         }
+
+        @media (min-width: 768px) {
+            body {
+                padding-top: 80px; /* Increased padding for larger screens */
+            }
+        }
+
+
 
         /* Navbar */
         /* Enhanced Navbar with Luxury Animation */
@@ -607,21 +616,21 @@
 </head>
 <body>
   <!-- Navbar -->
-  <div class="navbar">
-    <div class="mobile-left-icons">
-        <div class="menu-icon" id="menuIcon">
-            <i class="fas fa-bars"></i>
+  <div class="navbar mb-5 ">
+        <div class="mobile-left-icons">
+            <div class="menu-icon" id="menuIcon">
+                <i class="fas fa-bars"></i>
+            </div>
+            <div class="search-container">
+                <form action="{% url 'myshop' %}" method="get" class="search-form">
+                    <input type="text" name="brand_search" placeholder="Search brands..." 
+                        value="{{ brand_search|default:'' }}" class="search-input" style="display: none;">
+                    <i class="fas fa-search search-icon" style="color: #007474;"></i>
+                </form>
+            </div>
         </div>
-        <div class="search-container">
-            <form action="{% url 'myshop' %}" method="get" class="search-form">
-                <input type="text" name="brand_search" placeholder="Search brands..." 
-                       value="{{ brand_search|default:'' }}" class="search-input" style="display: none;">
-                <i class="fas fa-search search-icon" style="color: #007474;"></i>
-            </form>
-        </div>
-    </div>
 
-    <a href="{% url 'home' %}"><div class="logo">
+        <a href="{% url 'home' %}"><div class="logo">
       
         <img src="{% static 'images/footer_logo.png' %}" alt="Confluence">
     </div>
