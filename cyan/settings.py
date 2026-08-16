@@ -225,10 +225,10 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-# #####################################open ai##########################
+# #####################################gemini##########################
 
 
-OPENAI_API_KEY = config('OPENAI_API_KEY')
+GEMINI_API_KEY = config('GEMINI_API_KEY')
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
